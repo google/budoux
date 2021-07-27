@@ -1,0 +1,26 @@
+{
+  "name": "budoux-demo",
+  "version": "0.0.1",
+  "description": "Demo app for BudouX",
+  "main": "static/app.js",
+  "scripts": {
+    "build": "esbuild src/app.ts --bundle --minify --outfile=static/app.js",
+    "watch": "esbuild src/app.ts --watch --bundle --minify --outfile=static/app.js",
+    "serve": "http-server static",
+    "dev": "concurrently \"npm run serve\" \"npm run watch\"",
+    "start": "npm run dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "budoux": "file:../javascript"
+  },
+  "devDependencies": {
+    "@types/dompurify": "^2.2.3",
+    "concurrently": "^6.2.0",
+    "esbuild": "^0.12.15",
+    "http-server": "^14.0.0",
+    "typescript": "^4.3.5"
+  }
+}

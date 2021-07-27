@@ -1,0 +1,20 @@
+.DS_Store
+.venv
+/data
+/dist
+__pycache__
+*.pyc
+*.log
+*.egg-info
+
+# JavaScript related files
+node_modules
+demo/static/app.js
+javascript/dist
+javascript/module
+javascript/src/data
+
+# Generated files by scripts
+source.txt
+encoded_data.txt
+weights.txt

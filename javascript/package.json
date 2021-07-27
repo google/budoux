@@ -1,0 +1,32 @@
+{
+  "name": "budoux",
+  "version": "0.0.1",
+  "description": "A small chunk segmenter.",
+  "main": "./dist/index.js",
+  "module": "./module/index.js",
+  "scripts": {
+    "build": "npm run build:es && npm run build:cjs",
+    "build:cjs": "tsc --outDir dist --module CommonJS",
+    "build:es": "tsc --outDir module --module ES6",
+    "copy": "node ./scripts/copy-data.js",
+    "prepare": "npm run build",
+    "pretinstall": "npm run copy",
+    "test": "ts-node node_modules/jasmine/bin/jasmine tests/*.ts"
+  },
+  "author": "Shuhei Iitsuka",
+  "license": "Apache-2.0",
+  "browser": {
+    "./dist/dom.js": "./dist/dom-browser.js",
+    "./module/dom.js": "./module/dom-browser.js"
+  },
+  "devDependencies": {
+    "@types/jasmine": "^3.9.1",
+    "@types/jsdom": "^16.2.13",
+    "jasmine": "^3.9.0",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "jsdom": "^18.0.0"
+  }
+}

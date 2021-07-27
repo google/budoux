@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+      }
+
+      header {
+        background: #5e35b1;
+        color: #fff;
+        font-size: 1rem;
+        line-height: 3rem;
+      }
+
+      header h1 {
+        margin-bottom: 0;
+      }
+
+      header p {
+        margin-top: 0;
+      }
+
+      header a {
+        color: #aed581;
+      }
+
+      .form-item {
+        display: inline-block;
+        line-height: 2rem;
+        padding-right: 5rem;
+      }
+
+      .container {
+        margin: 0 auto;
+        max-width: 960px;
+        padding: 1rem;
+      }
+
+      #input {
+        height: 6rem;
+        line-height: 1.5rem;
+        margin: 2rem 0;
+        width: 100%;
+      }
+
+      #output {
+        font-size: 3rem;
+        margin: 2rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>BudouX 🍇</h1>
+        <p>The successor to <a href="https://github.com/google/budou" target="_blank" rel="noopener noreferrer">Budou</a>.</p>
+      </div>
+    </header>
+    <main class="container">
+      <textarea id="input">Google の使命は、世界中の情報を<strong>整理</strong>し、<em>世界中の人がアクセス</em>できて使えるようにすることです。</textarea>
+      <div class="form-item">
+        <label for="fontsize">Font size</label>
+        <input type="range" id="fontsize" min="1" max="8" step="0.1" value="3">
+      </div>
+      <div class="form-item">
+        <label for="threshold">Threshold</label>
+        <input type="range" id="threshold" min="100" max="2000" step="10" value="1000">
+      </div>
+      <div class="form-item">
+        <input type="checkbox" id="wbr2br">
+        <label for="wbr2br">Replace WBR with BR</label>
+      </div>
+      <p id="output"></p>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.3/purify.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
