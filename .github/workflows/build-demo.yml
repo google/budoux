@@ -9,6 +9,8 @@ jobs:
         with:
           node-version: '16'
       - run: npm install
+        working-directory: ./javascript
+      - run: npm install
         working-directory: ./demo
       - run: npm run build
         working-directory: ./demo
