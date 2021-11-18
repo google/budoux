@@ -2,6 +2,11 @@
   "name": "budoux",
   "version": "0.0.1",
   "description": "A small chunk segmenter.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/google/budoux.git",
+    "directory": "javascript"
+  },
   "main": "./dist/index.js",
   "module": "./module/index.js",
   "scripts": {
@@ -9,8 +14,7 @@
     "build:cjs": "tsc --outDir dist --module CommonJS",
     "build:es": "tsc --outDir module --module ES6",
     "copy": "node ./scripts/copy-data.js",
-    "prepare": "npm run build",
-    "pretinstall": "npm run copy",
+    "prepare": "npm run copy && npm run build",
     "test": "ts-node node_modules/jasmine/bin/jasmine tests/*.ts"
   },
   "author": "Shuhei Iitsuka",

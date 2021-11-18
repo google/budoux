@@ -49,3 +49,9 @@ const parser = new Parser(model);
 
 ## Caveat
 BudouX supports HTML inputs and outputs HTML strings with markup applied to wrap phrases, but it's not meant to be used as an HTML sanitizer. **BudouX doesn't sanitize any inputs.** Malicious HTML inputs yield malicious HTML outputs. Please use it with an appropriate sanitizer library if you don't trust the input.
+
+## Author
+[Shuhei Iitsuka](https://tushuhei.com)
+
+## Disclaimer
+This is not an officially supported Google product.
