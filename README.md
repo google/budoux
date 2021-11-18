@@ -22,9 +22,9 @@ https://google.github.io/budoux/
 
 ## Supported Programming languages
 - Python
-- [JavaScript](https://github.com/google/budoux/tree/master/javascript/)
+- [JavaScript](https://github.com/google/budoux/tree/main/javascript/)
 
-For details about the JavaScript module, please visit [JavaScript README](https://github.com/google/budoux/tree/master/javascript/README.md).
+For details about the JavaScript module, please visit [JavaScript README](https://github.com/google/budoux/tree/main/javascript/README.md).
 
 
 
