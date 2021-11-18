@@ -1,2 +1,3 @@
 include budoux/unicode_blocks.json
+include budoux/skip_nodes.json
 recursive-include budoux/models *.json
