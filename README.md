@@ -14,6 +14,9 @@ It is **language-neutral**. You can train a model for any language by feeding a 
 
 Last but not least, BudouX supports HTML inputs.
 
+## Demo
+https://google.github.io/budoux/
+
 ## Natural languages supported by default
 - Japanese
 
@@ -23,22 +26,14 @@ Last but not least, BudouX supports HTML inputs.
 
 For details about the JavaScript module, please visit [JavaScript README](https://github.com/google/budoux/tree/master/javascript/README.md).
 
-## Try demo
-Clone the repository and build the demo app under the `demo` directory.
 
-```bash
-$ cd demo
-$ npm i
-$ npm run build
-$ npm start
-```
 
 ## Python module
 
 ### Install
 
 ```bash
-$ pip install .
+$ pip install budoux
 ```
 
 ### Usage

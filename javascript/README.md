@@ -4,9 +4,12 @@ BudouX is a standalone, small, and language-neutral phrase segmenter tool that p
 
 For more details about the project, please refer to the [project README](https://github.com/google/budoux/README.md).
 
+## Demo
+https://google.github.io/budoux/
+
 ## Install
 ```
-npm install ./javascript
+npm install budoux
 ```
 
 ## Usage
