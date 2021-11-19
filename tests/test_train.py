@@ -19,13 +19,12 @@ from pathlib import Path
 import numpy as np
 from context import train
 
-
 ENTRIES_FILE_PATH = os.path.abspath(
-  os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
+    os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
 WEIGHTS_FILE_PATH = os.path.abspath(
-  os.path.join(os.path.dirname(__file__), 'weights_test.txt'))
+    os.path.join(os.path.dirname(__file__), 'weights_test.txt'))
 LOG_FILE_PATH = os.path.abspath(
-  os.path.join(os.path.dirname(__file__), 'train_test.log'))
+    os.path.join(os.path.dirname(__file__), 'train_test.log'))
 
 
 class TestTrain(unittest.TestCase):
@@ -35,12 +34,11 @@ class TestTrain(unittest.TestCase):
     Path(LOG_FILE_PATH).touch()
     with open(ENTRIES_FILE_PATH, 'w') as f:
       f.write((
-        ' 1\tA\tC\n'  # the first column represents the label (-1 / 1).
-        '-1\tA\tB\n'  # the rest cols represents the associated features.
-        ' 1\tA\tC\n'
-        '-1\tA\n'
-        ' 1\tA\tC\n'
-      ))
+          ' 1\tA\tC\n'  # the first column represents the label (-1 / 1).
+          '-1\tA\tB\n'  # the rest cols represents the associated features.
+          ' 1\tA\tC\n'
+          '-1\tA\n'
+          ' 1\tA\tC\n'))
 
   def test_pred(self):
     X = np.array([
@@ -48,8 +46,8 @@ class TestTrain(unittest.TestCase):
         [False, True, False, True],
     ])
     phis = {
-      1: 8,  # Weights Feature #1 by 8.
-      2: 2,  # Weights Feature #2 by 2.
+        1: 8,  # Weights Feature #1 by 8.
+        2: 2,  # Weights Feature #2 by 2.
     }
     # Since Feature #1 (= the 2nd col in X) wins, the prediction should be:
     # [
@@ -63,45 +61,53 @@ class TestTrain(unittest.TestCase):
     freq_thres = 0
     X, Y, features = train.preprocess(ENTRIES_FILE_PATH, freq_thres)
     self.assertListEqual(features, ['A', 'C', 'B'],
-      'Features should be ordered by frequency.')
+                         'Features should be ordered by frequency.')
 
-    self.assertListEqual(X.tolist(), [
-    # A      C      B      BIAS
-      [True, True,  False, True],
-      [True, False, True,  True],
-      [True, True,  False, True],
-      [True, False, False, True],
-      [True, True,  False, True],
-    ], 'X should represent the entry features with a bias column.')
+    self.assertListEqual(
+        X.tolist(),
+        [
+            # A    C     B      BIAS
+            [True, True, False, True],
+            [True, False, True, True],
+            [True, True, False, True],
+            [True, False, False, True],
+            [True, True, False, True],
+        ],
+        'X should represent the entry features with a bias column.')
 
     self.assertListEqual(Y.tolist(), [
-      True,
-      False,
-      True,
-      False,
-      True,
+        True,
+        False,
+        True,
+        False,
+        True,
     ], 'Y should represent the entry labels.')
 
     freq_thres = 4
     X, Y, features = train.preprocess(ENTRIES_FILE_PATH, freq_thres)
-    self.assertListEqual(features, ['A'],
-      'Features with smaller frequency than the threshold should be filtered.')
+    self.assertListEqual(
+        features, ['A'],
+        'Features with smaller frequency than the threshold should be filtered.'
+    )
 
-    self.assertListEqual(X.tolist(), [
-    # A      BIAS
-      [True, True],
-      [True, True],
-      [True, True],
-      [True, True],
-      [True, True],
-    ], 'X should represent the filtered entry features with a bias column.')
+    self.assertListEqual(
+        X.tolist(),
+        [
+            # A    BIAS
+            [True, True],
+            [True, True],
+            [True, True],
+            [True, True],
+            [True, True],
+        ],
+        'X should represent the filtered entry features with a bias column.')
 
     self.assertListEqual(Y.tolist(), [
-      True,
-      False,
-      True,
-      False,
-      True,
+        True,
+        False,
+        True,
+        False,
+        True,
     ], 'Y should represent the entry labels even filtered.')
 
   def test_split_dataset(self):
@@ -111,20 +117,20 @@ class TestTrain(unittest.TestCase):
     split_ratio = .8
     X_train, X_test, Y_train, Y_test = train.split_dataset(X, Y, split_ratio)
     self.assertAlmostEqual(X_train.shape[0], N * split_ratio)
-    self.assertAlmostEqual(X_test.shape[0] , N * (1 - split_ratio))
+    self.assertAlmostEqual(X_test.shape[0], N * (1 - split_ratio))
     self.assertAlmostEqual(X_train.shape[1], 2)
-    self.assertAlmostEqual(X_test.shape[1] , 2)
+    self.assertAlmostEqual(X_test.shape[1], 2)
     self.assertAlmostEqual(Y_train.shape[0], N * split_ratio)
-    self.assertAlmostEqual(Y_test.shape[0] , N * (1 - split_ratio))
+    self.assertAlmostEqual(Y_test.shape[0], N * (1 - split_ratio))
 
   def test_fit(self):
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
     X = np.array([
-        [False, True,  True,  False],
-        [True,  True,  False, True ],
-        [False, False, True,  False],
-        [True,  False, False, True ],
+        [False, True, True, False],
+        [True, True, False, True],
+        [False, False, True, False],
+        [True, False, False, True],
     ])
     Y = np.array([
         False,
@@ -138,8 +144,8 @@ class TestTrain(unittest.TestCase):
     with open(WEIGHTS_FILE_PATH) as f:
       weights = f.read().splitlines()
     top_feature = weights[0].split('\t')[0]
-    self.assertEqual(top_feature, 'b',
-      msg='The most effective feature should be selected.')
+    self.assertEqual(
+        top_feature, 'b', msg='The most effective feature should be selected.')
 
   def tearDown(self):
     os.remove(WEIGHTS_FILE_PATH)

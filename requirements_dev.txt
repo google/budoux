@@ -2,3 +2,4 @@ numpy
 html5lib
 pytest
 pytest-runner
+yapf
