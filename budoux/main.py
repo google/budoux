@@ -16,6 +16,7 @@
 import argparse
 import json
 import os
+import shutil
 import sys
 import textwrap
 import typing
@@ -56,7 +57,15 @@ def parse_args(test: typing.Optional[typing.List[str]] = None) -> argparse.Names
     """
     parser = argparse.ArgumentParser(
         prog="budoux",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        formatter_class=(
+            lambda prog: argparse.RawDescriptionHelpFormatter(
+                prog,
+                **{
+                    "width": shutil.get_terminal_size(fallback=(120, 50)).columns,
+                    "max_help_position": 25,
+                },
+            )
+        ),
         description=textwrap.dedent(
             """\
           BudouX is the successor to Budou,
@@ -74,9 +83,20 @@ def parse_args(test: typing.Optional[typing.List[str]] = None) -> argparse.Names
     parser.add_argument(
         "-m",
         "--model",
+        metavar="JSON",
         type=check_file,
         default=pkg_resources.resource_filename(__name__, "models/ja-knbc.json"),
+        help="custom model file path (default: models/ja-knbc.json)",
     )
+    parser.add_argument(
+        "-d",
+        "--delim",
+        metavar="STR",
+        type=str,
+        default="---",
+        help="output delimiter in TEXT mode (default: '---')",
+    )
+
     parser.add_argument(
         "-V", "--version", action="version", version="%(prog)s {}".format(__version__)
     )
@@ -86,22 +106,35 @@ def parse_args(test: typing.Optional[typing.List[str]] = None) -> argparse.Names
         return parser.parse_args()
 
 
-def main():
+def _main():
     args = parse_args()
     with open(args.model, "r") as f:
         model = json.load(f)
 
     parser = budoux.Parser(model)
 
-    if args.text is None:
-        inputs = sys.stdin.read().rstrip()
-    else:
-        inputs = args.text
-
     if args.html:
-        print(parser.translate_html_string(inputs))
+        if args.text is None:
+            inputs = sys.stdin.read()
+        else:
+            inputs = args.text
+        res = parser.translate_html_string(inputs)
+        print(res)
     else:
-        print(parser.parse(inputs))
+        if args.text is None:
+            inputs = [v.rstrip() for v in sys.stdin.readlines()]
+        else:
+            inputs = [v.rstrip() for v in args.text.splitlines()]
+        res = ["\n".join(res) for res in map(parser.parse, inputs)]
+        ors = "\n" + args.delim + "\n"
+        print(ors.join(res))
+
+
+def main():
+    try:
+        _main()
+    except KeyboardInterrupt:
+        exit(0)
 
 
 if __name__ == "__main__":
