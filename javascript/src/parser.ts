@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { unicodeBlocks } from './data/unicode_blocks';
-import { skipNodes } from './data/skip_nodes';
-import { model as jaKNBCModel } from './data/models/ja-knbc';
-import { parseFromString } from './dom';
-import { bisectRight, SEP } from './utils';
+import {unicodeBlocks} from './data/unicode_blocks';
+import {skipNodes} from './data/skip_nodes';
+import {model as jaKNBCModel} from './data/models/ja-knbc';
+import {parseFromString} from './dom';
+import {bisectRight, SEP} from './utils';
 
 const DEFAULT_THRES = 1000;
 
@@ -67,10 +67,16 @@ export class Parser {
    * @returns A feature to be consumed by a classifier.
    */
   static getFeature(
-    w1: string, w2: string, w3: string,
-    w4: string, w5: string, w6: string,
-    p1: string, p2: string, p3: string) {
-
+    w1: string,
+    w2: string,
+    w3: string,
+    w4: string,
+    w5: string,
+    w6: string,
+    p1: string,
+    p2: string,
+    p3: string
+  ) {
     const b1 = Parser.getUnicodeBlockFeature(w1);
     const b2 = Parser.getUnicodeBlockFeature(w2);
     const b3 = Parser.getUnicodeBlockFeature(w3);
@@ -78,51 +84,50 @@ export class Parser {
     const b5 = Parser.getUnicodeBlockFeature(w5);
     const b6 = Parser.getUnicodeBlockFeature(w6);
     const rawFeature = {
-      'UP1': p1,
-      'UP2': p2,
-      'UP3': p3,
-      'BP1': p1 + p2,
-      'BP2': p2 + p3,
-      'UW1': w1,
-      'UW2': w2,
-      'UW3': w3,
-      'UW4': w4,
-      'UW5': w5,
-      'UW6': w6,
-      'BW1': w2 + w3,
-      'BW2': w3 + w4,
-      'BW3': w4 + w5,
-      'TW1': w1 + w2 + w3,
-      'TW2': w2 + w3 + w4,
-      'TW3': w3 + w4 + w5,
-      'TW4': w4 + w5 + w6,
-      'UB1': b1,
-      'UB2': b2,
-      'UB3': b3,
-      'UB4': b4,
-      'UB5': b5,
-      'UB6': b6,
-      'BB1': b2 + b3,
-      'BB2': b3 + b4,
-      'BB3': b4 + b5,
-      'TB1': b1 + b2 + b3,
-      'TB2': b2 + b3 + b4,
-      'TB3': b3 + b4 + b5,
-      'TB4': b4 + b5 + b6,
-      'UQ1': p1 + b1,
-      'UQ2': p2 + b2,
-      'UQ3': p3 + b3,
-      'BQ1': p2 + b2 + b3,
-      'BQ2': p2 + b3 + b4,
-      'BQ3': p3 + b2 + b3,
-      'BQ4': p3 + b3 + b4,
-      'TQ1': p2 + b1 + b2 + b3,
-      'TQ2': p2 + b2 + b3 + b4,
-      'TQ3': p3 + b1 + b2 + b3,
-      'TQ4': p3 + b2 + b3 + b4,
+      UP1: p1,
+      UP2: p2,
+      UP3: p3,
+      BP1: p1 + p2,
+      BP2: p2 + p3,
+      UW1: w1,
+      UW2: w2,
+      UW3: w3,
+      UW4: w4,
+      UW5: w5,
+      UW6: w6,
+      BW1: w2 + w3,
+      BW2: w3 + w4,
+      BW3: w4 + w5,
+      TW1: w1 + w2 + w3,
+      TW2: w2 + w3 + w4,
+      TW3: w3 + w4 + w5,
+      TW4: w4 + w5 + w6,
+      UB1: b1,
+      UB2: b2,
+      UB3: b3,
+      UB4: b4,
+      UB5: b5,
+      UB6: b6,
+      BB1: b2 + b3,
+      BB2: b3 + b4,
+      BB3: b4 + b5,
+      TB1: b1 + b2 + b3,
+      TB2: b2 + b3 + b4,
+      TB3: b3 + b4 + b5,
+      TB4: b4 + b5 + b6,
+      UQ1: p1 + b1,
+      UQ2: p2 + b2,
+      UQ3: p3 + b3,
+      BQ1: p2 + b2 + b3,
+      BQ2: p2 + b3 + b4,
+      BQ3: p3 + b2 + b3,
+      BQ4: p3 + b3 + b4,
+      TQ1: p2 + b1 + b2 + b3,
+      TQ2: p2 + b2 + b3 + b4,
+      TQ3: p3 + b1 + b2 + b3,
+      TQ4: p3 + b2 + b3 + b4,
     };
-    return Object.entries(rawFeature)
-      .map(([key, value]) => `${key}:${value}`);
+    return Object.entries(rawFeature).map(([key, value]) => `${key}:${value}`);
   }
 
   /**
@@ -150,7 +155,7 @@ export class Parser {
     let p1 = 'U';
     let p2 = 'U';
     let p3 = 'U';
-    let result = [sentence.slice(0, 3)];
+    const result = [sentence.slice(0, 3)];
 
     for (let i = 3; i < sentence.length; i++) {
       const feature = Parser.getFeature(
@@ -160,12 +165,15 @@ export class Parser {
         sentence[i],
         sentence[i + 1] || '',
         sentence[i + 2] || '',
-        p1, p2, p3
+        p1,
+        p2,
+        p3
       );
-      const score = feature.map(f => this.model.get(f) || 0)
+      const score = feature
+        .map(f => this.model.get(f) || 0)
         .reduce((prev, curr) => prev + curr);
       const p = score > 0 ? 'B' : 'O';
-      if (score > thres) result.push('')
+      if (score > thres) result.push('');
       result[result.length - 1] += sentence[i];
       p1 = p2;
       p2 = p3;
@@ -197,7 +205,8 @@ export class Parser {
             if (toSkip) {
               textNodeContent += char;
               charsToProcess = charsToProcess.slice(
-                charsToProcess[0] === SEP ? 2 : 1);
+                charsToProcess[0] === SEP ? 2 : 1
+              );
             } else if (char === charsToProcess[0]) {
               textNodeContent += char;
               charsToProcess = charsToProcess.slice(1);
@@ -216,7 +225,7 @@ export class Parser {
           processChildren(child as HTMLElement);
         }
       }
-    }
+    };
     processChildren(parentElement);
   }
 
@@ -227,7 +236,7 @@ export class Parser {
    * @param threshold A score to control the granularity of output chunks.
    * @returns The translated HTML string.
    */
-   translateHTMLString(html: string, threshold = DEFAULT_THRES) {
+  translateHTMLString(html: string, threshold = DEFAULT_THRES) {
     if (html === '') return html;
     const doc = parseFromString(html);
     if (Parser.hasChildTextNode(doc.body)) {
@@ -246,4 +255,4 @@ export class Parser {
  */
 export const loadDefaultJapaneseParser = () => {
   return new Parser(new Map(Object.entries(jaKNBCModel)));
-}
+};
