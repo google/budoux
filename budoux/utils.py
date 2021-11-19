@@ -14,14 +14,12 @@
 """Utilities for BudouX."""
 
 from enum import Enum
-
-
 """The separator string to specify breakpoints."""
 SEP = '▁'
-
-
 """An enum to represent the type of inference result."""
+
+
 class Result(Enum):
-  UNKNOWN = 'U'
-  POSITIVE = 'B'
-  NEGATIVE = 'O'
+    UNKNOWN = 'U'
+    POSITIVE = 'B'
+    NEGATIVE = 'O'

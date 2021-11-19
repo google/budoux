@@ -31,49 +31,50 @@ __version__ = "0.0.1"
 def check_file(path: str) -> str:
     """Check if filepath is exist or not.
 
-    Args:
-        path (str): Model path
+  Args:
+      path (str): Model path
 
-    Raises:
-        FileNotFoundError: Raise if given path is not exist.
+  Raises:
+      FileNotFoundError: Raise if given path is not exist.
 
-    Returns:
-        str: Model path confirmed its existance.
-    """
+  Returns:
+      str: Model path confirmed its existance.
+  """
     if os.path.isfile(path):
         return path
     else:
         raise FileNotFoundError("'{}' is not found.".format(path))
 
 
-def parse_args(test: typing.Optional[typing.List[str]] = None) -> argparse.Namespace:
+def parse_args(
+        test: typing.Optional[typing.List[str]] = None) -> argparse.Namespace:
     """Parse commandline arguments.
 
-    Args:
-        test (typing.Optional[typing.List[str]], optional): Commandline args for testing. Defaults to None.
+  Args:
+      test (typing.Optional[typing.List[str]], optional): Commandline args for testing. Defaults to None.
 
-    Returns:
-        argparse.Namespace: Parsed data of args.
-    """
+  Returns:
+      argparse.Namespace: Parsed data of args.
+  """
     parser = argparse.ArgumentParser(
         prog="budoux",
-        formatter_class=(
-            lambda prog: argparse.RawDescriptionHelpFormatter(
-                prog,
-                **{
-                    "width": shutil.get_terminal_size(fallback=(120, 50)).columns,
-                    "max_help_position": 25,
-                },
-            )
-        ),
-        description=textwrap.dedent(
-            """\
-          BudouX is the successor to Budou,
-          the machine learning powered line break organizer tool."""
-        ),
+        formatter_class=(lambda prog: argparse.RawDescriptionHelpFormatter(
+            prog,
+            **{
+                "width": shutil.get_terminal_size(fallback=(120, 50)).columns,
+                "max_help_position": 25,
+            },
+        )),
+        description=textwrap.dedent("""\
+        BudouX is the successor to Budou,
+        the machine learning powered line break organizer tool."""),
     )
 
-    parser.add_argument("text", metavar="TXT", nargs="?", type=str, help="text")
+    parser.add_argument("text",
+                        metavar="TXT",
+                        nargs="?",
+                        type=str,
+                        help="text")
     parser.add_argument(
         "-H",
         "--html",
@@ -85,7 +86,8 @@ def parse_args(test: typing.Optional[typing.List[str]] = None) -> argparse.Names
         "--model",
         metavar="JSON",
         type=check_file,
-        default=pkg_resources.resource_filename(__name__, "models/ja-knbc.json"),
+        default=pkg_resources.resource_filename(__name__,
+                                                "models/ja-knbc.json"),
         help="custom model file path (default: models/ja-knbc.json)",
     )
     parser.add_argument(
@@ -97,9 +99,10 @@ def parse_args(test: typing.Optional[typing.List[str]] = None) -> argparse.Names
         help="output delimiter in TEXT mode (default: '---')",
     )
 
-    parser.add_argument(
-        "-V", "--version", action="version", version="%(prog)s {}".format(__version__)
-    )
+    parser.add_argument("-V",
+                        "--version",
+                        action="version",
+                        version="%(prog)s {}".format(__version__))
     if test:
         return parser.parse_args(test)
     else:
