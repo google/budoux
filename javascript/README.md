@@ -2,7 +2,7 @@
 
 BudouX is a standalone, small, and language-neutral phrase segmenter tool that provides beautiful and legible line breaks.
 
-For more details about the project, please refer to the [project README](https://github.com/google/budoux/README.md).
+For more details about the project, please refer to the [project README](../README.md).
 
 ## Demo
 https://google.github.io/budoux/
