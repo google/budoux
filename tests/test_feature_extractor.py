@@ -17,7 +17,12 @@ import unittest
 import os
 import sys
 from pathlib import Path
-from context import feature_extractor, utils
+
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(LIB_PATH))
+
+from budoux import feature_extractor
+from budoux import utils
 
 sys.stdin.reconfigure(encoding='utf-8')
 sys.stdout.reconfigure(encoding='utf-8')

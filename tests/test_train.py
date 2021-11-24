@@ -14,10 +14,15 @@
 """Tests the training script."""
 
 import os
+import sys
 import unittest
 from pathlib import Path
 import numpy as np
-from context import train
+
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(LIB_PATH))
+
+from scripts import train
 
 ENTRIES_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'entries_test.txt'))

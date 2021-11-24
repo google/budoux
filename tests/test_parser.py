@@ -14,9 +14,15 @@
 """Tests the BudouX parser."""
 
 import unittest
+import os
+import sys
 import xml.etree.ElementTree as ET
 import html5lib
-from context import parser
+
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(LIB_PATH))
+
+from budoux import parser
 
 html_parser = html5lib.HTMLParser()
 
