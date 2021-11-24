@@ -23,39 +23,41 @@ import typing
 
 
 def rollup(weights_filename: str, model_filename: str, scale: int = 1000):
-  """Rolls up the weights and outputs a model in JSON with integer scores.
+    """Rolls up the weights and outputs a model in JSON with integer scores.
 
   Args:
     weights_filename (str): A file path for the input weights file.
     model_filename (str): A file path for the output model file.
     scale (int, optional): A scale factor for the output score.
   """
-  decision_trees: typing.Dict[str, float] = dict()
-  with open(weights_filename) as f:
-    for row in f:
-      feature = row.split('\t')[0]
-      score = float(row.split('\t')[1])
-      decision_trees.setdefault(feature, 0)
-      decision_trees[feature] += score
-  with open(model_filename, 'w') as f:
-    decision_trees_intscore = dict(
-      (item[0], int(item[1] * scale)) for item in decision_trees.items())
-    json.dump(decision_trees_intscore, f)
+    decision_trees: typing.Dict[str, float] = dict()
+    with open(weights_filename) as f:
+        for row in f:
+            feature = row.split('\t')[0]
+            score = float(row.split('\t')[1])
+            decision_trees.setdefault(feature, 0)
+            decision_trees[feature] += score
+    with open(model_filename, 'w') as f:
+        decision_trees_intscore = dict(
+            (item[0], int(item[1] * scale)) for item in decision_trees.items())
+        json.dump(decision_trees_intscore, f)
 
 
 def main():
-  parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument('weight_file',
-    help='A file path for the learned weights.')
-  parser.add_argument('-o', '--outfile',
-    help='A file path to export a model file. (default: model.json)',
-    default='model.json')
-  args = parser.parse_args()
-  weights_filename = args.weight_file
-  model_filename = args.outfile
-  rollup(weights_filename, model_filename)
-  print('Model file is exported as', model_filename)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('weight_file',
+                        help='A file path for the learned weights.')
+    parser.add_argument(
+        '-o',
+        '--outfile',
+        help='A file path to export a model file. (default: model.json)',
+        default='model.json')
+    args = parser.parse_args()
+    weights_filename = args.weight_file
+    model_filename = args.outfile
+    rollup(weights_filename, model_filename)
+    print('Model file is exported as', model_filename)
 
 
 if __name__ == '__main__':
-  main()
+    main()
