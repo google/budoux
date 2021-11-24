@@ -15,8 +15,12 @@
 
 import unittest
 import os
+import sys
 from pathlib import Path
 from context import feature_extractor, utils
+
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding='utf-8')
 
 SOURCE_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'source_test.txt'))
@@ -29,7 +33,7 @@ class TestFeatureExtractor(unittest.TestCase):
   def setUp(self):
     Path(ENTRIES_FILE_PATH).touch()
     self.test_entry = f'これは{utils.SEP}美しい{utils.SEP}ペンです。'
-    with open(SOURCE_FILE_PATH, 'w') as f:
+    with open(SOURCE_FILE_PATH, 'w', encoding=sys.getdefaultencoding()) as f:
       f.write(self.test_entry)
 
   def test_unicode_block_index(self):
@@ -127,7 +131,9 @@ class TestFeatureExtractor(unittest.TestCase):
 
   def test_process(self):
     feature_extractor.process(SOURCE_FILE_PATH, ENTRIES_FILE_PATH)
-    with open(ENTRIES_FILE_PATH) as f:
+    with open(
+        ENTRIES_FILE_PATH, encoding=sys.getdefaultencoding(),
+        errors='replace') as f:
       entries = f.read().splitlines()
     test_sentence = ''.join(self.test_entry.split(utils.SEP))
     self.assertEqual(
