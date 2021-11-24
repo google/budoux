@@ -15,15 +15,14 @@
  */
 
 import 'jasmine';
-import { bisectRight } from '../src/utils';
-
+import {bisectRight} from '../src/utils';
 
 describe('utils.bisectRight', () => {
   const arr = [1, 3, 8, 12, 34];
   const testInsertionPoint = (item: number, expectedPoint: number) => {
     const point = bisectRight(arr, item);
     expect(point).toBe(expectedPoint);
-  }
+  };
 
   it('should find the point when the item is inluded.', () => {
     testInsertionPoint(8, 3);

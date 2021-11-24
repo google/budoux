@@ -1,5 +1,7 @@
 {
+  "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
+    "lib": ["es6", "dom", "dom.iterable"],
     "target": "es2017",
     "module": "commonjs",
     "declaration": true,
@@ -11,9 +13,7 @@
     "outDir": "./dist"
   },
   "include": [
-    "src/"
-  ],
-  "exclude": [
-    "node_modules/"
+    "src/**/*.ts",
+    "test/**/*.ts"
   ]
 }

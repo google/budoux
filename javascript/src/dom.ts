@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { JSDOM } from 'jsdom';
+import {JSDOM} from 'jsdom';
 
 /**
  * Parses an html string and returns a parsed html document.
@@ -24,4 +24,4 @@ import { JSDOM } from 'jsdom';
 export const parseFromString = (html: string) => {
   const dom = new JSDOM(html);
   return dom.window.document;
-}
+};

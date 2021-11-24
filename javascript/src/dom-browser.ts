@@ -23,4 +23,4 @@ export const parseFromString = (html: string) => {
   const domparser = new DOMParser();
   const document = domparser.parseFromString(html, 'text/html');
   return document;
-}
+};
