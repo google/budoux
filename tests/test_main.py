@@ -16,9 +16,12 @@
 from os.path import *
 import sys
 import unittest
-from unittest.mock import patch
-from context import main
+from pathlib import Path
 
+LIB_PATH = join(dirname(__file__), '..')
+sys.path.insert(0, abspath(LIB_PATH))
+
+from budoux import main
 
 class TestCommonOption(unittest.TestCase):
 
