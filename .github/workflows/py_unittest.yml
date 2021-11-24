@@ -20,4 +20,4 @@ jobs:
           python -m pip install .
           python -m pip install -r requirements_dev.txt
       - name: Run unittest
-        run: python -m unittest tests/*.py
+        run: python -m unittest discover -p "test_*.py" -s tests

@@ -17,7 +17,7 @@ import os
 import unittest
 from pathlib import Path
 import numpy as np
-from .context import train
+from context import train
 
 ENTRIES_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
