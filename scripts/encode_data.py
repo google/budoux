@@ -18,22 +18,23 @@ from context import feature_extractor
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        'source_data',
-        help='''File path of the source training data to extract features.''')
-    parser.add_argument('-o',
-                        '--outfile',
-                        help='''Output file path for the encoded training data.
+  parser = argparse.ArgumentParser(description=__doc__)
+  parser.add_argument(
+      'source_data',
+      help='''File path of the source training data to extract features.''')
+  parser.add_argument(
+      '-o',
+      '--outfile',
+      help='''Output file path for the encoded training data.
             (default: encoded_data.txt)''',
-                        default='encoded_data.txt')
-    args = parser.parse_args()
-    source_filename = args.source_data
-    train_data_filename = args.outfile
-    feature_extractor.process(source_filename, train_data_filename)
-    print('\033[92mEncoded training data is output to: %s\033[0m' %
-          (train_data_filename))
+      default='encoded_data.txt')
+  args = parser.parse_args()
+  source_filename = args.source_data
+  train_data_filename = args.outfile
+  feature_extractor.process(source_filename, train_data_filename)
+  print('\033[92mEncoded training data is output to: %s\033[0m' %
+        (train_data_filename))
 
 
 if __name__ == '__main__':
-    main()
+  main()
