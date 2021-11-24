@@ -27,6 +27,8 @@ import budoux
 
 __version__ = "0.0.1"
 
+ArgList = typing.Optional[typing.List[str]]
+
 
 def check_file(path: str) -> str:
   """Check if filepath is exist or not.
@@ -46,8 +48,7 @@ def check_file(path: str) -> str:
     raise FileNotFoundError("'{}' is not found.".format(path))
 
 
-def parse_args(
-    test: typing.Optional[typing.List[str]] = None) -> argparse.Namespace:
+def parse_args(test: ArgList = None) -> argparse.Namespace:
   """Parse commandline arguments.
 
   Args:
@@ -105,7 +106,7 @@ def parse_args(
     return parser.parse_args()
 
 
-def _main(test: typing.Optional[typing.List[str]] = None):
+def _main(test: ArgList = None):
   args = parse_args(test=test)
   with open(args.model, "r") as f:
     model = json.load(f)
@@ -133,7 +134,7 @@ def _main(test: typing.Optional[typing.List[str]] = None):
     print(res)
 
 
-def main(test: typing.Optional[typing.List[str]] = None):
+def main(test: ArgList = None):
   try:
     _main(test)
   except KeyboardInterrupt:
