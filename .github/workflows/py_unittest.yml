@@ -1,4 +1,4 @@
-name: Style Check
+name: Unittest for Python
 on: [push]
 jobs:
   python-style-check:
