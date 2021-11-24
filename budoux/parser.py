@@ -25,6 +25,9 @@ PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
 with open(os.path.join(os.path.dirname(__file__), 'skip_nodes.json')) as f:
   SKIP_NODES: typing.Set[str] = set(json.load(f))
 
+HTMLAttr = typing.List[typing.Tuple[str, typing.Union[str, None]]]
+
+
 class TextContentExtractor(HTMLParser):
   """An HTML parser to extract text content.
 
@@ -56,8 +59,7 @@ class HTMLChunkResolver(HTMLParser):
     self.chunks_joined = SEP.join(chunks)
     self.to_skip = False
 
-  def handle_starttag(self, tag: str,
-    attrs: typing.List[typing.Tuple[str, typing.Union[str, None]]]):
+  def handle_starttag(self, tag: str, attrs: HTMLAttr):
     attr_pairs = []
     for attr in attrs:
       if attr[1] is None:
@@ -78,7 +80,7 @@ class HTMLChunkResolver(HTMLParser):
       if self.chunks_joined[0] == SEP:
         self.chunks_joined = self.chunks_joined[1 + len(data):]
       else:
-        self.chunks_joined = self.chunks_joined[len(data):]        
+        self.chunks_joined = self.chunks_joined[len(data):]
       return
     for char in data:
       if char == self.chunks_joined[0]:
@@ -117,23 +119,22 @@ class Parser:
     Returns:
       A list of semantic chunks (List[str]).
     """
-    if sentence == '': return []
+    if sentence == '':
+      return []
     p1 = Result.UNKNOWN.value
     p2 = Result.UNKNOWN.value
     p3 = Result.UNKNOWN.value
     chunks = [sentence[:3]]
     for i in range(3, len(sentence)):
-      feature = get_feature(
-        sentence[i - 3],
-        sentence[i - 2],
-        sentence[i - 1],
-        sentence[i],
-        sentence[i + 1] if i + 1 < len(sentence) else '',
-        sentence[i + 2] if i + 2 < len(sentence) else '',
-        p1, p2, p3)
+      feature = get_feature(sentence[i - 3], sentence[i - 2], sentence[i - 1],
+                            sentence[i],
+                            sentence[i + 1] if i + 1 < len(sentence) else '',
+                            sentence[i + 2] if i + 2 < len(sentence) else '',
+                            p1, p2, p3)
       score = 0
       for f in feature:
-        if not f in self.model: continue
+        if not f in self.model:
+          continue
         score += self.model[f]
       if score > thres:
         chunks.append(sentence[i])

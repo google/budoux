@@ -15,13 +15,12 @@
 
 from enum import Enum
 
-
-"""The separator string to specify breakpoints."""
 SEP = '▁'
+"""The separator string to specify breakpoints."""
 
 
-"""An enum to represent the type of inference result."""
 class Result(Enum):
+  """An enum to represent the type of inference result."""
   UNKNOWN = 'U'
   POSITIVE = 'B'
   NEGATIVE = 'O'
