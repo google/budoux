@@ -17,6 +17,7 @@ import bisect
 import itertools
 import json
 import os
+import sys
 from .utils import SEP, Result
 
 with open(os.path.join(os.path.dirname(__file__), 'unicode_blocks.json')) as f:
@@ -134,9 +135,9 @@ def process(source_filename: str, entries_filename: str):
     source_filename (str): A file path to the source sentences.
     entries_filename (str): A file path to the output entries.
   """
-  with open(source_filename) as f:
+  with open(source_filename, encoding=sys.getdefaultencoding()) as f:
     data = f.readlines()
-  with open(entries_filename, 'w') as f:
+  with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
     f.write('')
 
   for row in data:
@@ -155,7 +156,7 @@ def process(source_filename: str, entries_filename: str):
                             p1, p2, p3)
       positive = i in sep_indices
       p = Result.POSITIVE.value if positive else Result.NEGATIVE.value
-      with open(entries_filename, 'a') as f:
+      with open(entries_filename, 'a', encoding=sys.getdefaultencoding()) as f:
         row = ['1' if positive else '-1'] + feature
         f.write('\t'.join(row) + '\n')
       p1 = p2
