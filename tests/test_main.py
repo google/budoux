@@ -110,21 +110,30 @@ class TestTextArguments(unittest.TestCase):
 class TestStdin(unittest.TestCase):
 
   def test_cmdargs_blank_stdin(self):
-    with open(join(abspath(dirname(__file__)), "in/1.in"), "r") as f:
+    with open(
+        join(abspath(dirname(__file__)), "in/1.in"),
+        "r",
+        encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main([])
 
     self.assertEqual(output, "")
 
   def test_cmdargs_text_stdin(self):
-    with open(join(abspath(dirname(__file__)), "in/2.in"), "r") as f:
+    with open(
+        join(abspath(dirname(__file__)), "in/2.in"),
+        "r",
+        encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main([])
 
     self.assertEqual(output, "これは\nテストです。")
 
   def test_cmdargs_html_stdin(self):
-    with open(join(abspath(dirname(__file__)), "in/3.in"), "r") as f:
+    with open(
+        join(abspath(dirname(__file__)), "in/3.in"),
+        "r",
+        encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main(["-H"])
 
