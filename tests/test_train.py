@@ -144,8 +144,9 @@ class TestTrain(unittest.TestCase):
     with open(WEIGHTS_FILE_PATH) as f:
       weights = f.read().splitlines()
     top_feature = weights[0].split('\t')[0]
-    self.assertEqual(
-        top_feature, 'b', msg='The most effective feature should be selected.')
+    self.assertEqual(top_feature,
+                     'b',
+                     msg='The most effective feature should be selected.')
 
   def tearDown(self):
     os.remove(WEIGHTS_FILE_PATH)

@@ -46,9 +46,8 @@ class TestHTMLChunkResolver(unittest.TestCase):
     expected = '<p>ab<b>c<wbr>de</b>f</p>'
     resolver = parser.HTMLChunkResolver(['abc', 'def'])
     resolver.feed(input)
-    self.assertTrue(
-        compare_html_string(resolver.output, expected),
-        'WBR tags should be inserted as specified by chunks.')
+    self.assertTrue(compare_html_string(resolver.output, expected),
+                    'WBR tags should be inserted as specified by chunks.')
 
 
 class TestParser(unittest.TestCase):
@@ -103,36 +102,32 @@ class TestParser(unittest.TestCase):
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<script>alert(1);</script>xyz<wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should pass script tags as is.')
+    self.assertTrue(compare_html_string(output_html, expected_html),
+                    'should pass script tags as is.')
 
     input_html = 'xyz<code>abc</code>abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<code>abc</code><wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should skip some specific tags.')
+    self.assertTrue(compare_html_string(output_html, expected_html),
+                    'should skip some specific tags.')
 
     input_html = 'xyza<a href="#" hidden>bc</a>abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<wbr>a<a href="#" hidden>bc</a><wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should not ruin attributes of child elements.')
+    self.assertTrue(compare_html_string(output_html, expected_html),
+                    'should not ruin attributes of child elements.')
 
     input_html = 'xyza🇯🇵🇵🇹abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<wbr>a🇯🇵🇵🇹<wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should work with emojis.')
+    self.assertTrue(compare_html_string(output_html, expected_html),
+                    'should work with emojis.')
 
 
 if __name__ == '__main__':

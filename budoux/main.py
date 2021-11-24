@@ -94,11 +94,10 @@ def parse_args(
       help="output delimiter in TEXT mode (default: '---')",
   )
 
-  parser.add_argument(
-      "-V",
-      "--version",
-      action="version",
-      version="%(prog)s {}".format(__version__))
+  parser.add_argument("-V",
+                      "--version",
+                      action="version",
+                      version="%(prog)s {}".format(__version__))
   if test:
     return parser.parse_args(test)
   else:

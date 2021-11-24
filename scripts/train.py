@@ -162,8 +162,8 @@ def fit(X: np.ndarray, Y: np.ndarray, features: typing.List[str], iters: int,
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument(
-      'encoded_train_data', help='File path for the encoded training data.')
+  parser.add_argument('encoded_train_data',
+                      help='File path for the encoded training data.')
   parser.add_argument(
       '-o',
       '--output',

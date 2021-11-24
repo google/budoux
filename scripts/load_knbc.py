@@ -112,12 +112,11 @@ def download_knbc(target_dir: str):
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument(
-      '-o',
-      '--outfile',
-      help='''File path to output the training data.
+  parser.add_argument('-o',
+                      '--outfile',
+                      help='''File path to output the training data.
             (default: source.txt)''',
-      default='source.txt')
+                      default='source.txt')
   args = parser.parse_args()
   outfile = args.outfile
   html_dir = 'data/KNBC_v1.0_090925_utf8/html/'

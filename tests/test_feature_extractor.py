@@ -130,10 +130,9 @@ class TestFeatureExtractor(unittest.TestCase):
     with open(ENTRIES_FILE_PATH) as f:
       entries = f.read().splitlines()
     test_sentence = ''.join(self.test_entry.split(utils.SEP))
-    self.assertEqual(
-        len(entries),
-        len(test_sentence) - 2,
-        'The first two characters\' ends should not be examined.')
+    self.assertEqual(len(entries),
+                     len(test_sentence) - 2,
+                     'The first two characters\' ends should not be examined.')
 
     print(entries)
     labels = [int(entry.split('\t')[0]) for entry in entries]

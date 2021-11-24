@@ -45,8 +45,8 @@ def rollup(weights_filename: str, model_filename: str, scale: int = 1000):
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument(
-      'weight_file', help='A file path for the learned weights.')
+  parser.add_argument('weight_file',
+                      help='A file path for the learned weights.')
   parser.add_argument(
       '-o',
       '--outfile',
