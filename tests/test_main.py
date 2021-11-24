@@ -26,6 +26,7 @@ from budoux import main
 sys.stdin.reconfigure(encoding='utf-8')
 sys.stdout.reconfigure(encoding='utf-8')
 
+
 class TestCommonOption(unittest.TestCase):
 
   def test_cmdargs_invalid_option(self):
