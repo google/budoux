@@ -1,3 +1,5 @@
 numpy
 html5lib
 yapf
+build
+twine
