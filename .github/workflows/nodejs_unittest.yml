@@ -1,7 +1,8 @@
 name: Unittest for NodeJS
-on: [push]
-  paths:
-    - 'javascript/**'
+on:
+  push:
+    paths:
+      - 'javascript/**'
 jobs:
   nodejs-unittest:
     runs-on: ${{ matrix.os }}
