@@ -23,6 +23,8 @@ sys.path.insert(0, abspath(LIB_PATH))
 
 from budoux import main
 
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding='utf-8')
 
 class TestCommonOption(unittest.TestCase):
 
