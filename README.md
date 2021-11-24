@@ -4,7 +4,7 @@ Standalone. Small. Language-neutral.
 
 BudouX is the successor to [Budou](https://github.com/google/budou), the machine learning powered line break organizer tool.
 
-![Example](example.png)
+![Example](https://raw.githubusercontent.com/google/budoux/main/example.png)
 
 It is **standalone**. It works with no dependency on third-party word segmenters such as Google cloud natural language API. 
 
