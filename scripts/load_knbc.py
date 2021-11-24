@@ -22,16 +22,14 @@ import urllib.error
 from html.parser import HTMLParser
 from context import utils
 
-
 RESOURCE_URL = (
-  'https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2'
-)
+    'https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2')
 
 
 class KNBCHTMLParser(HTMLParser):
   """Parses the HTML files in the KNBC corpus and outputs the chunks."""
 
-  def __init__(self, split_tab: bool =True):
+  def __init__(self, split_tab: bool = True):
     super().__init__()
     self.chunks = ['']
     self.n_rows = 0
@@ -48,9 +46,10 @@ class KNBCHTMLParser(HTMLParser):
       self.n_cols += 1
 
   def handle_endtag(self, tag):
-    if tag != 'tr': return
-    if (self.n_rows > 2 and self.n_cols == 1
-        and (self.split_tab or self.current_word == '文節区切り')):
+    if tag != 'tr':
+      return
+    if (self.n_rows > 2 and self.n_cols == 1 and
+        (self.split_tab or self.current_word == '文節区切り')):
       self.chunks.append('')
     if self.n_cols == 5:
       self.chunks[-1] += self.current_word
@@ -73,7 +72,8 @@ def break_before_open_parentheses(chunks: typing.List[str]):
   for chunk in chunks:
     if '（' in chunk:
       index = chunk.index('（')
-      if index > 0: out.append(chunk[:index])
+      if index > 0:
+        out.append(chunk[:index])
       out.append(chunk[index:])
     else:
       out.append(chunk)
@@ -112,10 +112,12 @@ def download_knbc(target_dir: str):
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument('-o', '--outfile',
-    help='''File path to output the training data.
+  parser.add_argument(
+      '-o',
+      '--outfile',
+      help='''File path to output the training data.
             (default: source.txt)''',
-    default='source.txt')
+      default='source.txt')
   args = parser.parse_args()
   outfile = args.outfile
   html_dir = 'data/KNBC_v1.0_090925_utf8/html/'
@@ -123,13 +125,15 @@ def main():
     download_knbc('data')
   with open(outfile, 'w') as f:
     for file in sorted(os.listdir(html_dir)):
-      if file[-11:] != '-morph.html': continue
+      if file[-11:] != '-morph.html':
+        continue
       parser = KNBCHTMLParser(split_tab=False)
       data = open(os.path.join(html_dir, file)).read()
       parser.feed(data)
       chunks = parser.chunks
       chunks = postprocess(chunks)
-      if len(chunks) < 2: continue
+      if len(chunks) < 2:
+        continue
       f.write(utils.SEP.join(chunks) + '\n')
   print('\033[92mTraining data is output to: %s\033[0m' % (outfile))
 

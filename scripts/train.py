@@ -18,7 +18,6 @@ import typing
 from collections import Counter
 import numpy as np
 
-
 EPS = np.finfo(float).eps
 
 
@@ -42,8 +41,11 @@ def preprocess(entries_filename: str, feature_thres: int):
   features_counter: typing.Counter[str] = Counter()
   for entry in entries:
     features_counter.update(entry[1:])
-  features = [item[0] for item in features_counter.most_common()
-                      if item[1] > feature_thres]
+  features = [
+      item[0]
+      for item in features_counter.most_common()
+      if item[1] > feature_thres
+  ]
   print('#features:\t%d' % (len(features)))
   feature_index = dict([(feature, i) for i, feature in enumerate(features)])
 
@@ -77,8 +79,11 @@ def pred(phis: typing.Dict[int, float], X: np.ndarray) -> np.ndarray:
   return y.dot(alphas) > 0
 
 
-def split_dataset(X: np.ndarray, Y: np.ndarray, split_ratio=0.9) -> tuple[
-  np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def split_dataset(
+    X: np.ndarray,
+    Y: np.ndarray,
+    split_ratio=0.9
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
   """Splits given entries and labels to training and testing datasets.
 
   Args:
@@ -95,10 +100,10 @@ def split_dataset(X: np.ndarray, Y: np.ndarray, split_ratio=0.9) -> tuple[
   N, _ = X.shape
   np.random.seed(0)
   indices = np.random.permutation(N)
-  X_train = X[indices[:int(N * split_ratio) ]]
-  X_test  = X[indices[ int(N * split_ratio):]]
-  Y_train = Y[indices[:int(N * split_ratio) ]]
-  Y_test  = Y[indices[ int(N * split_ratio):]]
+  X_train = X[indices[:int(N * split_ratio)]]
+  X_test = X[indices[int(N * split_ratio):]]
+  Y_train = Y[indices[:int(N * split_ratio)]]
+  Y_test = Y[indices[int(N * split_ratio):]]
   return X_train, X_test, Y_train, Y_test
 
 
@@ -117,8 +122,10 @@ def fit(X: np.ndarray, Y: np.ndarray, features: typing.List[str], iters: int,
   Returns:
     phi (Dict[int, float]): Leanred child classifiers.
   """
-  with open(weights_filename, 'w') as f: f.write('')
-  with open(log_filename, 'w') as f: f.write('')
+  with open(weights_filename, 'w') as f:
+    f.write('')
+  with open(log_filename, 'w') as f:
+    f.write('')
   print('Outputting learned weights to %s ...' % (weights_filename))
 
   phis: typing.Dict[int, float] = dict()
@@ -139,7 +146,8 @@ def fit(X: np.ndarray, Y: np.ndarray, features: typing.List[str], iters: int,
     phis.setdefault(m_best, 0)
     phis[m_best] += alpha if pol_best else -alpha
     miss = Y_train ^ X_train[:, m_best]
-    if not pol_best: miss = ~(miss)
+    if not pol_best:
+      miss = ~(miss)
     w = w * np.exp(alpha * miss)
     with open(weights_filename, 'a') as f:
       feature = features[m_best] if m_best < len(features) else 'BIAS'
@@ -155,20 +163,25 @@ def fit(X: np.ndarray, Y: np.ndarray, features: typing.List[str], iters: int,
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument('encoded_train_data',
-    help='File path for the encoded training data.')
-  parser.add_argument('-o', '--output',
-    help='Output file path for the learned weights. (default: weights.txt)',
-    default='weights.txt')
-  parser.add_argument('--log',
-    help='Output file path for the training log. (default: train.log)',
-    default='train.log')
-  parser.add_argument('--feature-thres',
-    help='Threshold value of the minimum feature frequency. (default: 10)',
-    default=10)
-  parser.add_argument('--iter',
-    help='Number of iterations for training. (default: 10000)',
-    default=10000)
+  parser.add_argument(
+      'encoded_train_data', help='File path for the encoded training data.')
+  parser.add_argument(
+      '-o',
+      '--output',
+      help='Output file path for the learned weights. (default: weights.txt)',
+      default='weights.txt')
+  parser.add_argument(
+      '--log',
+      help='Output file path for the training log. (default: train.log)',
+      default='train.log')
+  parser.add_argument(
+      '--feature-thres',
+      help='Threshold value of the minimum feature frequency. (default: 10)',
+      default=10)
+  parser.add_argument(
+      '--iter',
+      help='Number of iterations for training. (default: 10000)',
+      default=10000)
 
   args = parser.parse_args()
   train_data_filename = args.encoded_train_data
@@ -180,8 +193,9 @@ def main():
   X, Y, features = preprocess(train_data_filename, feature_thres)
   fit(X, Y, features, iterations, weights_filename, log_filename)
 
-  print('Training done. Export the model by passing %s to build_model.py' % (
-        weights_filename))
+  print('Training done. Export the model by passing %s to build_model.py' %
+        (weights_filename))
+
 
 if __name__ == '__main__':
   main()

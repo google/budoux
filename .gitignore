@@ -18,3 +18,5 @@ javascript/src/data
 source.txt
 encoded_data.txt
 weights.txt
+
+.vscode/

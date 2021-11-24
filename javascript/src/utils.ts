@@ -34,7 +34,7 @@ export const bisectRight = (arr: number[], i: number): number => {
     if (arr.length === 1) return 1;
     return mid + bisectRight(arr.slice(mid), i);
   }
-}
+};
 
 /** The separator string to specify breakpoints. */
 export const SEP = '▁';

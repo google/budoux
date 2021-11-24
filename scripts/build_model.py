@@ -39,17 +39,19 @@ def rollup(weights_filename: str, model_filename: str, scale: int = 1000):
       decision_trees[feature] += score
   with open(model_filename, 'w') as f:
     decision_trees_intscore = dict(
-      (item[0], int(item[1] * scale)) for item in decision_trees.items())
+        (item[0], int(item[1] * scale)) for item in decision_trees.items())
     json.dump(decision_trees_intscore, f)
 
 
 def main():
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument('weight_file',
-    help='A file path for the learned weights.')
-  parser.add_argument('-o', '--outfile',
-    help='A file path to export a model file. (default: model.json)',
-    default='model.json')
+  parser.add_argument(
+      'weight_file', help='A file path for the learned weights.')
+  parser.add_argument(
+      '-o',
+      '--outfile',
+      help='A file path to export a model file. (default: model.json)',
+      default='model.json')
   args = parser.parse_args()
   weights_filename = args.weight_file
   model_filename = args.outfile

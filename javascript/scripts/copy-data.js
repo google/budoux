@@ -19,13 +19,15 @@ const fs = require('fs');
 
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 const DATA_DIR = path.join(PROJECT_ROOT, 'javascript', 'src', 'data');
-fs.mkdirSync(path.join(DATA_DIR, 'models'), { recursive: true });
+fs.mkdirSync(path.join(DATA_DIR, 'models'), {recursive: true});
 
 const copyUnicodeBlocks = () => {
   const sourcePath = path.join(PROJECT_ROOT, 'budoux', 'unicode_blocks.json');
   const targetPath = path.join(DATA_DIR, 'unicode_blocks.ts');
-  fs.writeFileSync(targetPath,
-    `export const unicodeBlocks = ${fs.readFileSync(sourcePath)}`);
+  fs.writeFileSync(
+    targetPath,
+    `export const unicodeBlocks = ${fs.readFileSync(sourcePath)}`
+  );
 };
 
 const copyModels = () => {
@@ -38,16 +40,20 @@ const copyModels = () => {
     const sourcePath = path.join(modelsDirPath, file);
     const targetPath = path.join(DATA_DIR, 'models', `${body}.ts`);
     const content = fs.readFileSync(sourcePath);
-    fs.writeFileSync(targetPath,
-      `export const model: {[key:string]: number} = ${content}`);
+    fs.writeFileSync(
+      targetPath,
+      `export const model: {[key:string]: number} = ${content}`
+    );
   });
 };
 
 const copySkipNodes = () => {
   const sourcePath = path.join(PROJECT_ROOT, 'budoux', 'skip_nodes.json');
   const targetPath = path.join(DATA_DIR, 'skip_nodes.ts');
-  fs.writeFileSync(targetPath,
-    `export const skipNodes = ${fs.readFileSync(sourcePath)}`);
+  fs.writeFileSync(
+    targetPath,
+    `export const skipNodes = ${fs.readFileSync(sourcePath)}`
+  );
 };
 
 const main = () => {
