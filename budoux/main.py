@@ -105,8 +105,8 @@ def parse_args(
     return parser.parse_args()
 
 
-def _main():
-  args = parse_args()
+def _main(test: typing.Optional[typing.List[str]] = None):
+  args = parse_args(test=test)
   with open(args.model, "r") as f:
     model = json.load(f)
 
@@ -118,7 +118,6 @@ def _main():
     else:
       inputs = args.text
     res = parser.translate_html_string(inputs)
-    print(res)
   else:
     if args.text is None:
       inputs = [v.rstrip() for v in sys.stdin.readlines()]
@@ -126,12 +125,16 @@ def _main():
       inputs = [v.rstrip() for v in args.text.splitlines()]
     res = ["\n".join(res) for res in map(parser.parse, inputs)]
     ors = "\n" + args.delim + "\n"
-    print(ors.join(res))
+    res = ors.join(res)
 
+  if test is not None:
+    return res
+  else:
+    print(res)
 
-def main():
+def main(test: typing.Optional[typing.List[str]] = None):
   try:
-    _main()
+    _main(test)
   except KeyboardInterrupt:
     exit(0)
 

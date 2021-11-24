@@ -18,6 +18,7 @@ import sys
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 from budoux import feature_extractor
+from budoux import main
 from budoux import parser
 from budoux import utils
 from scripts import train
