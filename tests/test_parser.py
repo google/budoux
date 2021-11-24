@@ -22,8 +22,9 @@ html_parser = html5lib.HTMLParser()
 
 
 def compare_html_string(a, b):
-  return (ET.tostring(html_parser.parse(a)) == ET.tostring(
-      html_parser.parse(b)))
+  a_normalized = ET.tostring(html_parser.parse(a))
+  b_normalized = ET.tostring(html_parser.parse(b))
+  return a_normalized == b_normalized
 
 
 class TestTextContentExtractor(unittest.TestCase):
