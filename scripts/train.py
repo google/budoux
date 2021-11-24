@@ -82,7 +82,8 @@ def pred(phis: typing.Dict[int, float], X: np.ndarray) -> np.ndarray:
 def split_dataset(
     X: np.ndarray,
     Y: np.ndarray,
-    split_ratio=0.9) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    split_ratio=0.9
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
   """Splits given entries and labels to training and testing datasets.
 
   Args:
