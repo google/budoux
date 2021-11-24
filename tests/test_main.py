@@ -23,6 +23,7 @@ sys.path.insert(0, abspath(LIB_PATH))
 
 from budoux import main
 
+
 class TestCommonOption(unittest.TestCase):
 
   def test_cmdargs_invalid_option(self):

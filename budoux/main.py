@@ -132,6 +132,7 @@ def _main(test: typing.Optional[typing.List[str]] = None):
   else:
     print(res)
 
+
 def main(test: typing.Optional[typing.List[str]] = None):
   try:
     _main(test)
