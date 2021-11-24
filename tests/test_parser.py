@@ -16,7 +16,7 @@
 import unittest
 import xml.etree.ElementTree as ET
 import html5lib
-from context import parser
+from .context import parser
 
 html_parser = html5lib.HTMLParser()
 
