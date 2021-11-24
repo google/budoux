@@ -1,5 +1,7 @@
 # BudouX
 
+[![PyPI](https://img.shields.io/pypi/v/budoux?color=blue)](https://pypi.org/project/budoux/) [![npm](https://img.shields.io/npm/v/budoux?color=yellow)](https://www.npmjs.com/package/budoux)
+
 Standalone. Small. Language-neutral.
 
 BudouX is the successor to [Budou](https://github.com/google/budou), the machine learning powered line break organizer tool.
