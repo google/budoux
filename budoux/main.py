@@ -99,7 +99,7 @@ def parse_args(
       "--version",
       action="version",
       version="%(prog)s {}".format(__version__))
-  if test:
+  if test is not None:
     return parser.parse_args(test)
   else:
     return parser.parse_args()

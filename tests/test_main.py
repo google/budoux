@@ -13,124 +13,119 @@
 # limitations under the License.
 """Tests the BudouX　CLI."""
 
+from os.path import *
+import sys
 import unittest
+from unittest.mock import patch
 from context import main
 
-html_parser = html5lib.HTMLParser()
+
+class TestCommonOption(unittest.TestCase):
+
+  def test_cmdargs_invalid_option(self):
+    cmdargs = ['-v']
+    with self.assertRaises(SystemExit) as cm:
+      main.parse_args(cmdargs)
+
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_help(self):
+    cmdargs = ['-h']
+    with self.assertRaises(SystemExit) as cm:
+      main.parse_args(cmdargs)
+
+    self.assertEqual(cm.exception.code, 0)
+
+  def test_cmdargs_version(self):
+    cmdargs = ['-V']
+    with self.assertRaises(SystemExit) as cm:
+      main.parse_args(cmdargs)
+
+    self.assertEqual(cm.exception.code, 0)
 
 
-def compare_html_string(a, b):
-  a_normalized = ET.tostring(html_parser.parse(a))
-  b_normalized = ET.tostring(html_parser.parse(b))
-  return a_normalized == b_normalized
+class TestTextArguments(unittest.TestCase):
 
+  def test_cmdargs_single_text(self):
+    cmdargs = ['これはテストです。']
+    output = main._main(cmdargs)
 
-class TestTextContentExtractor(unittest.TestCase):
+    self.assertEqual(output, "これは\nテストです。")
 
-  def test_output(self):
-    input = '<p><a href="#">Hello</a>, <b>World</b></p>'
-    expected = 'Hello, World'
-    extractor = parser.TextContentExtractor()
-    extractor.feed(input)
+  def test_cmdargs_single_multiline_text(self):
+    cmdargs = ["これはテストです。\n今日は晴天です。"]
+    output = main._main(cmdargs)
+
+    self.assertEqual(output, "これは\nテストです。\n---\n今日は\n晴天です。")
+
+  def test_cmdargs_single_multiline_text_with_delimiter(self):
+    cmdargs = ["これはテストです。\n今日は晴天です。", "-d", "@"]
+    output = main._main(cmdargs)
+
+    self.assertEqual(output, "これは\nテストです。\n@\n今日は\n晴天です。")
+
+  def test_cmdargs_single_multiline_text_with_empty_delimiter(self):
+    cmdargs = ["これはテストです。\n今日は晴天です。", "-d", ""]
+    output = main._main(cmdargs)
+
+    self.assertEqual(output, "これは\nテストです。\n\n今日は\n晴天です。")
+
+  def test_cmdargs_single_text(self):
+    cmdargs = ["これはテストです。\n今日は晴天です。"]
+    output = main._main(cmdargs)
+
+    self.assertEqual(output, "これは\nテストです。\n---\n今日は\n晴天です。")
+
+  def test_cmdargs_multi_text(self):
+    cmdargs = ['これはテストです。', '今日は晴天です。']
+    with self.assertRaises(SystemExit) as cm:
+      main.main(cmdargs)
+
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_single_html(self):
+    cmdargs = ['-H', '今日は<b>とても天気</b>です。']
+    output = main._main(cmdargs)
+
     self.assertEqual(
-        extractor.output, expected,
-        'Text content should be extacted from the given HTML string.')
-
-
-class TestHTMLChunkResolver(unittest.TestCase):
-
-  def test_output(self):
-    input = '<p>ab<b>cde</b>f</p>'
-    expected = '<p>ab<b>c<wbr>de</b>f</p>'
-    resolver = parser.HTMLChunkResolver(['abc', 'def'])
-    resolver.feed(input)
-    self.assertTrue(
-        compare_html_string(resolver.output, expected),
-        'WBR tags should be inserted as specified by chunks.')
-
-
-class TestParser(unittest.TestCase):
-  TEST_SENTENCE = 'abcdeabcd'
-
-  def test_parse(self):
-    p = parser.Parser({
-        'UW4:a': 10000,  # means "should separate right before 'a'".
-    })
-    chunks = p.parse(TestParser.TEST_SENTENCE)
-    self.assertListEqual(chunks, ['abcde', 'abcd'],
-                         'should separate but not the first two characters.')
-
-    p = parser.Parser({
-        'BP2:UU': 10000,
-    })
-    chunks = p.parse(TestParser.TEST_SENTENCE)
-    self.assertListEqual(
-        chunks, ['abc', 'deabcd'],
-        'should respect the results feature with a high score.')
-
-    p = parser.Parser({
-        'UW4:a': 10,
-    })
-    chunks = p.parse(TestParser.TEST_SENTENCE, 100)
-    self.assertListEqual(
-        chunks, [TestParser.TEST_SENTENCE],
-        'should ignore features with scores lower than the threshold.')
-
-    p = parser.Parser({})
-    chunks = p.parse('')
-    self.assertListEqual(chunks, [],
-                         'should return a blank list when the input is blank.')
-
-  def test_translate_html_string(self):
-    p = parser.Parser({
-        'UW4:a': 10000,  # means "should separate right before 'a'".
-    })
-
-    input_html = 'xyzabcd'
-    expected_html = (
+        output,
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
-        'xyz<wbr>abcd</span>')
-    output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should output a html string with a SPAN parent with proper style attributes.'
-    )
+        '今日は<b ><wbr>とても<wbr>天気</b>です。</span>')
 
-    input_html = 'xyz<script>alert(1);</script>xyzabc'
-    expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
-        'xyz<script>alert(1);</script>xyz<wbr>abc</span>')
-    output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should pass script tags as is.')
+  def test_cmdargs_multi_html(self):
+    cmdargs = ['-H', '今日は<b>とても天気</b>です。', 'これは<b>テスト</b>です。']
+    with self.assertRaises(SystemExit) as cm:
+      main._main(cmdargs)
 
-    input_html = 'xyz<code>abc</code>abc'
-    expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
-        'xyz<code>abc</code><wbr>abc</span>')
-    output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should skip some specific tags.')
+    self.assertEqual(cm.exception.code, 2)
 
-    input_html = 'xyza<a href="#" hidden>bc</a>abc'
-    expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
-        'xyz<wbr>a<a href="#" hidden>bc</a><wbr>abc</span>')
-    output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should not ruin attributes of child elements.')
 
-    input_html = 'xyza🇯🇵🇵🇹abc'
-    expected_html = (
+class TestStdin(unittest.TestCase):
+
+  def test_cmdargs_blank_stdin(self):
+    with open(join(abspath(dirname(__file__)), "in/1.in"), "r") as f:
+      sys.stdin = f
+      output = main._main([])
+
+    self.assertEqual(output, "")
+
+  def test_cmdargs_text_stdin(self):
+    with open(join(abspath(dirname(__file__)), "in/2.in"), "r") as f:
+      sys.stdin = f
+      output = main._main([])
+
+    self.assertEqual(output, "これは\nテストです。")
+
+  def test_cmdargs_html_stdin(self):
+    with open(join(abspath(dirname(__file__)), "in/3.in"), "r") as f:
+      sys.stdin = f
+      output = main._main(["-H"])
+
+    self.assertEqual(
+        output,
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
-        'xyz<wbr>a🇯🇵🇵🇹<wbr>abc</span>')
-    output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'should work with emojis.')
+        'これは<b ><wbr>テスト</b>です。<wbr>\n'
+        '</span>')
 
 
 if __name__ == '__main__':
