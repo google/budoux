@@ -8,6 +8,5 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.7'
-      - run: |
-          python -m pip install --upgrade yapf
-          yapf --diff --recursive budoux tests
+      - run: python -m pip install --upgrade yapf
+      - run: yapf --diff --recursive budoux tests
