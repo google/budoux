@@ -68,9 +68,7 @@ To show help: $ budoux-cli --help
 ---
 天気です。
 `;
-    const outputText = String(
-      execSync(`npx budoux-cli --delim '---' ${inputText}`)
-    );
+    const outputText = String(execSync(`npx budoux-cli -d '---' ${inputText}`));
     expect(outputText).toBe(expectedText);
   });
 
