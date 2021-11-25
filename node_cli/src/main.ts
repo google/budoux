@@ -67,6 +67,7 @@ export default async function (argv: string[]) {
     .version()
     .alias('V', 'version')
     .help()
+    .alias('h', 'help')
     .parse();
 
   const {_, html, model, delim} = args;
