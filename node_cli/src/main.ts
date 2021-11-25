@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+import {readFileSync} from 'fs';
+import {resolve} from 'path';
 import yargs from 'yargs/yargs';
 import {hideBin} from 'yargs/helpers';
-import {loadDefaultJapaneseParser} from 'budoux';
+import {loadDefaultJapaneseParser, Parser} from 'budoux';
 
 export default async function (argv: string[]) {
   const args = await yargs(hideBin(argv))
@@ -26,13 +28,55 @@ export default async function (argv: string[]) {
       type: 'boolean',
       describe: 'HTML mode',
     })
+    .option('delim', {
+      alias: 'd',
+      string: true,
+      describe: 'output delimiter in TEXT mode',
+    })
+    .option('model', {
+      alias: 'm',
+      type: 'string',
+      describe: 'custom model file path or json string',
+      nargs: 1,
+    })
+    .coerce('model', (args: string) => {
+      let model: Map<string, number> | undefined;
+
+      if (args === undefined) {
+        return model;
+      }
+
+      try {
+        try {
+          const obj = JSON.parse(args);
+          model = new Map<string, number>(Object.entries(obj));
+        } catch (syntaxError) {
+          if (syntaxError instanceof SyntaxError) {
+            const file = readFileSync(resolve(args), {
+              encoding: 'utf-8',
+            });
+            const obj = JSON.parse(file);
+            model = new Map<string, number>(Object.entries(obj));
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+      return model;
+    })
     .version()
+    .alias('V', 'version')
     .help()
     .parse();
 
-  const {_, html} = args;
+  const {_, html, model, delim} = args;
   if (_.length >= 1) {
-    const parser = loadDefaultJapaneseParser();
+    let parser: Parser;
+    if (model) {
+      parser = new Parser(model);
+    } else {
+      parser = loadDefaultJapaneseParser();
+    }
 
     if (html) {
       _.forEach(text => {
@@ -43,12 +87,20 @@ export default async function (argv: string[]) {
       _.forEach(text => {
         const inputText = String(text);
         const outputArray = parser.parse(inputText);
-        outputArray.forEach((text: string) => {
+        outputArray.forEach((text: string, index) => {
           console.log(text);
+          if (
+            delim &&
+            outputArray.length !== 1 &&
+            index !== outputArray.length - 1
+          ) {
+            console.log(delim);
+          }
         });
       });
     }
   } else {
-    console.log('Please, pass one text argument to translate at least.');
+    console.log('Pass one text argument to translate at least.');
+    console.log('To show help: $ budoux-cli --help');
   }
 }
