@@ -123,7 +123,7 @@ describe('Parser.applyElement', () => {
     expect(inputElement.isEqualNode(expectedElement)).toBeTrue();
   };
 
-  it('should insert WBR tags where the sentence shoud break.', () => {
+  it('should insert WBR tags where the sentence should break.', () => {
     const inputHTML = '<p>xyzabcabc</p>';
     const expectedHTML = `
     <p style="word-break: keep-all; overflow-wrap: break-word;"
@@ -134,7 +134,7 @@ describe('Parser.applyElement', () => {
     checkEqual(model, inputHTML, expectedHTML);
   });
 
-  it('should insert WBR tags even it overlaps with otehr HTML tags.', () => {
+  it('should insert WBR tags even it overlaps with other HTML tags.', () => {
     const inputHTML = '<p>xy<a href="#">zabca</a>bc</p>';
     const expectedHTML = `<p style="word-break: keep-all; overflow-wrap: break-word;"
     >xy<a href="#">z<wbr>abc<wbr>a</a>bc</p>`;

@@ -24,11 +24,11 @@ describe('utils.bisectRight', () => {
     expect(point).toBe(expectedPoint);
   };
 
-  it('should find the point when the item is inluded.', () => {
+  it('should find the point when the item is included.', () => {
     testInsertionPoint(8, 3);
   });
 
-  it('should find the point when the item is not inluded.', () => {
+  it('should find the point when the item is not included.', () => {
     testInsertionPoint(4, 2);
   });
 
