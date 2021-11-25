@@ -37,7 +37,7 @@ To show help: $ budoux-cli --help
   it('should output the wrapped HTML sentence when exec command with --html option.', () => {
     const inputText = '今日は天気です。';
     const expectedText = `<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>
-    `;
+`;
     const outputText = String(execSync(`npx budoux-cli --html ${inputText}`));
     expect(outputText).toBe(expectedText);
   });
@@ -45,7 +45,7 @@ To show help: $ budoux-cli --help
   it('should output the wrapped HTML sentence when exec command with -H option alias.', () => {
     const inputText = '今日は天気です。';
     const expectedText = `<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>
-  `;
+`;
     const outputText = String(execSync(`npx budoux-cli -H ${inputText}`));
     expect(outputText).toBe(expectedText);
   });
@@ -76,14 +76,14 @@ To show help: $ budoux-cli --help
 
   it('should output the version when exec command with --version option.', () => {
     const expectedText = `0.0.1
-  `;
+`;
     const outputText = String(execSync('npx budoux-cli --version'));
     expect(outputText).toBe(expectedText);
   });
 
   it('should output the version when exec command with -V option.', () => {
     const expectedText = `0.0.1
-  `;
+`;
     const outputText = String(execSync('npx budoux-cli -V'));
     expect(outputText).toBe(expectedText);
   });
