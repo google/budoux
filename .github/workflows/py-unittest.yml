@@ -1,5 +1,8 @@
 name: Unittest for Python
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - "javascript/**"
 jobs:
   python-unittest:
     runs-on: ${{ matrix.os }}

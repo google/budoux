@@ -25,8 +25,6 @@ import pkg_resources
 
 import budoux
 
-__version__ = "0.0.1"
-
 ArgList = typing.Optional[typing.List[str]]
 
 
@@ -94,12 +92,12 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       default="---",
       help="output delimiter in TEXT mode (default: '---')",
   )
-
   parser.add_argument(
       "-V",
       "--version",
       action="version",
-      version="%(prog)s {}".format(__version__))
+      version="%(prog)s {}".format(budoux.__version__),
+  )
   if test is not None:
     return parser.parse_args(test)
   else:
