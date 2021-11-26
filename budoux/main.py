@@ -25,8 +25,6 @@ import pkg_resources
 
 import budoux
 
-__version__ = "0.0.1"
-
 
 def check_file(path: str) -> str:
   """Check if filepath is exist or not.
@@ -98,7 +96,7 @@ def parse_args(
       "-V",
       "--version",
       action="version",
-      version="%(prog)s {}".format(__version__))
+      version="%(prog)s {}".format(budoux.__version__))
   if test:
     return parser.parse_args(test)
   else:
