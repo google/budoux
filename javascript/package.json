@@ -9,6 +9,9 @@
   },
   "main": "./dist/index.js",
   "module": "./module/index.js",
+  "bin": {
+    "budoux": "bin/budoux.js"
+  },
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
     "build:cjs": "tsc --outDir dist --module CommonJS",
@@ -29,13 +32,14 @@
   "devDependencies": {
     "@types/jasmine": "^3.9.1",
     "@types/jsdom": "^16.2.13",
+    "@types/node": "^14.11.2",
     "gts": "^3.1.0",
     "jasmine": "^3.9.0",
     "ts-node": "^10.2.1",
-    "typescript": "^4.3.5",
-    "@types/node": "^14.11.2"
+    "typescript": "^4.3.5"
   },
   "dependencies": {
+    "commander": "^8.3.0",
     "jsdom": "^18.0.0"
   }
 }

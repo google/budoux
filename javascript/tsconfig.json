@@ -4,6 +4,7 @@
     "lib": ["es6", "dom", "dom.iterable"],
     "target": "es2017",
     "module": "commonjs",
+    "moduleResolution": "node",
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
@@ -12,8 +13,5 @@
     "skipLibCheck": true,
     "outDir": "./dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
-  ]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }
