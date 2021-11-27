@@ -105,12 +105,6 @@ const outputParsedTexts = (
  * @returns A parser with the loaded model.
  */
 const loadCustomParser = (path: string) => {
-  try {
-    const json = readFileSync(resolve(path));
-    return new Parser(new Map(Object.entries(json)));
-  } catch (err) {
-    console.error(err);
-  }
-  console.error('Loaded default Japanese model because failed to load json.');
-  return loadDefaultJapaneseParser();
+  const json = readFileSync(resolve(path));
+  return new Parser(new Map(Object.entries(json)));
 };
