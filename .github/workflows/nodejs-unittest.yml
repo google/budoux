@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - 'javascript/**'
+  pull_request:
+    paths:
+      - 'javascript/**'
 jobs:
   nodejs-unittest:
     runs-on: ${{ matrix.os }}
