@@ -32,8 +32,7 @@ export const cli = async (argv: string[]) => {
   program
     .option('-H, --html', 'HTML mode')
     .option('-d, --delim <str>', 'output delimiter in TEXT mode', '---')
-    .option('-m, --model <json>', 'custom model file path')
-    .option('--debug');
+    .option('-m, --model <json>', 'custom model file path');
 
   program.version('0.0.1');
   program.parse(argv);
@@ -45,7 +44,6 @@ export const cli = async (argv: string[]) => {
     model: string;
   };
   const {args} = program;
-  if (options.debug) console.log({options, args});
 
   const parser = model ? loadCustomParser(model) : loadDefaultJapaneseParser();
 
