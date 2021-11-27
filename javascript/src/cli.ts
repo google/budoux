@@ -25,7 +25,7 @@ import {Parser, loadDefaultJapaneseParser} from './parser';
  * @param argv process.argv.
  */
 export const cli = async (argv: string[]) => {
-  const program = new Command('budoxu');
+  const program = new Command('budoux');
 
   program.usage('[-h] [-H] [-m JSON] [-d STR] [-V] [TXT]');
 
