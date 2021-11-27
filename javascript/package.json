@@ -10,7 +10,7 @@
   "main": "./dist/index.js",
   "module": "./module/index.js",
   "bin": {
-    "budoux": "bin/budoux.js"
+    "budoux": "./bin/budoux.js"
   },
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
