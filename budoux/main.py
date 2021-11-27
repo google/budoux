@@ -25,6 +25,8 @@ import pkg_resources
 
 import budoux
 
+ArgList = typing.Optional[typing.List[str]]
+
 
 def check_file(path: str) -> str:
   """Check if filepath is exist or not.
@@ -44,8 +46,7 @@ def check_file(path: str) -> str:
     raise FileNotFoundError("'{}' is not found.".format(path))
 
 
-def parse_args(
-    test: typing.Optional[typing.List[str]] = None) -> argparse.Namespace:
+def parse_args(test: ArgList = None) -> argparse.Namespace:
   """Parse commandline arguments.
 
   Args:
@@ -91,20 +92,20 @@ def parse_args(
       default="---",
       help="output delimiter in TEXT mode (default: '---')",
   )
-
   parser.add_argument(
       "-V",
       "--version",
       action="version",
-      version="%(prog)s {}".format(budoux.__version__))
-  if test:
+      version="%(prog)s {}".format(budoux.__version__),
+  )
+  if test is not None:
     return parser.parse_args(test)
   else:
     return parser.parse_args()
 
 
-def _main():
-  args = parse_args()
+def _main(test: ArgList = None):
+  args = parse_args(test=test)
   with open(args.model, "r") as f:
     model = json.load(f)
 
@@ -116,7 +117,6 @@ def _main():
     else:
       inputs = args.text
     res = parser.translate_html_string(inputs)
-    print(res)
   else:
     if args.text is None:
       inputs = [v.rstrip() for v in sys.stdin.readlines()]
@@ -124,12 +124,17 @@ def _main():
       inputs = [v.rstrip() for v in args.text.splitlines()]
     res = ["\n".join(res) for res in map(parser.parse, inputs)]
     ors = "\n" + args.delim + "\n"
-    print(ors.join(res))
+    res = ors.join(res)
+
+  if test is not None:
+    return res
+  else:
+    print(res)
 
 
-def main():
+def main(test: ArgList = None):
   try:
-    _main()
+    _main(test)
   except KeyboardInterrupt:
     exit(0)
 
