@@ -16,8 +16,9 @@
 
 import 'jasmine';
 import {promisify} from 'util';
-import childProcess from 'child_process';
+import childProcess, {spawn} from 'child_process';
 import {cli} from '../src/cli';
+import {version} from '../package.json';
 const execFile = promisify(childProcess.execFile);
 
 describe('cli', () => {
@@ -87,5 +88,25 @@ describe('cli', () => {
     expect(stab).toThrowError(
       'Too many arguments. Please, pass the only one argument.'
     );
+  });
+
+  it('should output the version number when execute budoux command with --veriosn option.', async () => {
+    const result = await execFile('budoux', ['--version']);
+    expect(result.stdout).toBe(`${version}\n`);
+  });
+
+  it('should output the version number when execute budoux command with -V option alias.', async () => {
+    const result = await execFile('budoux', ['-V']);
+    expect(result.stdout).toBe(`${version}\n`);
+  });
+
+  it('should output the unknown option error when execute budoux command with -v option.', async () => {
+    const execution = spawn('budoux', ['-v']);
+
+    execution.stderr.on('data', stream => {
+      const stderr = stream.toString();
+      expect(stderr).toBe("error: unknown option '-v'\n");
+      execution.kill();
+    });
   });
 });
