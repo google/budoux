@@ -28,7 +28,9 @@ export const cli = async (argv: string[]) => {
   const program = new Command('budoux');
 
   program.usage('[-h] [-H] [-m JSON] [-d STR] [-V] [TXT]');
-
+  program.description(
+    'BudouX is the successor to Budou, the machine learning powered line break organizer tool.'
+  );
   program
     .option('-H, --html', 'HTML mode')
     .option('-d, --delim <str>', 'output delimiter in TEXT mode', '---')
