@@ -17,6 +17,7 @@
 import 'jasmine';
 import {promisify} from 'util';
 import childProcess from 'child_process';
+import {cli} from '../src/cli';
 const execFile = promisify(childProcess.execFile);
 
 describe('cli', () => {
@@ -72,5 +73,19 @@ describe('cli', () => {
       shell: true,
     });
     expect(result.stdout).toBe(expectedText);
+  });
+
+  it('should output error message when get more than one text argument.', async () => {
+    const argv = [
+      'node',
+      'budoux',
+      '今日は天気です。',
+      '明日は晴れるでしょう。',
+    ];
+    const stab = () => cli(argv);
+
+    expect(stab).toThrowError(
+      'Too many arguments. Please, pass the only one argument.'
+    );
   });
 });
