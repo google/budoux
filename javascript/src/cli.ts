@@ -24,7 +24,7 @@ import {Parser, loadDefaultJapaneseParser} from './parser';
  * Run the command line interface program.
  * @param argv process.argv.
  */
-export const cli = async (argv: string[]) => {
+export const cli = (argv: string[]) => {
   const program = new Command('budoux');
 
   program.usage('[-h] [-H] [-m JSON] [-d STR] [-V] [TXT]');
@@ -34,9 +34,11 @@ export const cli = async (argv: string[]) => {
   program
     .option('-H, --html', 'HTML mode')
     .option('-d, --delim <str>', 'output delimiter in TEXT mode', '---')
-    .option('-m, --model <json>', 'custom model file path');
+    .option('-m, --model <json>', 'custom model file path')
+    .argument('[txt]', 'text');
 
   program.version('0.0.1');
+
   program.parse(argv);
 
   const options = program.opts();
@@ -49,20 +51,30 @@ export const cli = async (argv: string[]) => {
 
   const parser = model ? loadCustomParser(model) : loadDefaultJapaneseParser();
 
-  if (args.length !== 0) {
-    outputParsedTexts(parser, html, delim, args);
-  } else {
-    const rl = readline.createInterface({
-      input: process.stdin,
-    });
+  switch (args.length) {
+    case 0: {
+      const rl = readline.createInterface({
+        input: process.stdin,
+      });
 
-    let stdin = '';
-    rl.on('line', line => {
-      stdin += line + '\n';
-    });
-    process.stdin.on('end', () => {
-      outputParsedTexts(parser, html, delim, [stdin]);
-    });
+      let stdin = '';
+      rl.on('line', line => {
+        stdin += line + '\n';
+      });
+      process.stdin.on('end', () => {
+        outputParsedTexts(parser, html, delim, [stdin]);
+      });
+      break;
+    }
+    case 1: {
+      outputParsedTexts(parser, html, delim, args);
+      break;
+    }
+    default: {
+      throw new Error(
+        'Too many arguments. Please, pass the only one argument.'
+      );
+    }
   }
 };
 
