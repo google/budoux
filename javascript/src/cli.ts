@@ -115,6 +115,7 @@ const outputParsedTexts = (
  * @returns A parser with the loaded model.
  */
 const loadCustomParser = (path: string) => {
-  const json = readFileSync(resolve(path));
+  const file = readFileSync(resolve(path)).toString();
+  const json = JSON.parse(file);
   return new Parser(new Map(Object.entries(json)));
 };
