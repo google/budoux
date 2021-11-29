@@ -38,6 +38,28 @@ describe('cli', () => {
     expect(result.stdout).toBe(expectedText);
   });
 
+  it('should output the separated sentence with custom model when execute budoux command with --model option.', async () => {
+    const customModelPath = 'tests/models/separate_right_before_a.json';
+
+    const inputText = 'abcdeabcd';
+    const expectedText = 'abcde\nabcd\n';
+    const result = await execFile('budoux', [
+      '--model',
+      customModelPath,
+      inputText,
+    ]);
+    expect(result.stdout).toBe(expectedText);
+  });
+
+  it('should output the separated sentence with custom model when execute budoux command with -m option alias.', async () => {
+    const customModelPath = 'tests/models/separate_right_before_a.json';
+
+    const inputText = 'abcdeabcd';
+    const expectedText = 'abcde\nabcd\n';
+    const result = await execFile('budoux', ['-m', customModelPath, inputText]);
+    expect(result.stdout).toBe(expectedText);
+  });
+
   it('should output the separated sentence with separater when execute budoux command with --delim option.', async () => {
     const inputText = '今日は天気です。\n明日は雨かな？';
     const expectedText = `今日は
