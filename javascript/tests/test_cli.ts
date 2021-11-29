@@ -62,36 +62,21 @@ describe('cli', () => {
 
   it('should output the separated sentence with separater when execute budoux command with --delim option.', async () => {
     const inputText = '今日は天気です。\n明日は雨かな？';
-    const expectedText = `今日は
-天気です。
----
-明日は
-雨かな？
-`;
+    const expectedText = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
     const result = await execFile('budoux', ['--delim', '---', inputText]);
     expect(result.stdout).toBe(expectedText);
   });
 
   it('should output the separated sentence with separater when execute budoux command with -d option alias.', async () => {
     const inputText = '今日は天気です。\n明日は雨かな？';
-    const expectedText = `今日は
-天気です。
----
-明日は
-雨かな？
-`;
+    const expectedText = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
     const result = await execFile('budoux', ['-d', '---', inputText]);
     expect(result.stdout).toBe(expectedText);
   });
 
   it('should output the separated sentence with separater when execute budoux with stdin inputed by pipe', async () => {
     const inputText = '今日は天気です。\n明日は雨かな？';
-    const expectedText = `今日は
-天気です。
----
-明日は
-雨かな？
-`;
+    const expectedText = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
     const result = await execFile(`echo '${inputText}' | budoux`, {
       shell: true,
     });
