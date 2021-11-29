@@ -83,12 +83,44 @@ describe('cli', () => {
     expect(result.stdout).toBe(expectedText);
   });
 
-  it('should output error message when get more than one text argument.', async () => {
+  it('should output the error message when get more than one text argument.', async () => {
     const argv = [
       'node',
       'budoux',
       '今日は天気です。',
       '明日は晴れるでしょう。',
+    ];
+    const stab = () => cli(argv);
+
+    expect(stab).toThrowError(
+      'Too many arguments. Please, pass the only one argument.'
+    );
+  });
+
+  it('should output the error message when get extra option argument.', async () => {
+    const argv = [
+      'node',
+      'budoux',
+      '--delim',
+      '---',
+      '<extra delimiter option arguments>',
+      '今日は天気です。',
+    ];
+    const stab = () => cli(argv);
+
+    expect(stab).toThrowError(
+      'Too many arguments. Please, pass the only one argument.'
+    );
+  });
+
+  it('should output the error message when get extra option argument.', async () => {
+    const argv = [
+      'node',
+      'budoux',
+      '--model',
+      'tests/models/separate_right_before_a.json',
+      '<extra model option arguments>',
+      '今日は天気です。',
     ];
     const stab = () => cli(argv);
 
