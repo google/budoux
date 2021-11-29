@@ -84,7 +84,7 @@ export const cli = (argv: string[]) => {
  * @param parser A parser.
  * @param html A flag of html output mode.
  * @param delim A delimiter to separate output sentence.
- * @param args string array to parse.
+ * @param args string array to parse. Array should have only one element.
  */
 const outputParsedTexts = (
   parser: Parser,
@@ -93,22 +93,19 @@ const outputParsedTexts = (
   args: string[]
 ) => {
   if (html) {
-    args.forEach(text => {
-      const output = parser.translateHTMLString(text);
-      console.log(output);
-    });
+    const text = args[0];
+    const output = parser.translateHTMLString(text);
+    console.log(output);
   } else {
-    args.forEach(arg => {
-      const splitedTextsByNewLine = arg
-        .split(/\r?\n/)
-        .filter(text => text !== '');
-      splitedTextsByNewLine.forEach((text, index) => {
-        const parsedTexts = parser.parse(text);
-        parsedTexts.forEach(parsedText => {
-          console.log(parsedText);
-        });
-        if (index + 1 !== splitedTextsByNewLine.length) console.log(delim);
+    const splitedTextsByNewLine = args[0]
+      .split(/\r?\n/)
+      .filter(text => text !== '');
+    splitedTextsByNewLine.forEach((text, index) => {
+      const parsedTexts = parser.parse(text);
+      parsedTexts.forEach(parsedText => {
+        console.log(parsedText);
       });
+      if (index + 1 !== splitedTextsByNewLine.length) console.log(delim);
     });
   }
 };
