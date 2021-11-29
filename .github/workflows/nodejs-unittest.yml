@@ -24,6 +24,9 @@ jobs:
       - name: Install Dependencies
         run: npm install
         working-directory: ./javascript
+      - name: Create symlink
+        run: npm link
+        working-directory: ./javascript
       - name: Build package
         run: npm run build --if-present
         working-directory: ./javascript
