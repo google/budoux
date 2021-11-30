@@ -20,7 +20,10 @@ import {model as jaKNBCModel} from './data/models/ja-knbc';
 import {parseFromString} from './dom';
 import {bisectRight, SEP} from './utils';
 
-const DEFAULT_THRES = 1000;
+/**
+ * The default threshold value for the parser.
+ */
+export const DEFAULT_THRES = 1000;
 
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
