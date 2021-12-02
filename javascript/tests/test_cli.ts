@@ -183,17 +183,17 @@ describe('cli', () => {
     const {stdout} = await runCli(['--version']);
 
     expect(stdout).toBe(`${version}\n`);
-  });
+  }, 3000);
 
   it('should output the version number when execute budoux command with -V option alias.', async () => {
     const {stdout} = await runCli(['-V']);
 
     expect(stdout).toBe(`${version}\n`);
-  });
+  }, 3000);
 
   it('should output the unknown option error when execute budoux command with -v option.', async () => {
     const {stderr} = await runCli(['-v']);
 
     expect(stderr).toBe("error: unknown option '-v'\n");
-  });
+  }, 3000);
 });
