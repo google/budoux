@@ -10,6 +10,7 @@ __pycache__
 # JavaScript related files
 node_modules
 demo/static/app.js
+javascript/bundle
 javascript/dist
 javascript/module
 javascript/src/data

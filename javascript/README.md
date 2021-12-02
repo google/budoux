@@ -50,6 +50,31 @@ const model = JSON.parse('{"BB2:108120": 1817}');  // Content of the custom mode
 const parser = new Parser(model);
 ```
 
+## Web component
+BudouX also has a custom element to make it easy to integrate the parser with your website.
+All you have to do is wrap sentences with the `<budoux-ja>` tag.
+
+```html
+<budoux-ja>今日はとても天気です。</budoux-ja>
+```
+
+In order to enable the custom element, you can simply add this line to load the bundle.
+
+```html
+<script src="https://unpkg.com/budoux/bundle/budoux-ja.min.js"></script>
+```
+
+Otherwise, if you wish to bundle the component with the rest of your source code, you can import the component as shown below.
+
+```javascript
+import 'budoux/module/webcomponents/budoux-ja';
+```
+
+### Attributes
+
+- thres
+  - The threshold value to control the granularity of output chunks. Smaller value returns more granular chunks. (default: 1000).
+
 ## Caveat
 BudouX supports HTML inputs and outputs HTML strings with markup applied to wrap phrases, but it's not meant to be used as an HTML sanitizer. **BudouX doesn't sanitize any inputs.** Malicious HTML inputs yield malicious HTML outputs. Please use it with an appropriate sanitizer library if you don't trust the input.
 
