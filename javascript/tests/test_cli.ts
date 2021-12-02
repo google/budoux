@@ -14,12 +14,30 @@
  * limitations under the License.
  */
 
-import 'jasmine';
-import {promisify} from 'util';
-import childProcess, {spawn} from 'child_process';
 import {cli} from '../src/cli';
 import {version} from '../package.json';
-const execFile = promisify(childProcess.execFile);
+import {execFile, ExecFileException} from 'child_process';
+import * as path from 'path';
+import stream from 'stream';
+
+type execFileCallBack = {
+  error: ExecFileException | null;
+  stdout: string;
+  stderr: string;
+};
+
+const runCli = (args: string[]): Promise<execFileCallBack> => {
+  return new Promise(resolve => {
+    const binPath = path.resolve('./bin/budoux.js');
+    execFile('node', [binPath, ...args], (error, stdout, stderr) => {
+      resolve({
+        error,
+        stdout,
+        stderr,
+      });
+    });
+  });
+};
 
 describe('cli', () => {
   beforeEach(() => {
@@ -91,13 +109,29 @@ describe('cli', () => {
   });
 
   it('should output the separated sentence with separater when execute budoux with stdin inputed by pipe', async () => {
-    const inputText = '今日は天気です。\n明日は雨かな？';
-    const expectedText = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
-    const result = await execFile(`echo '${inputText}' | budoux`, {
-      shell: true,
-    });
-    expect(result.stdout).toBe(expectedText);
-  });
+    const runCliWithStdin = (stdin: string): Promise<execFileCallBack> => {
+      return new Promise(resolve => {
+        const binPath = path.resolve('./bin/budoux.js');
+        const child = execFile('node', [binPath], (error, stdout, stderr) => {
+          resolve({
+            error,
+            stdout,
+            stderr,
+          });
+        });
+        const stdinStream = new stream.Readable();
+        stdinStream.push(stdin);
+        stdinStream.push(null);
+        if (child.stdin) {
+          stdinStream.pipe(child.stdin);
+        }
+      });
+    };
+
+    const {stdout} = await runCliWithStdin('今日は天気です。\n明日は雨かな？');
+    const expectedStdOut = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
+    expect(stdout).toBe(expectedStdOut);
+  }, 1000);
 
   it('should output the error message when get more than one text argument.', () => {
     const argv = [
@@ -146,22 +180,20 @@ describe('cli', () => {
   });
 
   it('should output the version number when execute budoux command with --veriosn option.', async () => {
-    const result = await execFile('budoux', ['--version']);
-    expect(result.stdout).toBe(`${version}\n`);
+    const {stdout} = await runCli(['--version']);
+
+    expect(stdout).toBe(`${version}\n`);
   });
 
   it('should output the version number when execute budoux command with -V option alias.', async () => {
-    const result = await execFile('budoux', ['-V']);
-    expect(result.stdout).toBe(`${version}\n`);
+    const {stdout} = await runCli(['-V']);
+
+    expect(stdout).toBe(`${version}\n`);
   });
 
   it('should output the unknown option error when execute budoux command with -v option.', async () => {
-    const execution = spawn('budoux', ['-v']);
+    const {stderr} = await runCli(['-v']);
 
-    execution.stderr.on('data', stream => {
-      const stderr = stream.toString();
-      expect(stderr).toBe("error: unknown option '-v'\n");
-      execution.kill();
-    });
+    expect(stderr).toBe("error: unknown option '-v'\n");
   });
 });
