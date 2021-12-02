@@ -22,56 +22,72 @@ import {version} from '../package.json';
 const execFile = promisify(childProcess.execFile);
 
 describe('cli', () => {
-  it('should output the wrapped HTML sentence when execute budoux command with --html option.', async () => {
+  beforeEach(() => {
+    spyOn(console, 'log');
+  });
+
+  it('should output the wrapped HTML sentence when execute budoux command with --html option.', () => {
     const inputText = '今日は天気です。';
-    const expectedText =
-      '<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>\n';
-    const result = await execFile('budoux', ['--html', inputText]);
-    expect(result.stdout).toBe(expectedText);
+    const argv = ['node', 'budoux', '--html', inputText];
+    const expectedStdOut =
+      '<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>';
+    cli(argv);
+    expect(console.log).toHaveBeenCalledWith(expectedStdOut);
   });
 
-  it('should output the wrapped HTML sentence when execute budoux command with -H option alias.', async () => {
+  it('should output the wrapped HTML sentence when execute budoux command with -H option alias.', () => {
     const inputText = '今日は天気です。';
-    const expectedText =
-      '<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>\n';
-    const result = await execFile('budoux', ['-H', inputText]);
-    expect(result.stdout).toBe(expectedText);
+    const argv = ['node', 'budoux', '-H', inputText];
+    const expectedStdOut =
+      '<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>';
+    cli(argv);
+    expect(console.log).toHaveBeenCalledWith(expectedStdOut);
   });
 
-  it('should output the separated sentence with custom model when execute budoux command with --model option.', async () => {
-    const customModelPath = 'tests/models/separate_right_before_a.json';
-
+  it('should output the separated sentence with custom model when execute budoux command with --model option.', () => {
     const inputText = 'abcdeabcd';
-    const expectedText = 'abcde\nabcd\n';
-    const result = await execFile('budoux', [
-      '--model',
-      customModelPath,
-      inputText,
-    ]);
-    expect(result.stdout).toBe(expectedText);
-  });
-
-  it('should output the separated sentence with custom model when execute budoux command with -m option alias.', async () => {
     const customModelPath = 'tests/models/separate_right_before_a.json';
+    const argv = ['node', 'budoux', '--model', customModelPath, inputText];
+    const expectedStdOuts = 'abcde\nabcd'.split('\n');
+    cli(argv);
+    expectedStdOuts.forEach(stdout => {
+      expect(console.log).toHaveBeenCalledWith(stdout);
+    });
+  });
 
+  it('should output the separated sentence with custom model when execute budoux command with -m option alias.', () => {
     const inputText = 'abcdeabcd';
-    const expectedText = 'abcde\nabcd\n';
-    const result = await execFile('budoux', ['-m', customModelPath, inputText]);
-    expect(result.stdout).toBe(expectedText);
+    const customModelPath = 'tests/models/separate_right_before_a.json';
+    const argv = ['node', 'budoux', '-m', customModelPath, inputText];
+    const expectedStdOuts = 'abcde\nabcd'.split('\n');
+    cli(argv);
+    expectedStdOuts.forEach(stdout => {
+      expect(console.log).toHaveBeenCalledWith(stdout);
+    });
   });
 
-  it('should output the separated sentence with separater when execute budoux command with --delim option.', async () => {
+  it('should output the separated sentence with separater when execute budoux command with --delim option.', () => {
     const inputText = '今日は天気です。\n明日は雨かな？';
-    const expectedText = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
-    const result = await execFile('budoux', ['--delim', '---', inputText]);
-    expect(result.stdout).toBe(expectedText);
+    const argv = ['node', 'budoux', '--delim', '---', inputText];
+    const expectedStdOuts = '今日は\n天気です。\n---\n明日は\n雨かな？'.split(
+      '\n'
+    );
+    cli(argv);
+    expectedStdOuts.forEach(stdout => {
+      expect(console.log).toHaveBeenCalledWith(stdout);
+    });
   });
 
-  it('should output the separated sentence with separater when execute budoux command with -d option alias.', async () => {
+  it('should output the separated sentence with separater when execute budoux command with -d option alias.', () => {
     const inputText = '今日は天気です。\n明日は雨かな？';
-    const expectedText = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
-    const result = await execFile('budoux', ['-d', '---', inputText]);
-    expect(result.stdout).toBe(expectedText);
+    const argv = ['node', 'budoux', '--delim', '---', inputText];
+    const expectedStdOuts = '今日は\n天気です。\n---\n明日は\n雨かな？'.split(
+      '\n'
+    );
+    cli(argv);
+    expectedStdOuts.forEach(stdout => {
+      expect(console.log).toHaveBeenCalledWith(stdout);
+    });
   });
 
   it('should output the separated sentence with separater when execute budoux with stdin inputed by pipe', async () => {
