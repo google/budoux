@@ -1,10 +1,12 @@
 # BudouX
 
+[![PyPI](https://img.shields.io/pypi/v/budoux?color=blue)](https://pypi.org/project/budoux/) [![npm](https://img.shields.io/npm/v/budoux?color=yellow)](https://www.npmjs.com/package/budoux)
+
 Standalone. Small. Language-neutral.
 
 BudouX is the successor to [Budou](https://github.com/google/budou), the machine learning powered line break organizer tool.
 
-![Example](example.png)
+![Example](https://raw.githubusercontent.com/google/budoux/main/example.png)
 
 It is **standalone**. It works with no dependency on third-party word segmenters such as Google cloud natural language API. 
 
@@ -63,7 +65,7 @@ parser = budoux.Parser(model)
 A model file for BudouX is a JSON file that contains pairs of a feature and its score extracted by machine learning training.
 Each score represents the significance of the feature in determining whether to break the sentence at a specific point.
 
-For more details of the JavaScript model, please refer to [JavaScript module README](./javascript/README.md).
+For more details of the JavaScript model, please refer to [JavaScript module README](https://github.com/google/budoux/tree/main/javascript/README.md).
 
 ## Caveat
 BudouX supports HTML inputs and outputs HTML strings with markup that wraps phrases, but it's not meant to be used as an HTML sanitizer. **BudouX doesn't sanitize any inputs.** Malicious HTML inputs yield malicious HTML outputs. Please use it with an appropriate sanitizer library if you don't trust the input.

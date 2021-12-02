@@ -1,5 +1,5 @@
 name: Style Check
-on: [push]
+on: [push, pull_request]
 jobs:
   python-style-check:
     runs-on: ubuntu-latest
