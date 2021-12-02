@@ -131,7 +131,7 @@ describe('cli', () => {
     const {stdout} = await runCliWithStdin('今日は天気です。\n明日は雨かな？');
     const expectedStdOut = '今日は\n天気です。\n---\n明日は\n雨かな？\n';
     expect(stdout).toBe(expectedStdOut);
-  }, 1000);
+  }, 3000);
 
   it('should output the error message when get more than one text argument.', () => {
     const argv = [
