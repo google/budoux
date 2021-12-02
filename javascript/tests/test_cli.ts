@@ -99,7 +99,7 @@ describe('cli', () => {
     expect(result.stdout).toBe(expectedText);
   });
 
-  it('should output the error message when get more than one text argument.', async () => {
+  it('should output the error message when get more than one text argument.', () => {
     const argv = [
       'node',
       'budoux',
@@ -113,7 +113,7 @@ describe('cli', () => {
     );
   });
 
-  it('should output the error message when get extra option argument.', async () => {
+  it('should output the error message when get extra option argument.', () => {
     const argv = [
       'node',
       'budoux',
@@ -129,7 +129,7 @@ describe('cli', () => {
     );
   });
 
-  it('should output the error message when get extra option argument.', async () => {
+  it('should output the error message when get extra option argument.', () => {
     const argv = [
       'node',
       'budoux',
