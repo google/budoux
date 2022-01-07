@@ -3,3 +3,4 @@ html5lib
 yapf
 build
 twine
+toml
