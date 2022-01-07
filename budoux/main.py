@@ -98,6 +98,12 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       action="version",
       version="%(prog)s {}".format(budoux.__version__),
   )
+  parser.add_argument(
+      "--thres",
+      type=int,
+      default=budoux.DEFAULT_THRES,
+      help="threshold value to separate chunks (default: {})".format(
+          budoux.DEFAULT_THRES))
   if test is not None:
     return parser.parse_args(test)
   else:
@@ -116,13 +122,14 @@ def _main(test: ArgList = None):
       inputs = sys.stdin.read()
     else:
       inputs = args.text
-    res = parser.translate_html_string(inputs)
+    res = parser.translate_html_string(inputs, thres=args.thres)
   else:
     if args.text is None:
       inputs = [v.rstrip() for v in sys.stdin.readlines()]
     else:
       inputs = [v.rstrip() for v in args.text.splitlines()]
-    res = ["\n".join(res) for res in map(parser.parse, inputs)]
+    outputs = [parser.parse(sentence, thres=args.thres) for sentence in inputs]
+    res = ["\n".join(res) for res in outputs]
     ors = "\n" + args.delim + "\n"
     res = ors.join(res)
 

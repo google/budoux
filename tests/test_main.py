@@ -106,6 +106,20 @@ class TestTextArguments(unittest.TestCase):
 
     self.assertEqual(cm.exception.code, 2)
 
+  def test_cmdargs_thres(self):
+    cmdargs = ['--thres=0', '今日はとても天気です。']
+    output_granular = main._main(cmdargs)
+    cmdargs = ['--thres=10000000', '今日はとても天気です。']
+    output_whole = main._main(cmdargs)
+    self.assertGreater(
+        len(output_granular), len(output_whole),
+        'Chunks should be more granular when a smaller threshold value is given.'
+    )
+    self.assertEqual(
+        ''.join(output_granular.split('\n')), ''.join(output_whole.split('\n')),
+        'The output sentence should be the same regardless of the threshold value.'
+    )
+
 
 class TestStdin(unittest.TestCase):
 

@@ -22,6 +22,7 @@ from .utils import Result, SEP
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
+DEFAULT_THRES = 1000
 with open(os.path.join(os.path.dirname(__file__), 'skip_nodes.json')) as f:
   SKIP_NODES: typing.Set[str] = set(json.load(f))
 
@@ -109,7 +110,7 @@ class Parser:
     """
     self.model = model
 
-  def parse(self, sentence: str, thres: int = 1000):
+  def parse(self, sentence: str, thres: int = DEFAULT_THRES):
     """Parses the input sentence and returns a list of semantic chunks.
 
     Args:
@@ -146,7 +147,7 @@ class Parser:
       p3 = p
     return chunks
 
-  def translate_html_string(self, html: str, thres: int = 1000):
+  def translate_html_string(self, html: str, thres: int = DEFAULT_THRES):
     """Translates the given HTML string with markups for semantic line breaks.
 
     Args:
