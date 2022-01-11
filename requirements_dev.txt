@@ -4,4 +4,5 @@ numpy
 toml
 twine
 types-html5lib
+types-setuptools
 yapf
