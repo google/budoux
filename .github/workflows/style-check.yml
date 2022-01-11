@@ -7,9 +7,28 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
-      - run: python -m pip install --upgrade yapf toml
-      - run: yapf --diff --recursive budoux tests scripts
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade yapf toml mypy flake8
+          python -m pip install -r requirements_dev.txt
+      - name: Run yapf
+        run: |
+          yapf --diff --recursive budoux tests scripts
+      - name: Run mypy
+        if: ${{ always() }}
+        uses: sasanquaneuf/mypy-github-action@releases/v1
+        with:
+          checkName: python-style-check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run flake8
+        if: ${{ always() }}
+        uses: suo/flake8-github-action@releases/v1
+        with:
+          checkName: python-style-check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   typescript-style-check:
     runs-on: ubuntu-latest
     steps:
