@@ -110,38 +110,34 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _main(test: ArgList = None):
+def _main(test: ArgList = None) -> str:
   args = parse_args(test=test)
   with open(args.model, "r") as f:
     model = json.load(f)
 
   parser = budoux.Parser(model)
-
   if args.html:
     if args.text is None:
-      inputs = sys.stdin.read()
+      inputs_html = sys.stdin.read()
     else:
-      inputs = args.text
-    res = parser.translate_html_string(inputs, thres=args.thres)
+      inputs_html = args.text
+    res = parser.translate_html_string(inputs_html, thres=args.thres)
   else:
     if args.text is None:
       inputs = [v.rstrip() for v in sys.stdin.readlines()]
     else:
       inputs = [v.rstrip() for v in args.text.splitlines()]
     outputs = [parser.parse(sentence, thres=args.thres) for sentence in inputs]
-    res = ["\n".join(res) for res in outputs]
+    conbined_output = ["\n".join(output) for output in outputs]
     ors = "\n" + args.delim + "\n"
-    res = ors.join(res)
+    res = ors.join(conbined_output)
 
-  if test is not None:
-    return res
-  else:
-    print(res)
+  return res
 
 
-def main(test: ArgList = None):
+def main(test: ArgList = None) -> None:
   try:
-    _main(test)
+    print(_main(test))
   except KeyboardInterrupt:
     exit(0)
 
