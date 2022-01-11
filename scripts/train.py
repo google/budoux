@@ -20,7 +20,7 @@ from collections import Counter
 import numpy as np
 import numpy.typing as npt
 
-EPS = np.finfo(float).eps
+EPS: np.floating[typing.Any] = np.finfo(float).eps
 
 
 def preprocess(
@@ -56,8 +56,8 @@ def preprocess(
 
   M = len(features) + 1
   N = len(entries)
-  Y = np.zeros(N, dtype=bool)
-  X = np.zeros((N, M), dtype=bool)
+  Y: npt.NDArray[np.bool_] = np.zeros(N, dtype=bool)
+  X: npt.NDArray[np.bool_] = np.zeros((N, M), dtype=bool)
 
   for i, entry in enumerate(entries):
     Y[i] = entry[0] == '1'
@@ -69,7 +69,7 @@ def preprocess(
 
 
 def pred(phis: typing.Dict[int, float],
-         X: npt.NDArray[np.bool_]) -> npt.NDArray[typing.Any]:
+         X: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
   """Predicts the output from the given classifiers and input entries.
 
   Args:
@@ -80,6 +80,9 @@ def pred(phis: typing.Dict[int, float],
   Returns:
     A list of inferred labels.
   """
+  alphas: npt.NDArray[np.float64]
+  y: npt.NDArray[np.int64]
+
   alphas = np.array(list(phis.values()))
   y = 2 * (X[:, list(phis.keys())]
            == True) - 1  # noqa (cannot replace `==` with `is`)

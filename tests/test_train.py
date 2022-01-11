@@ -19,6 +19,7 @@ import unittest
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
@@ -48,7 +49,7 @@ class TestTrain(unittest.TestCase):
           ' 1\tA\tC\n'))
 
   def test_pred(self) -> None:
-    X = np.array([
+    X: npt.NDArray[np.bool_] = np.array([
         [True, False, True, False],
         [False, True, False, True],
     ])
@@ -133,13 +134,13 @@ class TestTrain(unittest.TestCase):
   def test_fit(self) -> None:
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
-    X = np.array([
+    X: npt.NDArray[np.bool_] = np.array([
         [False, True, True, False],
         [True, True, False, True],
         [False, False, True, False],
         [True, False, False, True],
     ])
-    Y = np.array([
+    Y: npt.NDArray[np.bool_] = np.array([
         False,
         False,
         True,
