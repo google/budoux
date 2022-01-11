@@ -14,10 +14,11 @@
 """Encodes the training data with extracted features."""
 
 import argparse
+
 from context import feature_extractor
 
 
-def main():
+def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       'source_data',

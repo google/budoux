@@ -22,7 +22,7 @@ import json
 import typing
 
 
-def rollup(weights_filename: str, model_filename: str, scale: int = 1000):
+def rollup(weights_filename: str, model_filename: str, scale: int = 1000) -> None:
   """Rolls up the weights and outputs a model in JSON with integer scores.
 
   Args:
@@ -43,7 +43,7 @@ def rollup(weights_filename: str, model_filename: str, scale: int = 1000):
     json.dump(decision_trees_intscore, f)
 
 
-def main():
+def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       'weight_file', help='A file path for the learned weights.')
