@@ -20,7 +20,7 @@ from collections import Counter
 import numpy as np
 import numpy.typing as npt
 
-EPS: np.floating[typing.Any] = np.finfo(float).eps
+EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
 
 
 def preprocess(
