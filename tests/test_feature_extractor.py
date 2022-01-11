@@ -142,7 +142,7 @@ class TestFeatureExtractor(unittest.TestCase):
     feature_extractor.process(SOURCE_FILE_PATH, ENTRIES_FILE_PATH)
     with open(
         ENTRIES_FILE_PATH, encoding=sys.getdefaultencoding(),
-        errors='replace') as f:
+        errors='replace') as f:  # noqa (misfired error: E125)
       entries = f.read().splitlines()
     test_sentence = ''.join(self.test_entry.split(utils.SEP))
     self.assertEqual(
