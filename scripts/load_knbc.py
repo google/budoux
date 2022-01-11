@@ -49,8 +49,9 @@ class KNBCHTMLParser(HTMLParser):
   def handle_endtag(self, tag: str) -> None:
     if tag != 'tr':
       return None
-    if (self.n_rows > 2 and self.n_cols == 1 and
-        (self.split_tab or self.current_word == '文節区切り')):
+    flag1 = self.n_rows > 2 and self.n_cols == 1
+    flag2 = self.split_tab or self.current_word == '文節区切り'
+    if flag1 and flag2:
       self.chunks.append('')
     if self.n_cols == 5 and type(self.current_word) is str:
       self.chunks[-1] += self.current_word
@@ -110,6 +111,7 @@ def download_knbc(target_dir: str) -> None:
   with tarfile.open(download_file_path, 'r:bz2') as t:
     t.extractall(path=target_dir)
 
+
 def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
@@ -119,6 +121,7 @@ def parse_args() -> argparse.Namespace:
             (default: source.txt)''',
       default='source.txt')
   return parser.parse_args()
+
 
 def main() -> None:
   args = parse_args()

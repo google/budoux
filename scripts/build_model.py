@@ -22,7 +22,9 @@ import json
 import typing
 
 
-def rollup(weights_filename: str, model_filename: str, scale: int = 1000) -> None:
+def rollup(weights_filename: str,
+           model_filename: str,
+           scale: int = 1000) -> None:
   """Rolls up the weights and outputs a model in JSON with integer scores.
 
   Args:

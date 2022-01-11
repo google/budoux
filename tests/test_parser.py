@@ -13,16 +13,18 @@
 # limitations under the License.
 """Tests the BudouX parser."""
 
-import unittest
 import os
 import sys
+import unittest
 import xml.etree.ElementTree as ET
+
 import html5lib
 
+# module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import parser
+from budoux import parser  # noqa (module hack)
 
 html_parser = html5lib.HTMLParser()
 

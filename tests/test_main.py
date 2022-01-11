@@ -13,16 +13,16 @@
 # limitations under the License.
 """Tests the BudouX　CLI."""
 
-from os.path import join, dirname, abspath
-import sys
 import io
+import sys
 import unittest
-from pathlib import Path
+from os.path import abspath, dirname, join
 
+# module hack
 LIB_PATH = join(dirname(__file__), '..')
 sys.path.insert(0, abspath(LIB_PATH))
 
-from budoux import main
+from budoux import main  # noqa (module hack)
 
 if isinstance(sys.stdin, io.TextIOWrapper) and sys.version_info >= (3, 7):
   sys.stdin.reconfigure(encoding='utf-8')

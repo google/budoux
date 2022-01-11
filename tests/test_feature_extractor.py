@@ -13,24 +13,23 @@
 # limitations under the License.
 """Tests methods for the feature extractor."""
 
-import unittest
-import os
 import io
+import os
 import sys
+import unittest
 from pathlib import Path
 
+# module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import feature_extractor
-from budoux import utils
+from budoux import feature_extractor, utils  # noqa (module hack)
 
 if isinstance(sys.stdin, io.TextIOWrapper) and sys.version_info >= (3, 7):
   sys.stdin.reconfigure(encoding='utf-8')
 
 if isinstance(sys.stdout, io.TextIOWrapper) and sys.version_info >= (3, 7):
   sys.stdout.reconfigure(encoding='utf-8')
-
 
 SOURCE_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'source_test.txt'))

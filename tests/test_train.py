@@ -17,12 +17,14 @@ import os
 import sys
 import unittest
 from pathlib import Path
+
 import numpy as np
 
+# module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from scripts import train # type: ignore
+from scripts import train  # type: ignore # noqa (module hack)
 
 ENTRIES_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'entries_test.txt'))

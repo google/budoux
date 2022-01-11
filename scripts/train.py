@@ -23,7 +23,10 @@ import numpy.typing as npt
 EPS = np.finfo(float).eps
 
 
-def preprocess(entries_filename: str, feature_thres: int) -> typing.Tuple[npt.NDArray[np.bool_], npt.NDArray[np.bool_], typing.List[str]]:
+def preprocess(
+    entries_filename: str, feature_thres: int
+) -> typing.Tuple[npt.NDArray[np.bool_], npt.NDArray[np.bool_],
+                  typing.List[str]]:
   """Loads entries and translates them into NumPy arrays.
 
   Args:
@@ -65,7 +68,8 @@ def preprocess(entries_filename: str, feature_thres: int) -> typing.Tuple[npt.ND
   return X, Y, features
 
 
-def pred(phis: typing.Dict[int, float], X: npt.NDArray[np.bool_]) -> npt.NDArray[typing.Any]:
+def pred(phis: typing.Dict[int, float],
+         X: npt.NDArray[np.bool_]) -> npt.NDArray[typing.Any]:
   """Predicts the output from the given classifiers and input entries.
 
   Args:
@@ -77,7 +81,8 @@ def pred(phis: typing.Dict[int, float], X: npt.NDArray[np.bool_]) -> npt.NDArray
     A list of inferred labels.
   """
   alphas = np.array(list(phis.values()))
-  y = 2 * (X[:, list(phis.keys())] == True) - 1
+  y = 2 * (X[:, list(phis.keys())]
+           == True) - 1  # noqa (cannot replace `==` with `is`)
   return y.dot(alphas) > 0
 
 
@@ -85,7 +90,8 @@ def split_dataset(
     X: npt.NDArray[typing.Any],
     Y: npt.NDArray[typing.Any],
     split_ratio: float = 0.9
-) -> typing.Tuple[npt.NDArray[typing.Any], npt.NDArray[typing.Any], npt.NDArray[typing.Any], npt.NDArray[typing.Any]]:
+) -> typing.Tuple[npt.NDArray[typing.Any], npt.NDArray[typing.Any],
+                  npt.NDArray[typing.Any], npt.NDArray[typing.Any]]:
   """Splits given entries and labels to training and testing datasets.
 
   Args:
@@ -109,8 +115,9 @@ def split_dataset(
   return X_train, X_test, Y_train, Y_test
 
 
-def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_], features: typing.List[str], iters: int,
-        weights_filename: str, log_filename: str) -> typing.Dict[int, float]:
+def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
+        features: typing.List[str], iters: int, weights_filename: str,
+        log_filename: str) -> typing.Dict[int, float]:
   """Trains an AdaBoost classifier.
 
   Args:
@@ -162,6 +169,7 @@ def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_], features: typing.Lis
       f.write('%.5f\t%.5f\n' % (acc_train, acc_test))
   return phis
 
+
 def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
@@ -185,6 +193,7 @@ def parse_args() -> argparse.Namespace:
       default=10000)
 
   return parser.parse_args()
+
 
 def main() -> None:
   args = parse_args()

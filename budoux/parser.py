@@ -111,7 +111,9 @@ class Parser:
     """
     self.model = model
 
-  def parse(self, sentence: str, thres: int = DEFAULT_THRES) -> typing.List[str]:
+  def parse(self,
+            sentence: str,
+            thres: int = DEFAULT_THRES) -> typing.List[str]:
     """Parses the input sentence and returns a list of semantic chunks.
 
     Args:
@@ -135,7 +137,7 @@ class Parser:
                             p1, p2, p3)
       score = 0
       for f in feature:
-        if not f in self.model:
+        if f not in self.model:
           continue
         score += self.model[f]
       if score > thres:
