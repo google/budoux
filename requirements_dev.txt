@@ -1,6 +1,7 @@
-numpy
-html5lib
-yapf
 build
-twine
+html5lib
+numpy
 toml
+twine
+types-html5lib
+yapf
