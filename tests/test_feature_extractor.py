@@ -15,6 +15,7 @@
 
 import unittest
 import os
+import io
 import sys
 from pathlib import Path
 
@@ -24,8 +25,12 @@ sys.path.insert(0, os.path.abspath(LIB_PATH))
 from budoux import feature_extractor
 from budoux import utils
 
-sys.stdin.reconfigure(encoding='utf-8')
-sys.stdout.reconfigure(encoding='utf-8')
+if isinstance(sys.stdin, io.TextIOWrapper) and sys.version_info >= (3, 7):
+  sys.stdin.reconfigure(encoding='utf-8')
+
+if isinstance(sys.stdout, io.TextIOWrapper) and sys.version_info >= (3, 7):
+  sys.stdout.reconfigure(encoding='utf-8')
+
 
 SOURCE_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'source_test.txt'))
@@ -35,22 +40,22 @@ ENTRIES_FILE_PATH = os.path.abspath(
 
 class TestFeatureExtractor(unittest.TestCase):
 
-  def setUp(self):
+  def setUp(self) -> None:
     Path(ENTRIES_FILE_PATH).touch()
     self.test_entry = f'これは{utils.SEP}美しい{utils.SEP}ペンです。'
     with open(SOURCE_FILE_PATH, 'w', encoding=sys.getdefaultencoding()) as f:
       f.write(self.test_entry)
 
-  def test_unicode_block_index(self):
+  def test_unicode_block_index(self) -> None:
 
-    def check(character, block):
+    def check(character: str, block: int) -> None:
       self.assertEqual(feature_extractor.unicode_block_index(character), block)
 
     check('a', 1)  # 'a' falls the 1st block 'Basic Latin'.
     check('あ', 108)  # 'あ' falls the 108th block 'Hiragana'.
     check('安', 120)  # '安' falls the 120th block 'Kanji'.
 
-  def test_get_feature(self):
+  def test_get_feature(self) -> None:
     feature = feature_extractor.get_feature('a', 'b', 'c', 'd', 'e', 'f', 'x',
                                             'y', 'z')
     self.assertSetEqual(
@@ -134,7 +139,7 @@ class TestFeatureExtractor(unittest.TestCase):
         'BB3:999999', feature,
         'BB features that imply the end of line should not be included.')
 
-  def test_process(self):
+  def test_process(self) -> None:
     feature_extractor.process(SOURCE_FILE_PATH, ENTRIES_FILE_PATH)
     with open(
         ENTRIES_FILE_PATH, encoding=sys.getdefaultencoding(),
@@ -169,7 +174,7 @@ class TestFeatureExtractor(unittest.TestCase):
     self.assertIn('UW3:い', features[3])
     self.assertIn('UW3:。', features[-1])
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     os.remove(SOURCE_FILE_PATH)
     os.remove(ENTRIES_FILE_PATH)
 
