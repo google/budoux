@@ -125,7 +125,7 @@ class TestStdin(unittest.TestCase):
     with open(
         join(abspath(dirname(__file__)), "in/1.in"),
         "r",
-        encoding=sys.getdefaultencoding()) as f:  # noqa (misfired error: E125)
+        encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main([])
 
@@ -135,7 +135,7 @@ class TestStdin(unittest.TestCase):
     with open(
         join(abspath(dirname(__file__)), "in/2.in"),
         "r",
-        encoding=sys.getdefaultencoding()) as f:  # noqa (misfired error: E125)
+        encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main([])
 
@@ -145,7 +145,7 @@ class TestStdin(unittest.TestCase):
     with open(
         join(abspath(dirname(__file__)), "in/3.in"),
         "r",
-        encoding=sys.getdefaultencoding()) as f:  # noqa (misfired error: E125)
+        encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main(["-H"])
 
