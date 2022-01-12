@@ -7,6 +7,9 @@ __pycache__
 *.log
 *.egg-info
 
+# Python related files
+build/
+
 # JavaScript related files
 node_modules
 demo/static/app.js
