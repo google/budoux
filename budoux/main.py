@@ -28,6 +28,11 @@ import budoux
 ArgList = typing.Optional[typing.List[str]]
 
 
+class BudouxHelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                          argparse.RawDescriptionHelpFormatter):
+  pass
+
+
 def check_file(path: str) -> str:
   """Check if filepath is exist or not.
 
@@ -57,11 +62,11 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
   """
   parser = argparse.ArgumentParser(
       prog="budoux",
-      formatter_class=(lambda prog: argparse.RawDescriptionHelpFormatter(
+      formatter_class=(lambda prog: BudouxHelpFormatter(
           prog,
           **{
               "width": shutil.get_terminal_size(fallback=(120, 50)).columns,
-              "max_help_position": 25,
+              "max_help_position": 30,
           },
       )),
       description=textwrap.dedent("""\
@@ -82,7 +87,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       metavar="JSON",
       type=check_file,
       default=pkg_resources.resource_filename(__name__, "models/ja-knbc.json"),
-      help="custom model file path (default: models/ja-knbc.json)",
+      help="custom model file path",
   )
   parser.add_argument(
       "-d",
@@ -90,7 +95,14 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       metavar="STR",
       type=str,
       default="---",
-      help="output delimiter in TEXT mode (default: '---')",
+      help="output delimiter in TEXT mode",
+  )
+  parser.add_argument(
+      "-t",
+      "--thres",
+      type=int,
+      default=budoux.DEFAULT_THRES,
+      help="threshold value to separate chunks",
   )
   parser.add_argument(
       "-V",
@@ -98,12 +110,6 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       action="version",
       version="%(prog)s {}".format(budoux.__version__),
   )
-  parser.add_argument(
-      "--thres",
-      type=int,
-      default=budoux.DEFAULT_THRES,
-      help="threshold value to separate chunks (default: {})".format(
-          budoux.DEFAULT_THRES))
   if test is not None:
     return parser.parse_args(test)
   else:
