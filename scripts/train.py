@@ -16,12 +16,17 @@
 import argparse
 import typing
 from collections import Counter
+
 import numpy as np
+import numpy.typing as npt
 
-EPS = np.finfo(float).eps
+EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
 
 
-def preprocess(entries_filename: str, feature_thres: int):
+def preprocess(
+    entries_filename: str, feature_thres: int
+) -> typing.Tuple[npt.NDArray[np.bool_], npt.NDArray[np.bool_],
+                  typing.List[str]]:
   """Loads entries and translates them into NumPy arrays.
 
   Args:
@@ -51,8 +56,8 @@ def preprocess(entries_filename: str, feature_thres: int):
 
   M = len(features) + 1
   N = len(entries)
-  Y = np.zeros(N, dtype=bool)
-  X = np.zeros((N, M), dtype=bool)
+  Y: npt.NDArray[np.bool_] = np.zeros(N, dtype=bool)
+  X: npt.NDArray[np.bool_] = np.zeros((N, M), dtype=bool)
 
   for i, entry in enumerate(entries):
     Y[i] = entry[0] == '1'
@@ -63,7 +68,8 @@ def preprocess(entries_filename: str, feature_thres: int):
   return X, Y, features
 
 
-def pred(phis: typing.Dict[int, float], X: np.ndarray) -> np.ndarray:
+def pred(phis: typing.Dict[int, float],
+         X: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
   """Predicts the output from the given classifiers and input entries.
 
   Args:
@@ -74,16 +80,21 @@ def pred(phis: typing.Dict[int, float], X: np.ndarray) -> np.ndarray:
   Returns:
     A list of inferred labels.
   """
+  alphas: npt.NDArray[np.float64]
+  y: npt.NDArray[np.int64]
+
   alphas = np.array(list(phis.values()))
-  y = 2 * (X[:, list(phis.keys())] == True) - 1
+  y = 2 * (X[:, list(phis.keys())]
+           == True) - 1  # noqa (cannot replace `==` with `is`)
   return y.dot(alphas) > 0
 
 
 def split_dataset(
-    X: np.ndarray,
-    Y: np.ndarray,
-    split_ratio=0.9
-) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    X: npt.NDArray[typing.Any],
+    Y: npt.NDArray[typing.Any],
+    split_ratio: float = 0.9
+) -> typing.Tuple[npt.NDArray[typing.Any], npt.NDArray[typing.Any],
+                  npt.NDArray[typing.Any], npt.NDArray[typing.Any]]:
   """Splits given entries and labels to training and testing datasets.
 
   Args:
@@ -107,8 +118,9 @@ def split_dataset(
   return X_train, X_test, Y_train, Y_test
 
 
-def fit(X: np.ndarray, Y: np.ndarray, features: typing.List[str], iters: int,
-        weights_filename: str, log_filename: str):
+def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
+        features: typing.List[str], iters: int, weights_filename: str,
+        log_filename: str) -> typing.Dict[int, float]:
   """Trains an AdaBoost classifier.
 
   Args:
@@ -135,7 +147,7 @@ def fit(X: np.ndarray, Y: np.ndarray, features: typing.List[str], iters: int,
 
   for t in range(iters):
     print('=== %s ===' % (t))
-    res: np.ndarray = w.dot(Y_train[:, None] ^ X_train) / w.sum()
+    res: npt.NDArray[np.float64] = w.dot(Y_train[:, None] ^ X_train) / w.sum()
     err = 0.5 - np.abs(res - 0.5)
     m_best = int(err.argmin())
     pol_best = res[m_best] < 0.5
@@ -161,7 +173,7 @@ def fit(X: np.ndarray, Y: np.ndarray, features: typing.List[str], iters: int,
   return phis
 
 
-def main():
+def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       'encoded_train_data', help='File path for the encoded training data.')
@@ -183,7 +195,11 @@ def main():
       help='Number of iterations for training. (default: 10000)',
       default=10000)
 
-  args = parser.parse_args()
+  return parser.parse_args()
+
+
+def main() -> None:
+  args = parse_args()
   train_data_filename = args.encoded_train_data
   weights_filename = args.output
   log_filename = args.log

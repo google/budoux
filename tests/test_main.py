@@ -13,37 +13,41 @@
 # limitations under the License.
 """Tests the BudouX　CLI."""
 
-from os.path import *
+import io
 import sys
 import unittest
-from pathlib import Path
+from os.path import abspath, dirname, join
 
+# module hack
 LIB_PATH = join(dirname(__file__), '..')
 sys.path.insert(0, abspath(LIB_PATH))
 
-from budoux import main
+from budoux import main  # noqa (module hack)
 
-sys.stdin.reconfigure(encoding='utf-8')
-sys.stdout.reconfigure(encoding='utf-8')
+if isinstance(sys.stdin, io.TextIOWrapper) and sys.version_info >= (3, 7):
+  sys.stdin.reconfigure(encoding='utf-8')
+
+if isinstance(sys.stdout, io.TextIOWrapper) and sys.version_info >= (3, 7):
+  sys.stdout.reconfigure(encoding='utf-8')
 
 
 class TestCommonOption(unittest.TestCase):
 
-  def test_cmdargs_invalid_option(self):
+  def test_cmdargs_invalid_option(self) -> None:
     cmdargs = ['-v']
     with self.assertRaises(SystemExit) as cm:
       main.parse_args(cmdargs)
 
     self.assertEqual(cm.exception.code, 2)
 
-  def test_cmdargs_help(self):
+  def test_cmdargs_help(self) -> None:
     cmdargs = ['-h']
     with self.assertRaises(SystemExit) as cm:
       main.parse_args(cmdargs)
 
     self.assertEqual(cm.exception.code, 0)
 
-  def test_cmdargs_version(self):
+  def test_cmdargs_version(self) -> None:
     cmdargs = ['-V']
     with self.assertRaises(SystemExit) as cm:
       main.parse_args(cmdargs)
@@ -53,44 +57,38 @@ class TestCommonOption(unittest.TestCase):
 
 class TestTextArguments(unittest.TestCase):
 
-  def test_cmdargs_single_text(self):
+  def test_cmdargs_single_text(self) -> None:
     cmdargs = ['これはテストです。']
     output = main._main(cmdargs)
 
     self.assertEqual(output, "これは\nテストです。")
 
-  def test_cmdargs_single_multiline_text(self):
+  def test_cmdargs_single_multiline_text(self) -> None:
     cmdargs = ["これはテストです。\n今日は晴天です。"]
     output = main._main(cmdargs)
 
     self.assertEqual(output, "これは\nテストです。\n---\n今日は\n晴天です。")
 
-  def test_cmdargs_single_multiline_text_with_delimiter(self):
+  def test_cmdargs_single_multiline_text_with_delimiter(self) -> None:
     cmdargs = ["これはテストです。\n今日は晴天です。", "-d", "@"]
     output = main._main(cmdargs)
 
     self.assertEqual(output, "これは\nテストです。\n@\n今日は\n晴天です。")
 
-  def test_cmdargs_single_multiline_text_with_empty_delimiter(self):
+  def test_cmdargs_single_multiline_text_with_empty_delimiter(self) -> None:
     cmdargs = ["これはテストです。\n今日は晴天です。", "-d", ""]
     output = main._main(cmdargs)
 
     self.assertEqual(output, "これは\nテストです。\n\n今日は\n晴天です。")
 
-  def test_cmdargs_single_text(self):
-    cmdargs = ["これはテストです。\n今日は晴天です。"]
-    output = main._main(cmdargs)
-
-    self.assertEqual(output, "これは\nテストです。\n---\n今日は\n晴天です。")
-
-  def test_cmdargs_multi_text(self):
+  def test_cmdargs_multi_text(self) -> None:
     cmdargs = ['これはテストです。', '今日は晴天です。']
     with self.assertRaises(SystemExit) as cm:
       main.main(cmdargs)
 
     self.assertEqual(cm.exception.code, 2)
 
-  def test_cmdargs_single_html(self):
+  def test_cmdargs_single_html(self) -> None:
     cmdargs = ['-H', '今日は<b>とても天気</b>です。']
     output = main._main(cmdargs)
 
@@ -99,14 +97,14 @@ class TestTextArguments(unittest.TestCase):
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         '今日は<b ><wbr>とても<wbr>天気</b>です。</span>')
 
-  def test_cmdargs_multi_html(self):
+  def test_cmdargs_multi_html(self) -> None:
     cmdargs = ['-H', '今日は<b>とても天気</b>です。', 'これは<b>テスト</b>です。']
     with self.assertRaises(SystemExit) as cm:
       main._main(cmdargs)
 
     self.assertEqual(cm.exception.code, 2)
 
-  def test_cmdargs_thres(self):
+  def test_cmdargs_thres(self) -> None:
     cmdargs = ['--thres', '0', '今日はとても天気です。']
     output_granular = main._main(cmdargs)
     cmdargs = ['--thres', '10000000', '今日はとても天気です。']
@@ -123,7 +121,7 @@ class TestTextArguments(unittest.TestCase):
 
 class TestStdin(unittest.TestCase):
 
-  def test_cmdargs_blank_stdin(self):
+  def test_cmdargs_blank_stdin(self) -> None:
     with open(
         join(abspath(dirname(__file__)), "in/1.in"),
         "r",
@@ -133,7 +131,7 @@ class TestStdin(unittest.TestCase):
 
     self.assertEqual(output, "")
 
-  def test_cmdargs_text_stdin(self):
+  def test_cmdargs_text_stdin(self) -> None:
     with open(
         join(abspath(dirname(__file__)), "in/2.in"),
         "r",
@@ -143,7 +141,7 @@ class TestStdin(unittest.TestCase):
 
     self.assertEqual(output, "これは\nテストです。")
 
-  def test_cmdargs_html_stdin(self):
+  def test_cmdargs_html_stdin(self) -> None:
     with open(
         join(abspath(dirname(__file__)), "in/3.in"),
         "r",

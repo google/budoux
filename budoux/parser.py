@@ -17,8 +17,9 @@ import json
 import os
 import typing
 from html.parser import HTMLParser
+
 from .feature_extractor import get_feature
-from .utils import Result, SEP
+from .utils import SEP, Result
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
@@ -37,7 +38,7 @@ class TextContentExtractor(HTMLParser):
   """
   output = ''
 
-  def handle_data(self, data):
+  def handle_data(self, data: str) -> None:
     self.output += data
 
 
@@ -60,7 +61,7 @@ class HTMLChunkResolver(HTMLParser):
     self.chunks_joined = SEP.join(chunks)
     self.to_skip = False
 
-  def handle_starttag(self, tag: str, attrs: HTMLAttr):
+  def handle_starttag(self, tag: str, attrs: HTMLAttr) -> None:
     attr_pairs = []
     for attr in attrs:
       if attr[1] is None:
@@ -71,18 +72,18 @@ class HTMLChunkResolver(HTMLParser):
     self.output += '<%s %s>' % (tag, encoded_attrs)
     self.to_skip = tag.upper() in SKIP_NODES
 
-  def handle_endtag(self, tag: str):
+  def handle_endtag(self, tag: str) -> None:
     self.output += '</%s>' % (tag)
     self.to_skip = False
 
-  def handle_data(self, data: str):
+  def handle_data(self, data: str) -> None:
     if self.to_skip:
       self.output += data
       if self.chunks_joined[0] == SEP:
         self.chunks_joined = self.chunks_joined[1 + len(data):]
       else:
         self.chunks_joined = self.chunks_joined[len(data):]
-      return
+      return None
     for char in data:
       if char == self.chunks_joined[0]:
         self.chunks_joined = self.chunks_joined[1:]
@@ -110,7 +111,9 @@ class Parser:
     """
     self.model = model
 
-  def parse(self, sentence: str, thres: int = DEFAULT_THRES):
+  def parse(self,
+            sentence: str,
+            thres: int = DEFAULT_THRES) -> typing.List[str]:
     """Parses the input sentence and returns a list of semantic chunks.
 
     Args:
@@ -134,7 +137,7 @@ class Parser:
                             p1, p2, p3)
       score = 0
       for f in feature:
-        if not f in self.model:
+        if f not in self.model:
           continue
         score += self.model[f]
       if score > thres:
@@ -147,7 +150,7 @@ class Parser:
       p3 = p
     return chunks
 
-  def translate_html_string(self, html: str, thres: int = DEFAULT_THRES):
+  def translate_html_string(self, html: str, thres: int = DEFAULT_THRES) -> str:
     """Translates the given HTML string with markups for semantic line breaks.
 
     Args:
@@ -167,7 +170,7 @@ class Parser:
     return '<span style="%s">%s</span>' % (PARENT_CSS_STYLE, resolver.output)
 
 
-def load_default_japanese_parser():
+def load_default_japanese_parser() -> Parser:
   """Loads a parser equipped with the default Japanese model.
 
   Returns:

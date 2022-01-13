@@ -17,9 +17,10 @@ import argparse
 import os
 import tarfile
 import typing
-import urllib.request
 import urllib.error
+import urllib.request
 from html.parser import HTMLParser
+
 from context import utils
 
 RESOURCE_URL = (
@@ -29,15 +30,15 @@ RESOURCE_URL = (
 class KNBCHTMLParser(HTMLParser):
   """Parses the HTML files in the KNBC corpus and outputs the chunks."""
 
-  def __init__(self, split_tab: bool = True):
+  def __init__(self, split_tab: bool = True) -> None:
     super().__init__()
     self.chunks = ['']
     self.n_rows = 0
     self.n_cols = 0
-    self.current_word = None
+    self.current_word: typing.Optional[str] = None
     self.split_tab = split_tab
 
-  def handle_starttag(self, tag, _):
+  def handle_starttag(self, tag: str, _: typing.Any) -> None:
     if tag == 'tr':
       self.n_rows += 1
       self.n_cols = 0
@@ -45,21 +46,22 @@ class KNBCHTMLParser(HTMLParser):
     if tag == 'td':
       self.n_cols += 1
 
-  def handle_endtag(self, tag):
+  def handle_endtag(self, tag: str) -> None:
     if tag != 'tr':
-      return
-    if (self.n_rows > 2 and self.n_cols == 1 and
-        (self.split_tab or self.current_word == '文節区切り')):
+      return None
+    flag1 = self.n_rows > 2 and self.n_cols == 1
+    flag2 = self.split_tab or self.current_word == '文節区切り'
+    if flag1 and flag2:
       self.chunks.append('')
-    if self.n_cols == 5:
+    if self.n_cols == 5 and type(self.current_word) is str:
       self.chunks[-1] += self.current_word
 
-  def handle_data(self, data):
+  def handle_data(self, data: str) -> None:
     if self.n_cols == 1:
       self.current_word = data
 
 
-def break_before_open_parentheses(chunks: typing.List[str]):
+def break_before_open_parentheses(chunks: typing.List[str]) -> typing.List[str]:
   """Adds chunk breaks before every open parentheses.
 
   Args:
@@ -80,7 +82,7 @@ def break_before_open_parentheses(chunks: typing.List[str]):
   return out
 
 
-def postprocess(chunks: typing.List[str]):
+def postprocess(chunks: typing.List[str]) -> typing.List[str]:
   """Applies some processes to modify the extracted chunks.
 
   Args:
@@ -93,7 +95,7 @@ def postprocess(chunks: typing.List[str]):
   return chunks
 
 
-def download_knbc(target_dir: str):
+def download_knbc(target_dir: str) -> None:
   """Downloads the KNBC corpus and extracts files.
 
   Args:
@@ -110,7 +112,7 @@ def download_knbc(target_dir: str):
     t.extractall(path=target_dir)
 
 
-def main():
+def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       '-o',
@@ -118,7 +120,11 @@ def main():
       help='''File path to output the training data.
             (default: source.txt)''',
       default='source.txt')
-  args = parser.parse_args()
+  return parser.parse_args()
+
+
+def main() -> None:
+  args = parse_args()
   outfile = args.outfile
   html_dir = 'data/KNBC_v1.0_090925_utf8/html/'
   if not os.path.isdir(html_dir):

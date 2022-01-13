@@ -17,12 +17,15 @@ import os
 import sys
 import unittest
 from pathlib import Path
-import numpy as np
 
+import numpy as np
+import numpy.typing as npt
+
+# module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from scripts import train
+from scripts import train  # type: ignore # noqa (module hack)
 
 ENTRIES_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
@@ -34,7 +37,7 @@ LOG_FILE_PATH = os.path.abspath(
 
 class TestTrain(unittest.TestCase):
 
-  def setUp(self):
+  def setUp(self) -> None:
     Path(WEIGHTS_FILE_PATH).touch()
     Path(LOG_FILE_PATH).touch()
     with open(ENTRIES_FILE_PATH, 'w') as f:
@@ -45,14 +48,14 @@ class TestTrain(unittest.TestCase):
           '-1\tA\n'
           ' 1\tA\tC\n'))
 
-  def test_pred(self):
-    X = np.array([
+  def test_pred(self) -> None:
+    X: npt.NDArray[np.bool_] = np.array([
         [True, False, True, False],
         [False, True, False, True],
     ])
     phis = {
-        1: 8,  # Weights Feature #1 by 8.
-        2: 2,  # Weights Feature #2 by 2.
+        1: 8.0,  # Weights Feature #1 by 8.
+        2: 2.0,  # Weights Feature #2 by 2.
     }
     # Since Feature #1 (= the 2nd col in X) wins, the prediction should be:
     # [
@@ -62,7 +65,7 @@ class TestTrain(unittest.TestCase):
     pred = train.pred(phis, X)
     self.assertListEqual(pred.tolist(), [False, True])
 
-  def test_preprocess(self):
+  def test_preprocess(self) -> None:
     freq_thres = 0
     X, Y, features = train.preprocess(ENTRIES_FILE_PATH, freq_thres)
     self.assertListEqual(features, ['A', 'C', 'B'],
@@ -115,7 +118,7 @@ class TestTrain(unittest.TestCase):
         True,
     ], 'Y should represent the entry labels even filtered.')
 
-  def test_split_dataset(self):
+  def test_split_dataset(self) -> None:
     N = 100
     X = np.random.rand(N, 2)
     Y = np.arange(N)
@@ -128,16 +131,16 @@ class TestTrain(unittest.TestCase):
     self.assertAlmostEqual(Y_train.shape[0], N * split_ratio)
     self.assertAlmostEqual(Y_test.shape[0], N * (1 - split_ratio))
 
-  def test_fit(self):
+  def test_fit(self) -> None:
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
-    X = np.array([
+    X: npt.NDArray[np.bool_] = np.array([
         [False, True, True, False],
         [True, True, False, True],
         [False, False, True, False],
         [True, False, False, True],
     ])
-    Y = np.array([
+    Y: npt.NDArray[np.bool_] = np.array([
         False,
         False,
         True,
@@ -152,7 +155,7 @@ class TestTrain(unittest.TestCase):
     self.assertEqual(
         top_feature, 'b', msg='The most effective feature should be selected.')
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     os.remove(WEIGHTS_FILE_PATH)
     os.remove(LOG_FILE_PATH)
     os.remove(ENTRIES_FILE_PATH)

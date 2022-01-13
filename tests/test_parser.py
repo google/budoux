@@ -13,21 +13,23 @@
 # limitations under the License.
 """Tests the BudouX parser."""
 
-import unittest
 import os
 import sys
+import unittest
 import xml.etree.ElementTree as ET
+
 import html5lib
 
+# module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import parser
+from budoux import parser  # noqa (module hack)
 
 html_parser = html5lib.HTMLParser()
 
 
-def compare_html_string(a, b):
+def compare_html_string(a: str, b: str) -> bool:
   a_normalized = ET.tostring(html_parser.parse(a))
   b_normalized = ET.tostring(html_parser.parse(b))
   return a_normalized == b_normalized
@@ -35,7 +37,7 @@ def compare_html_string(a, b):
 
 class TestTextContentExtractor(unittest.TestCase):
 
-  def test_output(self):
+  def test_output(self) -> None:
     input = '<p><a href="#">Hello</a>, <b>World</b></p>'
     expected = 'Hello, World'
     extractor = parser.TextContentExtractor()
@@ -47,7 +49,7 @@ class TestTextContentExtractor(unittest.TestCase):
 
 class TestHTMLChunkResolver(unittest.TestCase):
 
-  def test_output(self):
+  def test_output(self) -> None:
     input = '<p>ab<b>cde</b>f</p>'
     expected = '<p>ab<b>c<wbr>de</b>f</p>'
     resolver = parser.HTMLChunkResolver(['abc', 'def'])
@@ -60,7 +62,7 @@ class TestHTMLChunkResolver(unittest.TestCase):
 class TestParser(unittest.TestCase):
   TEST_SENTENCE = 'abcdeabcd'
 
-  def test_parse(self):
+  def test_parse(self) -> None:
     p = parser.Parser({
         'UW4:a': 10000,  # means "should separate right before 'a'".
     })
@@ -89,7 +91,7 @@ class TestParser(unittest.TestCase):
     self.assertListEqual(chunks, [],
                          'should return a blank list when the input is blank.')
 
-  def test_translate_html_string(self):
+  def test_translate_html_string(self) -> None:
     p = parser.Parser({
         'UW4:a': 10000,  # means "should separate right before 'a'".
     })

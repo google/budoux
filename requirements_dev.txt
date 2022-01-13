@@ -1,6 +1,10 @@
-numpy
-html5lib
-yapf
 build
-twine
+flake8
+html5lib
+numpy
+mypy
 toml
+twine
+types-html5lib
+types-setuptools
+yapf

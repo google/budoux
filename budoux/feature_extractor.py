@@ -19,13 +19,14 @@ import json
 import os
 import sys
 import typing
+
 from .utils import SEP, Result
 
 with open(os.path.join(os.path.dirname(__file__), 'unicode_blocks.json')) as f:
   block_starts: typing.List[int] = json.load(f)
 
 
-def unicode_block_index(w: str):
+def unicode_block_index(w: str) -> int:
   """Returns the index of the Unicode block that the character belongs to.
 
   Args:
@@ -38,7 +39,7 @@ def unicode_block_index(w: str):
 
 
 def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
-                p2: str, p3: str):
+                p2: str, p3: str) -> typing.List[str]:
   """Generates a feature from characters around (w1-6) and past results (p1-3).
 
   Args:
@@ -129,7 +130,7 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
   return [f'{item[0]}:{item[1]}' for item in raw_feature.items()]
 
 
-def process(source_filename: str, entries_filename: str):
+def process(source_filename: str, entries_filename: str) -> None:
   """Extratcs features from source sentences and outputs as entries.
 
   Args:
@@ -141,8 +142,8 @@ def process(source_filename: str, entries_filename: str):
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
     f.write('')
 
-  for row in data:
-    chunks = row.strip().split(SEP)
+  for datum in data:
+    chunks = datum.strip().split(SEP)
     chunk_lengths = [len(chunk) for chunk in chunks]
     sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
     sentence = ''.join(chunks)
