@@ -142,8 +142,8 @@ def process(source_filename: str, entries_filename: str) -> None:
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
     f.write('')
 
-  for datam in data:
-    chunks = datam.strip().split(SEP)
+  for datum in data:
+    chunks = datum.strip().split(SEP)
     chunk_lengths = [len(chunk) for chunk in chunks]
     sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
     sentence = ''.join(chunks)
