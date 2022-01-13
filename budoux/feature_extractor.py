@@ -138,12 +138,12 @@ def process(source_filename: str, entries_filename: str) -> None:
     entries_filename (str): A file path to the output entries.
   """
   with open(source_filename, encoding=sys.getdefaultencoding()) as f:
-    datam = f.readlines()
+    data = f.readlines()
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
     f.write('')
 
-  for data in datam:
-    chunks = data.strip().split(SEP)
+  for datam in data:
+    chunks = datam.strip().split(SEP)
     chunk_lengths = [len(chunk) for chunk in chunks]
     sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
     sentence = ''.join(chunks)
