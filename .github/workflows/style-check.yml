@@ -10,8 +10,8 @@ jobs:
           python-version: '3.9'
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade yapf toml mypy flake8
-          python -m pip install -r requirements_dev.txt
+          pip install --upgrade pip
+          pip install -r requirements_dev.txt
       - name: Run yapf
         run: |
           yapf --diff --recursive budoux tests scripts

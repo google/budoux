@@ -1,6 +1,8 @@
 build
+flake8
 html5lib
 numpy
+mypy
 toml
 twine
 types-html5lib
