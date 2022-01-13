@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run flake8
         if: ${{ always() }}
-        uses: suo/flake8-github-action@12dc102f57ec89061b1c9234e762d544fc7dac31
+        uses: suo/flake8-github-action@3e87882219642e01aa8a6bbd03b4b0adb8542c2a
         with:
           checkName: python-style-check
         env:
