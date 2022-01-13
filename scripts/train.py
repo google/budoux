@@ -147,7 +147,7 @@ def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
 
   for t in range(iters):
     print('=== %s ===' % (t))
-    res: npt.NDArray[typing.Any] = w.dot(Y_train[:, None] ^ X_train) / w.sum()
+    res: npt.NDArray[np.float64] = w.dot(Y_train[:, None] ^ X_train) / w.sum()
     err = 0.5 - np.abs(res - 0.5)
     m_best = int(err.argmin())
     pol_best = res[m_best] < 0.5
