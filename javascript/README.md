@@ -1,7 +1,8 @@
 <!-- markdownlint-disable MD014 -->
 # BudouX JavaScript module
 
-BudouX is a standalone, small, and language-neutral phrase segmenter tool that provides beautiful and legible line breaks.
+BudouX is a standalone, small, and language-neutral phrase segmenter tool that
+provides beautiful and legible line breaks.
 
 For more details about the project, please refer to the [project README](https://github.com/google/budoux/).
 
@@ -62,7 +63,8 @@ const parser = new Parser(model);
 
 ## Web component
 
-BudouX also has a custom element to make it easy to integrate the parser with your website.
+BudouX also has a custom element to make it easy to integrate the parser with
+your website.
 All you have to do is wrap sentences with the `<budoux-ja>` tag.
 
 ```html
@@ -75,7 +77,8 @@ In order to enable the custom element, you can simply add this line to load the 
 <script src="https://unpkg.com/budoux/bundle/budoux-ja.min.js"></script>
 ```
 
-Otherwise, if you wish to bundle the component with the rest of your source code, you can import the component as shown below.
+Otherwise, if you wish to bundle the component with the rest of your source code,
+you can import the component as shown below.
 
 ```javascript
 import 'budoux/module/webcomponents/budoux-ja';
@@ -127,11 +130,16 @@ Options:
 ### Attributes
 
 - thres
-  - The threshold value to control the granularity of output chunks. Smaller value returns more granular chunks. (default: 1000).
+  - The threshold value to control the granularity of output chunks.
+    Smaller value returns more granular chunks. (default: 1000).
 
 ## Caveat
 
-BudouX supports HTML inputs and outputs HTML strings with markup applied to wrap phrases, but it's not meant to be used as an HTML sanitizer. **BudouX doesn't sanitize any inputs.** Malicious HTML inputs yield malicious HTML outputs. Please use it with an appropriate sanitizer library if you don't trust the input.
+BudouX supports HTML inputs and outputs HTML strings with markup applied to wrap
+phrases, but it's not meant to be used as an HTML sanitizer.
+**BudouX doesn't sanitize any inputs.**
+Malicious HTML inputs yield malicious HTML outputs.
+Please use it with an appropriate sanitizer library if you don't trust the input.
 
 ## Author
 
