@@ -81,6 +81,48 @@ Otherwise, if you wish to bundle the component with the rest of your source code
 import 'budoux/module/webcomponents/budoux-ja';
 ```
 
+### CLI
+
+You can also format inputs on your terminal with `budoux` command.
+
+```shellsession
+$ budoux 本日は晴天です。
+本日は
+晴天です。
+```
+
+```shellsession
+$ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
+本日は
+晴天です。
+---
+明日は
+曇りでしょう。
+
+```shellsession
+$ budoux 本日は晴天です。 -H
+<span style="word-break: keep-all; overflow-wrap: break-word;">本日は<wbr>晴天です。</span>
+```
+
+If you want to see help, run `budoux -h`.
+
+```shellsession
+$ budoux -h
+Usage: budoux [-h] [-H] [-m JSON] [-d STR] [-V] [TXT]
+
+BudouX is the successor to Budou, the machine learning powered line break organizer tool.
+
+Arguments:
+  txt                 text
+
+Options:
+  -H, --html          HTML mode
+  -d, --delim <str>   output delimiter in TEXT mode (default: "---")
+  -m, --model <json>  custom model file path
+  -V, --version       output the version number
+  -h, --help          display help for command
+```
+
 ### Attributes
 
 - thres

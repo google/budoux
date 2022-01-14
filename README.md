@@ -42,6 +42,8 @@ $ pip install budoux
 
 ### Usage
 
+#### Library
+
 You can get a list of phrases by feeding a sentence to the parser.
 
 ```python
@@ -70,6 +72,49 @@ A model file for BudouX is a JSON file that contains pairs of a feature and its 
 Each score represents the significance of the feature in determining whether to break the sentence at a specific point.
 
 For more details of the JavaScript model, please refer to [JavaScript module README](https://github.com/google/budoux/tree/main/javascript/README.md).
+
+#### CLI
+
+You can also format inputs on your terminal with `budoux` command.
+
+```shellsession
+$ budoux 本日は晴天です。
+本日は
+晴天です。
+
+```shellsession
+$ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
+本日は
+晴天です。
+---
+明日は
+曇りでしょう。
+
+```shellsession
+$ budoux 本日は晴天です。 -H
+<span style="word-break: keep-all; overflow-wrap: break-word;">本日は<wbr>晴天です。</span>
+```
+
+If you want to see help, run `budoux -h`.
+
+```shellsession
+$ budoux -h
+usage: budoux [-h] [-H] [-m JSON] [-d STR] [-t THRES] [-V] [TXT]
+
+BudouX is the successor to Budou,
+the machine learning powered line break organizer tool.
+
+positional arguments:
+  TXT                      text (default: None)
+
+optional arguments:
+  -h, --help               show this help message and exit
+  -H, --html               HTML mode (default: False)
+  -m JSON, --model JSON    custom model file path (default: /path/to/models/ja-knbc.json)
+  -d STR, --delim STR      output delimiter in TEXT mode (default: ---)
+  -t THRES, --thres THRES  threshold value to separate chunks (default: 1000)
+  -V, --version            show program's version number and exit
+```
 
 ## Caveat
 
