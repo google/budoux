@@ -98,6 +98,7 @@ $ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
 ---
 明日は
 曇りでしょう。
+```
 
 ```shellsession
 $ budoux 本日は晴天です。 -H

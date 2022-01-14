@@ -81,6 +81,7 @@ You can also format inputs on your terminal with `budoux` command.
 $ budoux 本日は晴天です。
 本日は
 晴天です。
+```
 
 ```shellsession
 $ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
@@ -89,6 +90,7 @@ $ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
 ---
 明日は
 曇りでしょう。
+```
 
 ```shellsession
 $ budoux 本日は晴天です。 -H
