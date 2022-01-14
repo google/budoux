@@ -40,3 +40,11 @@ jobs:
         working-directory: ./javascript
       - run: npm run lint
         working-directory: ./javascript
+  markdown-style-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: markdownlint
+          uses: nosborn/github-action-markdown-cli@018fc8b964d4d364519e7cbcda29b6b9bf3f0ba3
+          with:
+            files: '**/*.md'
