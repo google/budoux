@@ -118,9 +118,13 @@ def split_dataset(
   return X_train, X_test, Y_train, Y_test
 
 
-def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
-        features: typing.List[str], iters: int, weights_filename: str,
-        log_filename: str, chunk_size: typing.Optional[int] = None) -> typing.Dict[int, float]:
+def fit(X: npt.NDArray[np.bool_],
+        Y: npt.NDArray[np.bool_],
+        features: typing.List[str],
+        iters: int,
+        weights_filename: str,
+        log_filename: str,
+        chunk_size: typing.Optional[int] = None) -> typing.Dict[int, float]:
   """Trains an AdaBoost classifier.
 
   Args:
@@ -154,10 +158,10 @@ def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
     else:
       res = np.zeros(M_train)
       for i in range(0, N_train, chunk_size):
-          Y_train_chunk = Y_train[i:i + chunk_size]
-          X_train_chunk = X_train[i:i + chunk_size]
-          w_chunk = w[i:i + chunk_size]
-          res += w_chunk.dot(Y_train_chunk[:, None] ^ X_train_chunk)
+        Y_train_chunk = Y_train[i:i + chunk_size]
+        X_train_chunk = X_train[i:i + chunk_size]
+        w_chunk = w[i:i + chunk_size]
+        res += w_chunk.dot(Y_train_chunk[:, None] ^ X_train_chunk)
       res = res / w.sum()
     err = 0.5 - np.abs(res - 0.5)
     m_best = int(err.argmin())
@@ -207,7 +211,8 @@ def parse_args() -> argparse.Namespace:
       default=10000)
   parser.add_argument(
       '--chunk-size',
-      help='A chunk size to split training entries into chunks for memory reduction when calculating AdaBoost\'s weighted training error.')
+      help='A chunk size to split training entries into chunks for memory reduction when calculating AdaBoost\'s weighted training error.'
+  )
 
   return parser.parse_args()
 
