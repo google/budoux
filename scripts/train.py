@@ -118,9 +118,13 @@ def split_dataset(
   return X_train, X_test, Y_train, Y_test
 
 
-def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
-        features: typing.List[str], iters: int, weights_filename: str,
-        log_filename: str) -> typing.Dict[int, float]:
+def fit(X: npt.NDArray[np.bool_],
+        Y: npt.NDArray[np.bool_],
+        features: typing.List[str],
+        iters: int,
+        weights_filename: str,
+        log_filename: str,
+        chunk_size: typing.Optional[int] = None) -> typing.Dict[int, float]:
   """Trains an AdaBoost classifier.
 
   Args:
@@ -130,6 +134,8 @@ def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
     iters (int): A number of training iterations.
     weights_filename (str): A file path to write the learned weights.
     log_filename (str): A file path to log the accuracy along with training.
+    chunk_size (Optional[int]): A chunk size to split training entries into chunks for memory reduction
+      when calculating AdaBoost's weighted training error.
 
   Returns:
     phi (Dict[int, float]): Leanred child classifiers.
@@ -142,12 +148,21 @@ def fit(X: npt.NDArray[np.bool_], Y: npt.NDArray[np.bool_],
 
   phis: typing.Dict[int, float] = dict()
   X_train, X_test, Y_train, Y_test = split_dataset(X, Y)
-  N_train, _ = X_train.shape
+  N_train, M_train = X_train.shape
   w = np.ones(N_train) / N_train
 
   for t in range(iters):
     print('=== %s ===' % (t))
-    res: npt.NDArray[np.float64] = w.dot(Y_train[:, None] ^ X_train) / w.sum()
+    if chunk_size is None:
+      res: npt.NDArray[np.float64] = w.dot(Y_train[:, None] ^ X_train) / w.sum()
+    else:
+      res = np.zeros(M_train)
+      for i in range(0, N_train, chunk_size):
+        Y_train_chunk = Y_train[i:i + chunk_size]
+        X_train_chunk = X_train[i:i + chunk_size]
+        w_chunk = w[i:i + chunk_size]
+        res += w_chunk.dot(Y_train_chunk[:, None] ^ X_train_chunk)
+      res = res / w.sum()
     err = 0.5 - np.abs(res - 0.5)
     m_best = int(err.argmin())
     pol_best = res[m_best] < 0.5
@@ -194,6 +209,10 @@ def parse_args() -> argparse.Namespace:
       '--iter',
       help='Number of iterations for training. (default: 10000)',
       default=10000)
+  parser.add_argument(
+      '--chunk-size',
+      help='A chunk size to split training entries into chunks for memory reduction when calculating AdaBoost\'s weighted training error.'
+  )
 
   return parser.parse_args()
 
@@ -205,9 +224,10 @@ def main() -> None:
   log_filename = args.log
   feature_thres = int(args.feature_thres)
   iterations = int(args.iter)
+  chunk_size = int(args.chunk_size) if args.chunk_size is not None else None
 
   X, Y, features = preprocess(train_data_filename, feature_thres)
-  fit(X, Y, features, iterations, weights_filename, log_filename)
+  fit(X, Y, features, iterations, weights_filename, log_filename, chunk_size)
 
   print('Training done. Export the model by passing %s to build_model.py' %
         (weights_filename))
