@@ -43,7 +43,7 @@ class TestTrain(unittest.TestCase):
     with open(ENTRIES_FILE_PATH, 'w') as f:
       f.write((
           ' 1\tA\tC\n'  # the first column represents the label (-1 / 1).
-          '-1\tA\tB\n'  # the rest cols represents the associated features.
+          '-1\tA\tB\n'  # the rest columns represents the associated features.
           ' 1\tA\tC\n'
           '-1\tA\n'
           ' 1\tA\tC\n'))
@@ -110,13 +110,14 @@ class TestTrain(unittest.TestCase):
         ],
         'X should represent the filtered entry features with a bias column.')
 
-    self.assertListEqual(Y.tolist(), [
-        True,
-        False,
-        True,
-        False,
-        True,
-    ], 'Y should represent the entry labels even filtered.')
+    self.assertListEqual(
+        Y.tolist(), [
+            True,
+            False,
+            True,
+            False,
+            True,
+        ], 'Y should represent the entry labels even some labels are filtered.')
 
   def test_split_dataset(self) -> None:
     N = 100
@@ -148,7 +149,7 @@ class TestTrain(unittest.TestCase):
     ])
     features = ['a', 'b', 'c']
     iters = 1
-    train.fit(X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH)
+    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH)
     with open(WEIGHTS_FILE_PATH) as f:
       weights = f.read().splitlines()
     top_feature = weights[0].split('\t')[0]

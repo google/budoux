@@ -118,8 +118,10 @@ def split_dataset(
   return X_train, X_test, Y_train, Y_test
 
 
-def fit(X: npt.NDArray[np.bool_],
-        Y: npt.NDArray[np.bool_],
+def fit(X_train: npt.NDArray[np.bool_],
+        Y_train: npt.NDArray[np.bool_],
+        X_test: npt.NDArray[np.bool_],
+        Y_test: npt.NDArray[np.bool_],
         features: typing.List[str],
         iters: int,
         weights_filename: str,
@@ -128,8 +130,10 @@ def fit(X: npt.NDArray[np.bool_],
   """Trains an AdaBoost classifier.
 
   Args:
-    X (numpy.ndarray): Training entries.
-    Y (numpy.ndarray): Training labels.
+    X_train (numpy.ndarray): Training entries.
+    Y_train (numpy.ndarray): Training labels.
+    X_test (numpy.ndarray): Testing entries.
+    Y_test (numpy.ndarray): Testing labels.
     features (List[str]): Features, which correspond to the columns of entries.
     iters (int): A number of training iterations.
     weights_filename (str): A file path to write the learned weights.
@@ -147,7 +151,16 @@ def fit(X: npt.NDArray[np.bool_],
   print('Outputting learned weights to %s ...' % (weights_filename))
 
   phis: typing.Dict[int, float] = dict()
-  X_train, X_test, Y_train, Y_test = split_dataset(X, Y)
+
+  assert (X_train.shape[1] == X_test.shape[1]
+         ), 'Training and test entries should have the same number of features.'
+  assert (X_train.shape[1] - 1 == len(features)
+         ), 'The training data should have the same number of features + BIAS.'
+  assert (X_train.shape[0] == Y_train.shape[0]
+         ), 'Training entries and labels should have the same number of items.'
+  assert (X_test.shape[0] == Y_test.shape[0]
+         ), 'Testing entries and labels should have the same number of items.'
+
   N_train, M_train = X_train.shape
   w = np.ones(N_train) / N_train
 
@@ -227,7 +240,9 @@ def main() -> None:
   chunk_size = int(args.chunk_size) if args.chunk_size is not None else None
 
   X, Y, features = preprocess(train_data_filename, feature_thres)
-  fit(X, Y, features, iterations, weights_filename, log_filename, chunk_size)
+  X_train, X_test, Y_train, Y_test = split_dataset(X, Y)
+  fit(X_train, Y_train, X_test, Y_test, features, iterations, weights_filename,
+      log_filename, chunk_size)
 
   print('Training done. Export the model by passing %s to build_model.py' %
         (weights_filename))
