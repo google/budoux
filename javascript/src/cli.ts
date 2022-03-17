@@ -18,7 +18,7 @@ import {readFileSync} from 'fs';
 import {resolve} from 'path';
 import * as readline from 'readline';
 import {Command} from 'commander';
-import {Parser, loadDefaultJapaneseParser} from './parser';
+import {Parser, loadDefaultJapaneseParser, DEFAULT_THRES} from './parser';
 
 /**
  * Run the command line interface program.
@@ -27,13 +27,18 @@ import {Parser, loadDefaultJapaneseParser} from './parser';
 export const cli = (argv: string[]) => {
   const program = new Command('budoux');
 
-  program.usage('[-h] [-H] [-m JSON] [-d STR] [-V] [TXT]');
+  program.usage('[-h] [-H] [-d STR] [-t THRES] [-m JSON] [-V] [TXT]');
   program.description(
     'BudouX is the successor to Budou, the machine learning powered line break organizer tool.'
   );
   program
-    .option('-H, --html', 'HTML mode')
+    .option('-H, --html', 'HTML mode', false)
     .option('-d, --delim <str>', 'output delimiter in TEXT mode', '---')
+    .option(
+      '-t, --thres <number>',
+      'threshold value to separate chunks',
+      `${DEFAULT_THRES}`
+    )
     .option('-m, --model <json>', 'custom model file path')
     .argument('[txt]', 'text');
 
@@ -42,10 +47,11 @@ export const cli = (argv: string[]) => {
   program.parse(argv);
 
   const options = program.opts();
-  const {model, delim, html} = options as {
+  const {model, thres, delim, html} = options as {
     html: boolean;
     delim: string;
-    model: string;
+    thres: number;
+    model?: string;
   };
   const {args} = program;
 
@@ -62,12 +68,12 @@ export const cli = (argv: string[]) => {
         stdin += line + '\n';
       });
       process.stdin.on('end', () => {
-        outputParsedTexts(parser, html, delim, [stdin]);
+        outputParsedTexts(parser, html, delim, thres, [stdin]);
       });
       break;
     }
     case 1: {
-      outputParsedTexts(parser, html, delim, args);
+      outputParsedTexts(parser, html, delim, thres, args);
       break;
     }
     default: {
@@ -83,24 +89,26 @@ export const cli = (argv: string[]) => {
  * @param parser A parser.
  * @param html A flag of html output mode.
  * @param delim A delimiter to separate output sentence.
+ * @param thres A threshold value to separate chunks.
  * @param args string array to parse. Array should have only one element.
  */
 const outputParsedTexts = (
   parser: Parser,
   html: boolean,
   delim: string,
+  thres: number,
   args: string[]
 ) => {
   if (html) {
     const text = args[0];
-    const output = parser.translateHTMLString(text);
+    const output = parser.translateHTMLString(text, thres);
     console.log(output);
   } else {
     const splitedTextsByNewLine = args[0]
       .split(/\r?\n/)
       .filter(text => text !== '');
     splitedTextsByNewLine.forEach((text, index) => {
-      const parsedTexts = parser.parse(text);
+      const parsedTexts = parser.parse(text, thres);
       parsedTexts.forEach(parsedText => {
         console.log(parsedText);
       });
