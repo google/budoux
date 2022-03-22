@@ -38,3 +38,6 @@ export const bisectRight = (arr: number[], i: number): number => {
 
 /** The separator string to specify breakpoints. */
 export const SEP = '▁';
+
+/** The invalid feature string. */
+export const INVALID = '▔';

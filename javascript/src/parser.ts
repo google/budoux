@@ -17,8 +17,9 @@
 import {unicodeBlocks} from './data/unicode_blocks';
 import {skipNodes} from './data/skip_nodes';
 import {model as jaKNBCModel} from './data/models/ja-knbc';
+import {model as zhHansModel} from './data/models/zh-hans';
 import {parseFromString} from './dom';
-import {bisectRight, SEP} from './utils';
+import {bisectRight, SEP, INVALID} from './utils';
 
 /**
  * The default threshold value for the parser.
@@ -48,10 +49,11 @@ export class Parser {
    * @returns A Unicode Block feature.
    */
   static getUnicodeBlockFeature(w: string) {
+    if (!w || w === INVALID) return INVALID;
     const cp = w.codePointAt(0);
-    const bn = cp === undefined ? 999 : bisectRight(unicodeBlocks, cp);
-    const b = `${bn}`.padStart(3, '0');
-    return b;
+    if (cp === undefined) return INVALID;
+    const bn = bisectRight(unicodeBlocks, cp);
+    return `${bn}`.padStart(3, '0');
   }
 
   /**
@@ -130,7 +132,9 @@ export class Parser {
       TQ3: p3 + b1 + b2 + b3,
       TQ4: p3 + b2 + b3 + b4,
     };
-    return Object.entries(rawFeature).map(([key, value]) => `${key}:${value}`);
+    return Object.entries(rawFeature)
+      .filter(entry => !entry[1].includes(INVALID))
+      .map(([key, value]) => `${key}:${value}`);
   }
 
   /**
@@ -158,16 +162,16 @@ export class Parser {
     let p1 = 'U';
     let p2 = 'U';
     let p3 = 'U';
-    const result = [sentence.slice(0, 3)];
+    const result = [sentence[0]];
 
-    for (let i = 3; i < sentence.length; i++) {
+    for (let i = 1; i < sentence.length; i++) {
       const feature = Parser.getFeature(
-        sentence[i - 3],
-        sentence[i - 2],
+        sentence[i - 3] || INVALID,
+        sentence[i - 2] || INVALID,
         sentence[i - 1],
         sentence[i],
-        sentence[i + 1] || '',
-        sentence[i + 2] || '',
+        sentence[i + 1] || INVALID,
+        sentence[i + 2] || INVALID,
         p1,
         p2,
         p3
@@ -258,4 +262,8 @@ export class Parser {
  */
 export const loadDefaultJapaneseParser = () => {
   return new Parser(new Map(Object.entries(jaKNBCModel)));
+};
+
+export const loadDefaultSimplifiedChineseParser = () => {
+  return new Parser(new Map(Object.entries(zhHansModel)));
 };

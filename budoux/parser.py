@@ -19,7 +19,7 @@ import typing
 from html.parser import HTMLParser
 
 from .feature_extractor import get_feature
-from .utils import SEP, Result
+from .utils import SEP, INVALID, Result
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
@@ -128,13 +128,13 @@ class Parser:
     p1 = Result.UNKNOWN.value
     p2 = Result.UNKNOWN.value
     p3 = Result.UNKNOWN.value
-    chunks = [sentence[:3]]
-    for i in range(3, len(sentence)):
-      feature = get_feature(sentence[i - 3], sentence[i - 2], sentence[i - 1],
-                            sentence[i],
-                            sentence[i + 1] if i + 1 < len(sentence) else '',
-                            sentence[i + 2] if i + 2 < len(sentence) else '',
-                            p1, p2, p3)
+    chunks = [sentence[0]]
+    for i in range(1, len(sentence)):
+      feature = get_feature(
+          sentence[i - 3] if i > 2 else INVALID,
+          sentence[i - 2] if i > 1 else INVALID, sentence[i - 1], sentence[i],
+          sentence[i + 1] if i + 1 < len(sentence) else INVALID,
+          sentence[i + 2] if i + 2 < len(sentence) else INVALID, p1, p2, p3)
       score = 0
       for f in feature:
         if f not in self.model:

@@ -68,15 +68,15 @@ class TestParser(unittest.TestCase):
     })
     chunks = p.parse(TestParser.TEST_SENTENCE)
     self.assertListEqual(chunks, ['abcde', 'abcd'],
-                         'should separate but not the first two characters.')
+                         'Should separate if a strong feature item supports.')
 
     p = parser.Parser({
-        'BP2:UU': 10000,
+        'UW4:b': 10000,  # means "should separate right before 'b'".
     })
     chunks = p.parse(TestParser.TEST_SENTENCE)
     self.assertListEqual(
-        chunks, ['abc', 'deabcd'],
-        'should respect the results feature with a high score.')
+        chunks, ['a', 'bcdea', 'bcd'],
+        'Should separate even if it makes the first character a sole phrase.')
 
     p = parser.Parser({
         'UW4:a': 10,
@@ -84,12 +84,12 @@ class TestParser(unittest.TestCase):
     chunks = p.parse(TestParser.TEST_SENTENCE, 100)
     self.assertListEqual(
         chunks, [TestParser.TEST_SENTENCE],
-        'should ignore features with scores lower than the threshold.')
+        'Should ignore features with scores lower than the threshold.')
 
     p = parser.Parser({})
     chunks = p.parse('')
     self.assertListEqual(chunks, [],
-                         'should return a blank list when the input is blank.')
+                         'Should return a blank list when the input is blank.')
 
   def test_translate_html_string(self) -> None:
     p = parser.Parser({
@@ -103,7 +103,7 @@ class TestParser(unittest.TestCase):
     output_html = p.translate_html_string(input_html)
     self.assertTrue(
         compare_html_string(output_html, expected_html),
-        'should output a html string with a SPAN parent with proper style attributes.'
+        'Should output a html string with a SPAN parent with proper style attributes.'
     )
 
     input_html = 'xyz<script>alert(1);</script>xyzabc'
@@ -113,7 +113,7 @@ class TestParser(unittest.TestCase):
     output_html = p.translate_html_string(input_html)
     self.assertTrue(
         compare_html_string(output_html, expected_html),
-        'should pass script tags as is.')
+        'Should pass script tags as is.')
 
     input_html = 'xyz<code>abc</code>abc'
     expected_html = (
@@ -122,7 +122,7 @@ class TestParser(unittest.TestCase):
     output_html = p.translate_html_string(input_html)
     self.assertTrue(
         compare_html_string(output_html, expected_html),
-        'should skip some specific tags.')
+        'Should skip some specific tags.')
 
     input_html = 'xyza<a href="#" hidden>bc</a>abc'
     expected_html = (
@@ -131,7 +131,7 @@ class TestParser(unittest.TestCase):
     output_html = p.translate_html_string(input_html)
     self.assertTrue(
         compare_html_string(output_html, expected_html),
-        'should not ruin attributes of child elements.')
+        'Should not ruin attributes of child elements.')
 
     input_html = 'xyza🇯🇵🇵🇹abc'
     expected_html = (
@@ -140,7 +140,7 @@ class TestParser(unittest.TestCase):
     output_html = p.translate_html_string(input_html)
     self.assertTrue(
         compare_html_string(output_html, expected_html),
-        'should work with emojis.')
+        'Should work with emojis.')
 
 
 if __name__ == '__main__':
