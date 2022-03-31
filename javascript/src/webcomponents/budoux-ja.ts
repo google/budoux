@@ -14,48 +14,19 @@
  * limitations under the License.
  */
 
-import {loadDefaultJapaneseParser, DEFAULT_THRES} from '../parser';
-
-const parser = loadDefaultJapaneseParser();
+import {loadDefaultJapaneseParser} from '../parser';
+import {BudouXBaseElement} from './budoux-base';
 
 /**
  * BudouX Japanese Web component.
  */
-export class BudouXJapaneseElement extends HTMLElement {
-  shadow: ShadowRoot;
-
-  static get observedAttributes() {
-    return ['thres'];
-  }
+export class BudouXJapaneseElement extends BudouXBaseElement {
   /**
    * BudouX Japanese Web component constructor.
    */
   constructor() {
     super();
-
-    this.shadow = this.attachShadow({mode: 'open'});
-    const observer = new MutationObserver(this.sync.bind(this));
-    observer.observe(this, {
-      attributes: false,
-      characterData: true,
-      subtree: true,
-    });
-  }
-
-  connectedCallback() {
-    this.sync();
-  }
-
-  attributeChangedCallback() {
-    this.sync();
-  }
-
-  sync() {
-    const thres = this.getAttribute('thres');
-    this.shadow.innerHTML = parser.translateHTMLString(
-      this.innerHTML,
-      thres === null ? DEFAULT_THRES : Number(thres)
-    );
+    this.parser = loadDefaultJapaneseParser();
   }
 }
 
