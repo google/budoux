@@ -179,3 +179,14 @@ def load_default_japanese_parser() -> Parser:
   with open(os.path.join(MODEL_DIR, 'ja-knbc.json')) as f:
     model = json.load(f)
   return Parser(model)
+
+
+def load_default_simplified_chinese_parser() -> Parser:
+  """Loads a parser equipped with the default Simplified Chinese model.
+
+  Returns:
+    A parser (:obj:`budoux.Parser`).
+  """
+  with open(os.path.join(MODEL_DIR, 'zh-hans.json')) as f:
+    model = json.load(f)
+  return Parser(model)

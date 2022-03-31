@@ -24,6 +24,7 @@ Last but not least, BudouX supports HTML inputs.
 ## Natural languages supported by default
 
 - Japanese
+- Simplified Chinese
 
 ## Supported Programming languages
 
@@ -45,12 +46,24 @@ $ pip install budoux
 #### Library
 
 You can get a list of phrases by feeding a sentence to the parser.
+The easiest way is to get a parser is loading the default parser for each language.
+
+**Japanese:**
 
 ```python
 import budoux
 parser = budoux.load_default_japanese_parser()
 print(parser.parse('今日は天気です。'))
 # ['今日は', '天気です。']
+```
+
+**Simplified Chinese:**
+
+```python
+import budoux
+parser = budoux.load_default_simplified_chinese_parser()
+print(parser.parse('今天是晴天。'))
+# ['今天', '是', '晴天。']
 ```
 
 You can also translate an HTML string by wrapping phrases with non-breaking markup.
