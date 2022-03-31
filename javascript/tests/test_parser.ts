@@ -17,27 +17,30 @@
 import 'jasmine';
 import {JSDOM} from 'jsdom';
 import {Parser} from '../src/parser';
+import {INVALID} from '../src/utils';
 
 describe('Parser.getUnicodeBlockFeature', () => {
   const testFeature = (character: string, feature: string) => {
     const result = Parser.getUnicodeBlockFeature(character);
     expect(result).toBe(feature);
   };
-
-  it('should encode the character to a unicode block index.', () => {
-    testFeature('あ', '108');
-  });
-
-  it('should process the first character only.', () => {
-    testFeature('あ亜。', '108');
-  });
-
-  it('should return in 3 digits even if the index is small.', () => {
+  it('"a" should be the 1st block "Basic Latin".', () => {
     testFeature('a', '001');
   });
-
-  it('should return the default value if the code point is undefined.', () => {
-    testFeature('', '999');
+  it('"あ" should be the 108th block "Hiragana".', () => {
+    testFeature('あ', '108');
+  });
+  it('"安" should be the 120th block "Kanji"', () => {
+    testFeature('安', '120');
+  });
+  it('Only the first character should be recoghnized', () => {
+    testFeature('あ安', '108');
+  });
+  it('Should return INVALID when a blank string is given.', () => {
+    testFeature('', INVALID);
+  });
+  it('Should return INVALID when INVALID is given.', () => {
+    testFeature(INVALID, INVALID);
   });
 });
 
@@ -68,10 +71,36 @@ describe('Parser.getFeature', () => {
   });
 });
 
+describe('Parser.getFeature with invalid inputs.', () => {
+  const feature = Parser.getFeature(
+    'a',
+    'a',
+    INVALID,
+    'a',
+    'a',
+    'a',
+    'a',
+    'a',
+    'a'
+  );
+  const findByPrefix = (prefix: string, feature: string[]) => {
+    for (const item of feature) {
+      if (item.startsWith(prefix)) return true;
+    }
+    return false;
+  };
+  it('should not include invalid features.', () => {
+    expect(findByPrefix('UW3:', feature)).toBeFalse();
+    expect(findByPrefix('UB3:', feature)).toBeFalse();
+    expect(findByPrefix('BW2:', feature)).toBeFalse();
+    expect(findByPrefix('BB2:', feature)).toBeFalse();
+  });
+});
+
 describe('Parser.parse', () => {
   const TEST_SENTENCE = 'abcdeabcd';
 
-  it('should separate but not the first two characters.', () => {
+  it('should separate if a strong feature item supports.', () => {
     const model = new Map([
       ['UW4:a', 10000], // means "should separate right before 'a'".
     ]);
@@ -80,13 +109,13 @@ describe('Parser.parse', () => {
     expect(result).toEqual(['abcde', 'abcd']);
   });
 
-  it('should respect the results feature with a high score.', () => {
+  it('should separate even if it makes the first character a sole phrase', () => {
     const model = new Map([
-      ['BP2:UU', 10000], // previous results are Unknown and Unknown.
+      ['UW4:b', 10000], // means "should separate right before 'b'".
     ]);
     const parser = new Parser(model);
     const result = parser.parse(TEST_SENTENCE);
-    expect(result).toEqual(['abc', 'deabcd']);
+    expect(result).toEqual(['a', 'bcdea', 'bcd']);
   });
 
   it('should ignore features with scores lower than the threshold.', () => {

@@ -16,6 +16,7 @@
 import io
 import os
 import sys
+import typing
 import unittest
 from pathlib import Path
 
@@ -47,12 +48,18 @@ class TestFeatureExtractor(unittest.TestCase):
 
   def test_unicode_block_index(self) -> None:
 
-    def check(character: str, block: int) -> None:
-      self.assertEqual(feature_extractor.unicode_block_index(character), block)
+    def check(character: str, block: str, msg: str) -> None:
+      self.assertEqual(
+          feature_extractor.unicode_block_index(character), block, msg)
 
-    check('a', 1)  # 'a' falls the 1st block 'Basic Latin'.
-    check('あ', 108)  # 'あ' falls the 108th block 'Hiragana'.
-    check('安', 120)  # '安' falls the 120th block 'Kanji'.
+    check('a', '001', '"a" should be the 1st block "Basic Latin".')
+    check('あ', '108', '"あ" should be the 108th block "Hiragana".')
+    check('安', '120', '"安" should be the 120th block "Kanji"')
+    check('あ安', '108', 'Only the first character should be recognized')
+    check('', utils.INVALID,
+          'Should return INVALID when a blank string is given.')
+    check(utils.INVALID, utils.INVALID,
+          'Should return INVALID when INVALID is given.')
 
   def test_get_feature(self) -> None:
     feature = feature_extractor.get_feature('a', 'b', 'c', 'd', 'e', 'f', 'x',
@@ -118,25 +125,26 @@ class TestFeatureExtractor(unittest.TestCase):
         },
         'Features should be extracted.')
 
-    feature = feature_extractor.get_feature('', 'a', 'a', 'a', 'a', 'a', 'a',
-                                            'a', 'a')
-    self.assertIn('UW1:', feature,
-                  'The word feature should be blank for a blank string.')
-    self.assertIn(
-        'UB1:999', feature,
-        'The Unicode block feature should be 999 for a blank string.')
+    def find_by_prefix(prefix: str, feature: typing.List[str]) -> bool:
+      for item in feature:
+        if item.startswith(prefix):
+          return True
+      return False
 
-    feature = feature_extractor.get_feature('a', 'a', 'a', '', '', '', 'b', 'b',
-                                            'b')
-    self.assertNotIn(
-        'UW4:', feature,
-        'UW features that imply the end of line should not be included.')
-    self.assertNotIn(
-        'UB4:999', feature,
-        'UB features that imply the end of line should not be included.')
-    self.assertNotIn(
-        'BB3:999999', feature,
-        'BB features that imply the end of line should not be included.')
+    feature = feature_extractor.get_feature('a', 'a', utils.INVALID, 'a', 'a',
+                                            'a', 'a', 'a', 'a')
+    self.assertFalse(
+        find_by_prefix('UW3:', feature),
+        'Should omit the Unigram feature when the character is invalid.')
+    self.assertFalse(
+        find_by_prefix('UB3:', feature),
+        'Should omit the Unicode block feature when the character is invalid.')
+    self.assertFalse(
+        find_by_prefix('BW2:', feature),
+        'Should omit the Bigram feature that covers an invalid character.')
+    self.assertFalse(
+        find_by_prefix('BB2:', feature),
+        'Should omit the Unicode feature that covers an invalid character.')
 
   def test_process(self) -> None:
     feature_extractor.process(SOURCE_FILE_PATH, ENTRIES_FILE_PATH)
@@ -146,15 +154,15 @@ class TestFeatureExtractor(unittest.TestCase):
       entries = f.read().splitlines()
     test_sentence = ''.join(self.test_entry.split(utils.SEP))
     self.assertEqual(
-        len(entries),
-        len(test_sentence) - 2,
-        'The first two characters\' ends should not be examined.')
+        len(entries), len(test_sentence),
+        'Should start making entries from the first character.')
 
-    print(entries)
     labels = [int(entry.split('\t')[0]) for entry in entries]
     self.assertListEqual(
         labels,
         [
+            -1,  # こ
+            -1,  # れ
             1,  # は
             -1,  # 美
             -1,  # し
@@ -168,10 +176,22 @@ class TestFeatureExtractor(unittest.TestCase):
         'The first column of entries should be labels.')
 
     features = [set(entry.split('\t')[1:]) for entry in entries]
-    self.assertIn('UW3:美', features[1])
-    self.assertIn('UW3:し', features[2])
-    self.assertIn('UW3:い', features[3])
-    self.assertIn('UW3:。', features[-1])
+    self.assertIn(
+        'UW3:こ', features[0],
+        'The first feature set should include the first character as the UW3 feature.'
+    )
+    self.assertIn(
+        'UW3:れ', features[1],
+        'The second feature set should include the second character as the UW3 feature.'
+    )
+    self.assertIn(
+        'UW3:は', features[2],
+        'The third feature set should include the third character as the UW3 feature.'
+    )
+    self.assertIn(
+        'UW3:。', features[-1],
+        'The last feature set should include the last character as the UW3 feature.'
+    )
 
   def tearDown(self) -> None:
     os.remove(SOURCE_FILE_PATH)
