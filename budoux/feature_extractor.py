@@ -26,14 +26,14 @@ with open(os.path.join(os.path.dirname(__file__), 'unicode_blocks.json')) as f:
   block_starts: typing.List[int] = json.load(f)
 
 
-def unicode_block_feature(w: str) -> str:
+def unicode_block_index(w: str) -> str:
   """Returns the index of the Unicode block that the character belongs to.
 
   Args:
     w (str): A character.
 
   Returns:
-    index (int): Unicode block index.
+    index (str): Unicode block index in three digits.
   """
   if not w or w == INVALID:
     return INVALID
@@ -59,12 +59,12 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
     The feature (list[str]).
 
   """
-  b1 = unicode_block_feature(w1)
-  b2 = unicode_block_feature(w2)
-  b3 = unicode_block_feature(w3)
-  b4 = unicode_block_feature(w4)
-  b5 = unicode_block_feature(w5)
-  b6 = unicode_block_feature(w6)
+  b1 = unicode_block_index(w1)
+  b2 = unicode_block_index(w2)
+  b3 = unicode_block_index(w3)
+  b4 = unicode_block_index(w4)
+  b5 = unicode_block_index(w5)
+  b6 = unicode_block_index(w6)
   raw_feature = {
       'UP1': p1,
       'UP2': p2,

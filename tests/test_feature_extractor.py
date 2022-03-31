@@ -50,7 +50,7 @@ class TestFeatureExtractor(unittest.TestCase):
 
     def check(character: str, block: str, msg: str) -> None:
       self.assertEqual(
-          feature_extractor.unicode_block_feature(character), block, msg)
+          feature_extractor.unicode_block_index(character), block, msg)
 
     check('a', '001', '"a" should be the 1st block "Basic Latin".')
     check('あ', '108', '"あ" should be the 108th block "Hiragana".')
