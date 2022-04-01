@@ -190,4 +190,3 @@ def load_default_simplified_chinese_parser() -> Parser:
   with open(os.path.join(MODEL_DIR, 'zh-hans.json')) as f:
     model = json.load(f)
   return Parser(model)
-
