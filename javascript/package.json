@@ -1,6 +1,6 @@
 {
   "name": "budoux",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A small chunk segmenter.",
   "repository": {
     "type": "git",
@@ -33,7 +33,7 @@
     "./module/dom.js": "./module/dom-browser.js"
   },
   "devDependencies": {
-    "@types/jasmine": "^4.0.1",
+    "@types/jasmine": "^4.0.2",
     "@types/jsdom": "^16.2.14",
     "@types/node": "^17.0.23",
     "esbuild": "^0.14.29",
