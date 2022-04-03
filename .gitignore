@@ -8,7 +8,7 @@ __pycache__
 *.egg-info
 *,cover
 *.coverage
-xov.xml
+cov.xml
 
 # Python related files
 build/
