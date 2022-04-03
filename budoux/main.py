@@ -14,13 +14,13 @@
 # limitations under the License.
 """BudouX Script to provide CLI for user."""
 import argparse
+import glob
 import json
 import os
 import shutil
 import sys
 import textwrap
 import typing
-import glob
 
 import pkg_resources
 
@@ -60,7 +60,7 @@ def get_model_langs() -> typing.Dict[str, str]:
   """
   models = glob.glob(
       pkg_resources.resource_filename(__name__, "models") + "/*-*.json")
-  return {model.split("/")[-1][:2]: model for model in models}
+  return {model.split(os.sep)[-1][:2]: model for model in models}
 
 
 def check_lang(lang: str) -> str:
