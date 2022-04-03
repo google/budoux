@@ -145,11 +145,11 @@ class TestParser(unittest.TestCase):
 
 class TestDefaultParser(unittest.TestCase):
 
-  def test_load_default_japanese_parser(self):
+  def test_load_default_japanese_parser(self) -> None:
     p_ja = parser.load_default_japanese_parser()
     self.assertTrue("UW4:私" in p_ja.model)
 
-  def test_load_default_simplified_chinese_parser(self):
+  def test_load_default_simplified_chinese_parser(self) -> None:
     p_ch = parser.load_default_simplified_chinese_parser()
     self.assertTrue("UW4:力" in p_ch.model)
 
