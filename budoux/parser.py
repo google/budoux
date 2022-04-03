@@ -19,7 +19,7 @@ import typing
 from html.parser import HTMLParser
 
 from .feature_extractor import get_feature
-from .utils import SEP, INVALID, Result
+from .utils import INVALID, SEP, Result
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'

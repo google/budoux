@@ -20,7 +20,7 @@ import os
 import sys
 import typing
 
-from .utils import SEP, INVALID, Result
+from .utils import INVALID, SEP, Result
 
 with open(os.path.join(os.path.dirname(__file__), 'unicode_blocks.json')) as f:
   block_starts: typing.List[int] = json.load(f)
