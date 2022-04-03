@@ -6,6 +6,8 @@ __pycache__
 *.pyc
 *.log
 *.egg-info
+*,cover
+*.coverage
 
 # Python related files
 build/
