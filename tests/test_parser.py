@@ -143,5 +143,16 @@ class TestParser(unittest.TestCase):
         'Should work with emojis.')
 
 
+class TestDefaultParser(unittest.TestCase):
+
+  def test_load_default_japanese_parser(self):
+    p_ja = parser.load_default_japanese_parser()
+    self.assertTrue("UW4:私" in p_ja.model)
+
+  def test_load_default_simplified_chinese_parser(self):
+    p_ch = parser.load_default_simplified_chinese_parser()
+    self.assertTrue("UW4:力" in p_ch.model)
+
+
 if __name__ == '__main__':
   unittest.main()
