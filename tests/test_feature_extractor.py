@@ -26,10 +26,10 @@ sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import feature_extractor, utils  # noqa (module hack)
 
-if isinstance(sys.stdin, io.TextIOWrapper) and sys.version_info >= (3, 7):
+if isinstance(sys.stdin, io.TextIOWrapper):
   sys.stdin.reconfigure(encoding='utf-8')
 
-if isinstance(sys.stdout, io.TextIOWrapper) and sys.version_info >= (3, 7):
+if isinstance(sys.stdout, io.TextIOWrapper):
   sys.stdout.reconfigure(encoding='utf-8')
 
 SOURCE_FILE_PATH = os.path.abspath(
