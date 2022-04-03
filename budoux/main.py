@@ -80,7 +80,8 @@ def check_lang(lang: str) -> str:
     return langs[lang]
   else:
     raise argparse.ArgumentTypeError(
-        f"'{lang}' does not exist in builtin models.")
+        f"'{lang}' does not exist in builtin models. (supported languages: {langs.keys()})"
+    )
 
 
 def parse_args(test: ArgList = None) -> argparse.Namespace:
