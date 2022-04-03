@@ -55,6 +55,29 @@ class TestCommonOption(unittest.TestCase):
     self.assertEqual(cm.exception.code, 0)
 
 
+class TestModelOption(unittest.TestCase):
+
+  def test_cmdargs_invalid_json(self) -> None:
+    cmdargs = ['-m', '404.json']
+    with self.assertRaises(SystemExit) as cm:
+      main.parse_args(cmdargs)
+
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_invalid_lang(self) -> None:
+    cmdargs = ['-l', 'aa']
+    with self.assertRaises(SystemExit) as cm:
+      main.parse_args(cmdargs)
+
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_lang_ja(self) -> None:
+    cmdargs = ['-l', 'ja', '今日はいい天気ですね。']
+    output = main._main(cmdargs)
+
+    self.assertEqual(output, '今日は\nいい\n天気ですね。')
+
+
 class TestTextArguments(unittest.TestCase):
 
   def test_cmdargs_single_text(self) -> None:
