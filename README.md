@@ -95,7 +95,7 @@ $ budoux 本日は晴天です。  # default: japanese
 本日は
 晴天です。
 
-$ budoux -l zh 今天天气晴朗。
+$ budoux -l zh-hans 今天天气晴朗。
 今天天气
 晴朗。
 ```
@@ -129,15 +129,15 @@ positional arguments:
 options:
   -h, --help               show this help message and exit
   -H, --html               HTML mode (default: False)
-  -m JSON, --model JSON    custom model file path (default: /home/eggplants/prog/budoux/budoux/models/ja-knbc.json)
+  -m JSON, --model JSON    custom model file path (default: /path/to/models/ja-knbc.json)
   -l LANG, --lang LANG     language of custom model (default: None)
   -d STR, --delim STR      output delimiter in TEXT mode (default: ---)
   -t THRES, --thres THRES  threshold value to separate chunks (default: 1000)
   -V, --version            show program's version number and exit
 
 supported languages of `-l`, `--lang`:
-- zh
-- ja
+- zh-hans
+- ja-knbc
 ```
 
 ## Caveat

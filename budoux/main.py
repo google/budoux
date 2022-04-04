@@ -60,14 +60,14 @@ def get_model_langs() -> typing.Dict[str, str]:
   """
   models = glob.glob(
       pkg_resources.resource_filename(__name__, "models") + "/*-*.json")
-  return {model.split(os.sep)[-1][:2]: model for model in models}
+  return {model.split(os.sep)[-1][:-5]: model for model in models}
 
 
 def check_lang(lang: str) -> str:
   """Check if given language exists or not.
 
   Args:
-      lang (str): language code (e.g.: 'ja')
+      lang (str): language code (e.g.: 'ja-knbc')
 
   Raises:
       argparse.ArgumentTypeError: Raise if no model for given language exists.
