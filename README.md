@@ -91,9 +91,17 @@ For more details of the JavaScript model, please refer to [JavaScript module REA
 You can also format inputs on your terminal with `budoux` command.
 
 ```shellsession
-$ budoux 本日は晴天です。
+$ budoux 本日は晴天です。 # default: japanese
 本日は
 晴天です。
+
+$ budoux -l ja 本日は晴天です。
+本日は
+晴天です。
+
+$ budoux -l zh-hans 今天天气晴朗。
+今天天气
+晴朗。
 ```
 
 ```shellsession
@@ -114,7 +122,7 @@ If you want to see help, run `budoux -h`.
 
 ```shellsession
 $ budoux -h
-usage: budoux [-h] [-H] [-m JSON] [-d STR] [-t THRES] [-V] [TXT]
+usage: budoux [-h] [-H] [-m JSON | -l LANG] [-d STR] [-t THRES] [-V] [TXT]
 
 BudouX is the successor to Budou,
 the machine learning powered line break organizer tool.
@@ -122,13 +130,18 @@ the machine learning powered line break organizer tool.
 positional arguments:
   TXT                      text (default: None)
 
-optional arguments:
+options:
   -h, --help               show this help message and exit
   -H, --html               HTML mode (default: False)
   -m JSON, --model JSON    custom model file path (default: /path/to/models/ja-knbc.json)
+  -l LANG, --lang LANG     language of custom model (default: None)
   -d STR, --delim STR      output delimiter in TEXT mode (default: ---)
   -t THRES, --thres THRES  threshold value to separate chunks (default: 1000)
   -V, --version            show program's version number and exit
+
+supported languages of `-l`, `--lang`:
+- zh-hans
+- ja
 ```
 
 ## Caveat

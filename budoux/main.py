@@ -14,6 +14,7 @@
 # limitations under the License.
 """BudouX Script to provide CLI for user."""
 import argparse
+import glob
 import json
 import os
 import shutil
@@ -34,21 +35,60 @@ class BudouxHelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
 
 
 def check_file(path: str) -> str:
-  """Check if filepath is exist or not.
+  """Check if a given filepath exists or not.
 
   Args:
       path (str): Model path
 
   Raises:
-      FileNotFoundError: Raise if given path is not exist.
+      FileNotFoundError: Raise if given path does not exist.
 
   Returns:
-      str: Model path confirmed its existance.
+      str: A model path.
   """
   if os.path.isfile(path):
     return path
   else:
-    raise FileNotFoundError("'{}' is not found.".format(path))
+    raise argparse.ArgumentTypeError(f"'{path}' is not found.")
+
+
+def get_model_langs() -> typing.Dict[str, str]:
+  """Get a dictionary of model languages and its paths.
+
+  Returns:
+      typing.Dict[str, str]: A dictionary of model languages and its paths.
+  """
+  models = glob.glob(
+      pkg_resources.resource_filename(__name__, "models") + "/*-*.json")
+  langs = {}
+  for model in models:
+    model_name = model.split(os.sep)[-1][:-5]
+    if model_name.startswith('zh-'):
+      langs[model_name] = model
+    else:
+      langs[model_name[:2]] = model
+  return langs
+
+
+def check_lang(lang: str) -> str:
+  """Check if given language exists or not.
+
+  Args:
+      lang (str): language code (e.g.: 'ja')
+
+  Raises:
+      argparse.ArgumentTypeError: Raise if no model for given language exists.
+
+  Returns:
+      str: A model path.
+  """
+  langs = get_model_langs()
+  if lang in langs:
+    return langs[lang]
+  else:
+    raise argparse.ArgumentTypeError(
+        f"'{lang}' does not exist in builtin models. (supported languages: {list(langs.keys())})"
+    )
 
 
 def parse_args(test: ArgList = None) -> argparse.Namespace:
@@ -72,7 +112,9 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       description=textwrap.dedent("""\
         BudouX is the successor to Budou,
         the machine learning powered line break organizer tool."""),
-  )
+      epilog="\n- ".join(
+          ["supported languages of `-l`, `--lang`:",
+           *get_model_langs().keys()]))
 
   parser.add_argument("text", metavar="TXT", nargs="?", type=str, help="text")
   parser.add_argument(
@@ -81,13 +123,21 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       action="store_true",
       help="HTML mode",
   )
-  parser.add_argument(
+  model_select_group = parser.add_mutually_exclusive_group()
+  model_select_group.add_argument(
       "-m",
       "--model",
       metavar="JSON",
       type=check_file,
       default=pkg_resources.resource_filename(__name__, "models/ja-knbc.json"),
       help="custom model file path",
+  )
+  model_select_group.add_argument(
+      "-l",
+      "--lang",
+      metavar="LANG",
+      type=check_lang,
+      help="language of custom model",
   )
   parser.add_argument(
       "-d",
@@ -118,7 +168,8 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
 
 def _main(test: ArgList = None) -> str:
   args = parse_args(test=test)
-  with open(args.model, "r") as f:
+  model_path = args.lang or args.model
+  with open(model_path, "r") as f:
     model = json.load(f)
 
   parser = budoux.Parser(model)
