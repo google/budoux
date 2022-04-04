@@ -163,7 +163,7 @@ A training dataset is a large text file that consists of sentences separated by 
 Assuming the text file is saved as `mysource.txt`, you can build your own custom model by running the following commands.
 
 ```shellsession
-$ pip install -r requirements_dev.txt
+$ pip install .[dev]
 $ python scripts/encode_data.py mysource.txt -o encoded_data.txt
 $ python scripts/train.py encoded_data.txt -o weights.txt
 $ python scripts/build_model.py weights.txt -o mymodel.json
