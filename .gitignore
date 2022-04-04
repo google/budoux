@@ -6,7 +6,6 @@ __pycache__
 *.pyc
 *.log
 *.egg-info
-*,cover
 *.coverage
 cov.xml
 
