@@ -64,18 +64,31 @@ class TestModelOption(unittest.TestCase):
 
     self.assertEqual(cm.exception.code, 2)
 
-  def test_cmdargs_invalid_lang(self) -> None:
+  def test_cmdargs_invalid_lang_1(self) -> None:
     cmdargs = ['-l', 'aa']
     with self.assertRaises(SystemExit) as cm:
       main.parse_args(cmdargs)
 
     self.assertEqual(cm.exception.code, 2)
 
+  def test_cmdargs_invalid_lang_2(self) -> None:
+    cmdargs = ['-l', 'ja-knbc']
+    with self.assertRaises(SystemExit) as cm:
+      main.parse_args(cmdargs)
+
+    self.assertEqual(cm.exception.code, 2)
+
   def test_cmdargs_lang_ja(self) -> None:
-    cmdargs = ['-l', 'ja-knbc', '今日はいい天気ですね。']
+    cmdargs = ['-l', 'ja', '今日はいい天気ですね。']
     output = main._main(cmdargs)
 
     self.assertEqual(output, '今日は\nいい\n天気ですね。')
+
+  def test_cmdargs_lang_ja(self) -> None:
+    cmdargs = ['-l', 'zh-hans', '今天天气晴朗。']
+    output = main._main(cmdargs)
+
+    self.assertEqual(output, '今天天气\n晴朗。')
 
 
 class TestTextArguments(unittest.TestCase):

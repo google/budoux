@@ -91,7 +91,11 @@ For more details of the JavaScript model, please refer to [JavaScript module REA
 You can also format inputs on your terminal with `budoux` command.
 
 ```shellsession
-$ budoux 本日は晴天です。  # default: japanese
+$ budoux 本日は晴天です。 # default: japanese
+本日は
+晴天です。
+
+$ budoux -l ja 本日は晴天です。
 本日は
 晴天です。
 
@@ -137,7 +141,7 @@ options:
 
 supported languages of `-l`, `--lang`:
 - zh-hans
-- ja-knbc
+- ja
 ```
 
 ## Caveat

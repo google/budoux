@@ -60,14 +60,19 @@ def get_model_langs() -> typing.Dict[str, str]:
   """
   models = glob.glob(
       pkg_resources.resource_filename(__name__, "models") + "/*-*.json")
-  return {model.split(os.sep)[-1][:-5]: model for model in models}
+  langs = {}
+  for model in models:
+    model_name = model.split(os.sep)[-1][:-5]
+    langs[model_name if model_name.startswith('zh-') else model_name[:2]] = model
+  else:
+    return langs
 
 
 def check_lang(lang: str) -> str:
   """Check if given language exists or not.
 
   Args:
-      lang (str): language code (e.g.: 'ja-knbc')
+      lang (str): language code (e.g.: 'ja')
 
   Raises:
       argparse.ArgumentTypeError: Raise if no model for given language exists.
