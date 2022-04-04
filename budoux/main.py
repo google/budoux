@@ -63,9 +63,11 @@ def get_model_langs() -> typing.Dict[str, str]:
   langs = {}
   for model in models:
     model_name = model.split(os.sep)[-1][:-5]
-    langs[model_name if model_name.startswith('zh-') else model_name[:2]] = model
-  else:
-    return langs
+    if model_name.startswith('zh-'):
+      langs[model_name] = model
+    else:
+      langs[model_name[:2]] = model
+  return langs
 
 
 def check_lang(lang: str) -> str:
