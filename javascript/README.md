@@ -66,17 +66,21 @@ console.log(ele.outerHTML);
 There is another way to apply the process to an HTML element.
 
 ```javascript
+import { HTMLProcessor } from 'budoux';
 const ele = document.querySelector('p.budou-this');
-const applier = new Applier(parser);
+const applier = new HTMLProcessor(parser);
 applier.applyToElement(ele);
 ```
 
-The `Applier` class recognizes separate or nested paragraphs more correctly,
+The [`HTMLProcessor`] class
+recognizes separate or nested paragraphs more correctly,
 its output is generally more memory efficient for browsers,
 and it can customize its output such as inserting a space at boundaries
 which is often useful for accessibility,
 but the bundle code size is larger.
 Please see the JSDoc for more details.
+
+[`HTMLProcessor`]: https://github.com/google/budoux/blob/main/javascript/src/html_processor.ts
 
 ### Loading a custom model
 

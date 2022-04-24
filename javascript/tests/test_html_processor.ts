@@ -17,7 +17,7 @@
 import 'jasmine';
 import {JSDOM} from 'jsdom';
 import {loadDefaultJapaneseParser} from '../src/parser';
-import {Applier} from '../src/applier';
+import {HTMLProcessor, HTMLProcessorOptions} from '../src/html_processor';
 
 // Browser compatibilities.
 console.assert(!('getComputedStyle' in global));
@@ -35,19 +35,20 @@ global.getComputedStyle = (element: Element) => {
 
 const parser = loadDefaultJapaneseParser();
 
-class MockApplierBase extends Applier {
-  constructor() {
-    super(parser);
+class MockHTMLProcessorBase extends HTMLProcessor {
+  constructor(options?: HTMLProcessorOptions) {
+    super(parser, options);
   }
 }
 
-describe('Applier.applyToElement', () => {
+describe('HTMLProcessor.applyToElement', () => {
   function apply(html: string) {
     const dom = new JSDOM(html);
-    const applier = new MockApplierBase();
-    applier.separator = '/';
-    applier.className = 'applied';
-    applier.applyToElement(dom.window.document.body);
+    const processor = new MockHTMLProcessorBase({
+      separator: '/',
+      className: 'applied',
+    });
+    processor.applyToElement(dom.window.document.body);
     return dom.window.document.body.innerHTML;
   }
 
@@ -83,11 +84,11 @@ describe('Applier.applyToElement', () => {
   }
 });
 
-describe('Applier.getBlocks', () => {
+describe('HTMLProcessor.getBlocks', () => {
   const getBlocks = (html: string) => {
     const dom = new JSDOM(html);
-    const applier = new MockApplierBase();
-    const blocks = applier.getBlocks(dom.window.document.body);
+    const processor = new MockHTMLProcessorBase();
+    const blocks = processor.getBlocks(dom.window.document.body);
     const texts = Array.from(
       (function* (blocks) {
         for (const block of blocks)
@@ -151,7 +152,7 @@ describe('Applier.getBlocks', () => {
   });
 });
 
-describe('Applier.splitTextNodes', () => {
+describe('HTMLProcessor.splitTextNodes', () => {
   class MockText {
     nodeValue: string;
 
@@ -167,7 +168,7 @@ describe('Applier.splitTextNodes', () => {
     chunks: string[];
   }
 
-  class MockApplier extends MockApplierBase {
+  class MockHTMLProcessor extends MockHTMLProcessorBase {
     nodeAndChunks: NodeAndChunks[] = [];
 
     splitTextNode(node: Text, chunks: string[]) {
@@ -176,9 +177,9 @@ describe('Applier.splitTextNodes', () => {
   }
 
   function split(nodes: Text[], boundaries: number[]) {
-    const applier = new MockApplier();
-    applier.splitTextNodes(nodes, boundaries);
-    return applier.nodeAndChunks;
+    const processor = new MockHTMLProcessor();
+    processor.splitTextNodes(nodes, boundaries);
+    return processor.nodeAndChunks;
   }
 
   it('should not split nodes', () => {

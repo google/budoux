@@ -137,30 +137,9 @@ class Paragraph {
 }
 
 /**
- * Applies the BudouX to the given DOM.
- *
- * This class has following advantages over
- * {@link Applier.applyToElement}.
- * * It recognizes paragraphs and applies the BudouX for each
- *   paragraph separately.
- * * It can customize how to insert break opportunities.
- *   See {@link separator} for more details.
- * * It is generally faster and more memory efficient, but the
- *   code size is larger.
+ * Options for {@link HTMLProcessor}.
  */
-export class Applier {
-  private parser_: Parser;
-  /**
-   * The threshold score to control the granularity of chunks.
-   */
-  threshold: number = DEFAULT_THRES;
-  /**
-   * The separator to insert at each semantics boundary.
-   * The default value is U+200B ZERO WIDTH SPACE.
-   *
-   * When falsy, a `<wbr>` element is inserted.
-   */
-  separator?: string = ZWSP;
+export interface HTMLProcessorOptions {
   /**
    * This class name is added to the containing block
    * when the BudouX is applied.
@@ -172,12 +151,51 @@ export class Applier {
    * When falsy, an inline style is set instead.
    */
   className?: string;
+  /**
+   * The separator to insert at each semantics boundary.
+   * The default value is U+200B ZERO WIDTH SPACE.
+   *
+   * When falsy, a `<wbr>` element is inserted.
+   */
+  separator?: string;
+  /**
+   * The threshold score to control the granularity of chunks.
+   * See {@link Parser.parse}.
+   */
+  threshold?: number;
+}
+
+/**
+ * Applies the BudouX to the given DOM.
+ *
+ * This class has following advantages over
+ * {@link Parser.applyElement}.
+ * * It recognizes paragraphs and applies the BudouX for each
+ *   paragraph separately.
+ * * It can customize how to insert break opportunities.
+ *   See {@link separator} for more details.
+ * * It is generally faster and more memory efficient, but the
+ *   code size is larger.
+ */
+export class HTMLProcessor {
+  private parser_: Parser;
+  /** See {@link HTMLProcessorOptions.className}. */
+  className?: string;
+  /** See {@link HTMLProcessorOptions.separator}. */
+  separator?: string = ZWSP;
+  /** See {@link HTMLProcessorOptions.threshold}. */
+  threshold: number = DEFAULT_THRES;
 
   /**
    * @param parser A BudouX {@link Parser} to compute semantic line breaks.
    */
-  constructor(parser: Parser) {
+  constructor(parser: Parser, options?: HTMLProcessorOptions) {
     this.parser_ = parser;
+    if (options !== undefined) {
+      if (options.className !== undefined) this.className = options.className;
+      if (options.separator !== undefined) this.separator = options.separator;
+      if (options.threshold !== undefined) this.threshold = options.threshold;
+    }
   }
 
   /**
