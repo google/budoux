@@ -153,11 +153,12 @@ export interface HTMLProcessorOptions {
   className?: string;
   /**
    * The separator to insert at each semantics boundary.
-   * The default value is U+200B ZERO WIDTH SPACE.
    *
-   * When falsy, a `<wbr>` element is inserted.
+   * When it's a {@link Node}, a clone of the {@link Node} will be inserted.
+   *
+   * The default value is U+200B ZERO WIDTH SPACE.
    */
-  separator?: string;
+  separator?: string | Node;
   /**
    * The threshold score to control the granularity of chunks.
    * See {@link Parser.parse}.
@@ -182,7 +183,7 @@ export class HTMLProcessor {
   /** See {@link HTMLProcessorOptions.className}. */
   className?: string;
   /** See {@link HTMLProcessorOptions.separator}. */
-  separator?: string = ZWSP;
+  separator: string | Node = ZWSP;
   /** See {@link HTMLProcessorOptions.threshold}. */
   threshold: number = DEFAULT_THRES;
 
@@ -373,14 +374,15 @@ export class HTMLProcessor {
     assert(chunks.length > 1);
     assert(node.nodeValue === chunks.join(''));
 
-    // If the `separator` string is specified, insert it at each boundary.
-    if (this.separator) {
-      node.nodeValue = chunks.join(this.separator);
+    const separator = this.separator;
+    if (typeof separator === 'string') {
+      // If the `separator` is a string, insert it at each boundary.
+      node.nodeValue = chunks.join(separator);
       return;
     }
 
-    // Otherwise create a `Text` node for each chunk, with `<wbr>` between them,
-    // and replace the `node` with them.
+    // Otherwise create a `Text` node for each chunk, with the separator node
+    // between them, and replace the `node` with them.
     const document = node.ownerDocument;
     let nodes = [];
     for (const chunk of chunks) {
@@ -388,7 +390,7 @@ export class HTMLProcessor {
       nodes.push(null);
     }
     nodes.pop();
-    nodes = nodes.map(n => (n ? n : document.createElement('wbr')));
+    nodes = nodes.map(n => (n ? n : separator.cloneNode(true)));
     node.replaceWith(...nodes);
   }
 
