@@ -193,11 +193,11 @@ export class Parser {
    * @param threshold The threshold score to control the granularity of chunks.
    */
   applyElement(parentElement: HTMLElement, threshold = DEFAULT_THRES) {
-    const html_processor = new HTMLProcessor(this, {
+    const htmlProcessor = new HTMLProcessor(this, {
       separator: parentElement.ownerDocument.createElement('wbr'),
       threshold: threshold,
     });
-    html_processor.applyToElement(parentElement);
+    htmlProcessor.applyToElement(parentElement);
   }
 
   /**

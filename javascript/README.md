@@ -71,10 +71,10 @@ For example:
 ```javascript
 import { HTMLProcessor } from 'budoux';
 const ele = document.querySelector('p.budou-this');
-const html_processor = new HTMLProcessor(parser, {
+const htmlProcessor = new HTMLProcessor(parser, {
   separator: ' '
 });
-html_processor.applyToElement(ele);
+htmlProcessor.applyToElement(ele);
 ```
 
 [`HTMLProcessor`]: https://github.com/google/budoux/blob/main/javascript/src/html_processor.ts
