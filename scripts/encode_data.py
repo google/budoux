@@ -16,7 +16,7 @@
 import argparse
 import itertools
 import sys
-from context import feature_extractor, utils
+from budoux import feature_extractor, utils
 
 
 def process(line: str, entries_filename: str) -> None:
@@ -71,7 +71,8 @@ def main() -> None:
     f.write('')
   for line in data:
     process(line, entries_filename)
-  print('\033[92mEncoded training data is output to: %s\033[0m' % entries_filename)
+  print('\033[92mEncoded training data is output to: %s\033[0m' %
+        entries_filename)
 
 
 if __name__ == '__main__':

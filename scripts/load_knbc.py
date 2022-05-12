@@ -20,8 +20,7 @@ import typing
 import urllib.error
 import urllib.request
 from html.parser import HTMLParser
-
-from context import utils
+from budoux import utils
 
 RESOURCE_URL = (
     'https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2')

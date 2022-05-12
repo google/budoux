@@ -111,5 +111,3 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
     if INVALID in value:
       del raw_feature[key]
   return [f'{item[0]}:{item[1]}' for item in raw_feature.items()]
-
-
