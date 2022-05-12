@@ -13,11 +13,13 @@
 # limitations under the License.
 """Tests the data encoder script."""
 
-import unittest
 import os
 import sys
+import unittest
 from pathlib import Path
+
 from budoux import utils
+
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))

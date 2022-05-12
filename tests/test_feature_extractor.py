@@ -15,6 +15,7 @@
 
 import typing
 import unittest
+
 from budoux import feature_extractor, utils
 
 
