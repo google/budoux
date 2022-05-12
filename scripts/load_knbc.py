@@ -20,6 +20,7 @@ import typing
 import urllib.error
 import urllib.request
 from html.parser import HTMLParser
+
 from budoux import utils
 
 RESOURCE_URL = (
