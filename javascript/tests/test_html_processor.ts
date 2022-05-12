@@ -84,6 +84,28 @@ describe('HTMLProcessor.applyToElement', () => {
   }
 });
 
+describe('HTMLProcessor.applyToElement.separator.node', () => {
+  const dom = new JSDOM('<div>今日は良い天気</div>');
+  const document = dom.window.document;
+  const separator = document.createElement('span');
+  separator.style.whiteSpace = 'normal';
+  separator.textContent = '\u200B';
+  const processor = new MockHTMLProcessorBase({
+    separator: separator,
+    className: 'applied',
+  });
+  processor.applyToElement(document.body);
+  it('should clone separator element deeply', () => {
+    expect(document.body.innerHTML).toEqual(
+      '<div class="applied">今日は' +
+        '<span style="white-space: normal;">\u200B</span>' +
+        '良い' +
+        '<span style="white-space: normal;">\u200B</span>' +
+        '天気</div>'
+    );
+  });
+});
+
 describe('HTMLProcessor.getBlocks', () => {
   const getBlocks = (html: string) => {
     const dom = new JSDOM(html);

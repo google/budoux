@@ -15,11 +15,11 @@
  */
 
 import {unicodeBlocks} from './data/unicode_blocks';
-import {skipNodes} from './data/skip_nodes';
 import {model as jaKNBCModel} from './data/models/ja-knbc';
 import {model as zhHansModel} from './data/models/zh-hans';
 import {parseFromString} from './dom';
-import {bisectRight, SEP, INVALID} from './utils';
+import {HTMLProcessor} from './html_processor';
+import {bisectRight, INVALID} from './utils';
 
 /**
  * The default threshold value for the parser.
@@ -32,8 +32,6 @@ const NODETYPE = {
   ELEMENT: 1,
   TEXT: 3,
 };
-
-const SKIP_NODES = new Set(skipNodes);
 
 export class Parser {
   model;
@@ -195,45 +193,11 @@ export class Parser {
    * @param threshold The threshold score to control the granularity of chunks.
    */
   applyElement(parentElement: HTMLElement, threshold = DEFAULT_THRES) {
-    parentElement.style.wordBreak = 'keep-all';
-    parentElement.style.overflowWrap = 'break-word';
-    const chunks = this.parse(parentElement.textContent || '', threshold);
-    let charsToProcess = chunks.join(SEP);
-    const ownerDocument = parentElement.ownerDocument;
-
-    const processChildren = (parent: HTMLElement) => {
-      const toSkip = SKIP_NODES.has(parent.nodeName);
-      const children = [...parent.childNodes];
-      for (const child of children) {
-        if (child.nodeType === NODETYPE.TEXT) {
-          let textNodeContent = '';
-          const nodesToAdd: (HTMLElement | Text)[] = [];
-          (child.textContent || '').split('').forEach(char => {
-            if (toSkip) {
-              textNodeContent += char;
-              charsToProcess = charsToProcess.slice(
-                charsToProcess[0] === SEP ? 2 : 1
-              );
-            } else if (char === charsToProcess[0]) {
-              textNodeContent += char;
-              charsToProcess = charsToProcess.slice(1);
-            } else if (charsToProcess[0] === SEP) {
-              nodesToAdd.push(ownerDocument.createTextNode(textNodeContent));
-              nodesToAdd.push(ownerDocument.createElement('wbr'));
-              charsToProcess = charsToProcess.slice(2);
-              textNodeContent = char;
-            }
-          });
-          if (textNodeContent) {
-            nodesToAdd.push(ownerDocument.createTextNode(textNodeContent));
-          }
-          child.replaceWith(...nodesToAdd);
-        } else if (child.nodeType === NODETYPE.ELEMENT) {
-          processChildren(child as HTMLElement);
-        }
-      }
-    };
-    processChildren(parentElement);
+    const htmlProcessor = new HTMLProcessor(this, {
+      separator: parentElement.ownerDocument.createElement('wbr'),
+      threshold: threshold,
+    });
+    htmlProcessor.applyToElement(parentElement);
   }
 
   /**
