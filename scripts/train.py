@@ -141,7 +141,7 @@ def fit(X_train: npt.NDArray[np.bool_],
       when calculating AdaBoost's weighted training error.
 
   Returns:
-    phi (Dict[int, float]): Leanred child classifiers.
+    phi (Dict[int, float]): Learned child classifiers.
   """
   with open(weights_filename, 'w') as f:
     f.write('')
