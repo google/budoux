@@ -61,10 +61,9 @@ def preprocess(
 
   for i, entry in enumerate(entries):
     Y[i] = entry[0] == '1'
-    for col in entry[1:]:
-      if col in feature_index:
-        X[i, feature_index[col]] = True
-    X[i, -1] = True  # add a bias column.
+    indices = [feature_index[col] for col in entry[1:] if col in feature_index]
+    X[i, indices] = True
+  X[:, -1] = True  # add a bias column.
   return X, Y, features
 
 
