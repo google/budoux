@@ -14,13 +14,11 @@
 """Methods to encode source sentences to features."""
 
 import bisect
-import itertools
 import json
 import os
-import sys
 import typing
 
-from .utils import INVALID, SEP, Result
+from .utils import INVALID
 
 with open(os.path.join(os.path.dirname(__file__), 'unicode_blocks.json')) as f:
   block_starts: typing.List[int] = json.load(f)
@@ -113,40 +111,3 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
     if INVALID in value:
       del raw_feature[key]
   return [f'{item[0]}:{item[1]}' for item in raw_feature.items()]
-
-
-def process(source_filename: str, entries_filename: str) -> None:
-  """Extratcs features from source sentences and outputs trainig data entries.
-
-  Args:
-    source_filename (str): A file path to the source sentences.
-    entries_filename (str): A file path to the output entries.
-  """
-  with open(source_filename, encoding=sys.getdefaultencoding()) as f:
-    data = f.readlines()
-  with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
-    f.write('')
-
-  for datum in data:
-    chunks = datum.strip().split(SEP)
-    chunk_lengths = [len(chunk) for chunk in chunks]
-    sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
-    sentence = ''.join(chunks)
-    p1 = Result.UNKNOWN.value
-    p2 = Result.UNKNOWN.value
-    p3 = Result.UNKNOWN.value
-    for i in range(1, len(sentence) + 1):
-      feature = get_feature(
-          sentence[i - 3] if i > 2 else INVALID,
-          sentence[i - 2] if i > 1 else INVALID, sentence[i - 1],
-          sentence[i] if i < len(sentence) else INVALID,
-          sentence[i + 1] if i + 1 < len(sentence) else INVALID,
-          sentence[i + 2] if i + 2 < len(sentence) else INVALID, p1, p2, p3)
-      positive = i in sep_indices
-      p = Result.POSITIVE.value if positive else Result.NEGATIVE.value
-      with open(entries_filename, 'a', encoding=sys.getdefaultencoding()) as f:
-        row = ['1' if positive else '-1'] + feature
-        f.write('\t'.join(row) + '\n')
-      p1 = p2
-      p2 = p3
-      p3 = p

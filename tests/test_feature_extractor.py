@@ -13,38 +13,13 @@
 # limitations under the License.
 """Tests methods for the feature extractor."""
 
-import io
-import os
-import sys
 import typing
 import unittest
-from pathlib import Path
 
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
-
-from budoux import feature_extractor, utils  # noqa (module hack)
-
-if isinstance(sys.stdin, io.TextIOWrapper):
-  sys.stdin.reconfigure(encoding='utf-8')
-
-if isinstance(sys.stdout, io.TextIOWrapper):
-  sys.stdout.reconfigure(encoding='utf-8')
-
-SOURCE_FILE_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'source_test.txt'))
-ENTRIES_FILE_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
+from budoux import feature_extractor, utils
 
 
 class TestFeatureExtractor(unittest.TestCase):
-
-  def setUp(self) -> None:
-    Path(ENTRIES_FILE_PATH).touch()
-    self.test_entry = f'これは{utils.SEP}美しい{utils.SEP}ペンです。'
-    with open(SOURCE_FILE_PATH, 'w', encoding=sys.getdefaultencoding()) as f:
-      f.write(self.test_entry)
 
   def test_unicode_block_index(self) -> None:
 
@@ -145,57 +120,6 @@ class TestFeatureExtractor(unittest.TestCase):
     self.assertFalse(
         find_by_prefix('BB2:', feature),
         'Should omit the Unicode feature that covers an invalid character.')
-
-  def test_process(self) -> None:
-    feature_extractor.process(SOURCE_FILE_PATH, ENTRIES_FILE_PATH)
-    with open(
-        ENTRIES_FILE_PATH, encoding=sys.getdefaultencoding(),
-        errors='replace') as f:
-      entries = f.read().splitlines()
-    test_sentence = ''.join(self.test_entry.split(utils.SEP))
-    self.assertEqual(
-        len(entries), len(test_sentence),
-        'Should start making entries from the first character.')
-
-    labels = [int(entry.split('\t')[0]) for entry in entries]
-    self.assertListEqual(
-        labels,
-        [
-            -1,  # こ
-            -1,  # れ
-            1,  # は
-            -1,  # 美
-            -1,  # し
-            1,  # い
-            -1,  # ペ
-            -1,  # ン
-            -1,  # で
-            -1,  # す
-            1  # 。
-        ],
-        'The first column of entries should be labels.')
-
-    features = [set(entry.split('\t')[1:]) for entry in entries]
-    self.assertIn(
-        'UW3:こ', features[0],
-        'The first feature set should include the first character as the UW3 feature.'
-    )
-    self.assertIn(
-        'UW3:れ', features[1],
-        'The second feature set should include the second character as the UW3 feature.'
-    )
-    self.assertIn(
-        'UW3:は', features[2],
-        'The third feature set should include the third character as the UW3 feature.'
-    )
-    self.assertIn(
-        'UW3:。', features[-1],
-        'The last feature set should include the last character as the UW3 feature.'
-    )
-
-  def tearDown(self) -> None:
-    os.remove(SOURCE_FILE_PATH)
-    os.remove(ENTRIES_FILE_PATH)
 
 
 if __name__ == '__main__':
