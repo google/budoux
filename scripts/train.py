@@ -17,10 +17,16 @@ import argparse
 import typing
 from collections import Counter
 
-import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
-from jax import device_put, jit
+
+jax_installed = False
+try:
+  import jax.numpy as jnp
+  from jax import device_put, jit
+  jax_installed = True
+except ModuleNotFoundError:
+  import numpy as jnp
 
 EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
 
@@ -69,7 +75,6 @@ def preprocess(
   return X, Y, features
 
 
-@jit
 def pred(phis: typing.Dict[int, float],
          X: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
   """Predicts the output from the given classifiers and input entries.
@@ -163,10 +168,11 @@ def fit(X_train: npt.NDArray[np.bool_],
   assert (X_test.shape[0] == Y_test.shape[0]
          ), 'Testing entries and labels should have the same number of items.'
 
-  X_train = device_put(X_train)
-  Y_train = device_put(Y_train)
-  X_test = device_put(X_test)
-  Y_test = device_put(Y_test)
+  if jax_installed:
+    X_train = device_put(X_train)
+    Y_train = device_put(Y_train)
+    X_test = device_put(X_test)
+    Y_test = device_put(Y_test)
   N_train, M_train = X_train.shape
   w = jnp.ones(N_train) / N_train
   YX_train = Y_train[:, None] ^ X_train
@@ -197,8 +203,12 @@ def fit(X_train: npt.NDArray[np.bool_],
     with open(weights_filename, 'a') as f:
       feature = features[m_best] if m_best < len(features) else 'BIAS'
       f.write('%s\t%.3f\n' % (feature, alpha if pol_best else -alpha))
-    acc_train = (pred(phis, X_train) == Y_train).mean()
-    acc_test = (pred(phis, X_test) == Y_test).mean()
+    if jax_installed:
+      acc_train = (jit(pred)(phis, X_train) == Y_train).mean()
+      acc_test = (jit(pred)(phis, X_test) == Y_test).mean()
+    else:
+      acc_train = (pred(phis, X_train) == Y_train).mean()
+      acc_test = (pred(phis, X_test) == Y_test).mean()
     print('training accuracy:\t', acc_train)
     print('testing accuracy:\t', acc_test)
     with open(log_filename, 'a') as f:
