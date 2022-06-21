@@ -20,10 +20,3 @@ SEP = '▁'
 
 INVALID = '▔'
 """The invalid feature string."""
-
-
-class Result(Enum):
-  """An enum to represent the type of inference result."""
-  UNKNOWN = 'U'
-  POSITIVE = 'B'
-  NEGATIVE = 'O'

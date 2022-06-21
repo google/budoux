@@ -19,7 +19,7 @@ import typing
 from html.parser import HTMLParser
 
 from .feature_extractor import get_feature
-from .utils import INVALID, SEP, Result
+from .utils import INVALID, SEP
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
@@ -121,9 +121,6 @@ class Parser:
     """
     if sentence == '':
       return []
-    p1 = Result.UNKNOWN.value
-    p2 = Result.UNKNOWN.value
-    p3 = Result.UNKNOWN.value
     chunks = [sentence[0]]
     base_score = -sum(self.model.values())
     for i in range(1, len(sentence)):
@@ -131,17 +128,13 @@ class Parser:
           sentence[i - 3] if i > 2 else INVALID,
           sentence[i - 2] if i > 1 else INVALID, sentence[i - 1], sentence[i],
           sentence[i + 1] if i + 1 < len(sentence) else INVALID,
-          sentence[i + 2] if i + 2 < len(sentence) else INVALID, p1, p2, p3)
+          sentence[i + 2] if i + 2 < len(sentence) else INVALID)
       score = base_score + 2 * sum(
           self.model[f] for f in feature if f in self.model)
       if score > 0:
         chunks.append(sentence[i])
       else:
         chunks[-1] += sentence[i]
-      p = Result.POSITIVE.value if score > 0 else Result.NEGATIVE.value
-      p1 = p2
-      p2 = p3
-      p3 = p
     return chunks
 
   def translate_html_string(self, html: str) -> str:

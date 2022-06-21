@@ -31,9 +31,6 @@ def process(line: str, entries_filename: str) -> None:
   chunk_lengths = [len(chunk) for chunk in chunks]
   sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
   sentence = ''.join(chunks)
-  p1 = utils.Result.UNKNOWN.value
-  p2 = utils.Result.UNKNOWN.value
-  p3 = utils.Result.UNKNOWN.value
   lines = []
   for i in range(1, len(sentence) + 1):
     feature = feature_extractor.get_feature(
@@ -41,13 +38,9 @@ def process(line: str, entries_filename: str) -> None:
         sentence[i - 2] if i > 1 else utils.INVALID, sentence[i - 1],
         sentence[i] if i < len(sentence) else utils.INVALID,
         sentence[i + 1] if i + 1 < len(sentence) else utils.INVALID,
-        sentence[i + 2] if i + 2 < len(sentence) else utils.INVALID, p1, p2, p3)
+        sentence[i + 2] if i + 2 < len(sentence) else utils.INVALID)
     positive = i in sep_indices
-    p = utils.Result.POSITIVE.value if positive else utils.Result.NEGATIVE.value
     lines.append('\t'.join(['1' if positive else '-1'] + feature) + '\n')
-    p1 = p2
-    p2 = p3
-    p3 = p
   with open(entries_filename, 'a', encoding=sys.getdefaultencoding()) as f:
     f.write(''.join(lines))
 
