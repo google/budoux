@@ -16,19 +16,31 @@
 import argparse
 import typing
 from collections import Counter
+from typing import NamedTuple
 
 import numpy as np
 import numpy.typing as npt
 
-jax_installed = False
+jax_ready = False
 try:
   import jax.numpy as jnp
   from jax import device_put, jit
-  jax_installed = True
+  jax_ready = True
 except ModuleNotFoundError:
   import numpy as jnp  # type: ignore
 
 EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
+
+
+class Result(NamedTuple):
+  tp: int
+  tn: int
+  fp: int
+  fn: int
+  accuracy: float
+  precision: float
+  recall: float
+  fscore: float
 
 
 def preprocess(
@@ -127,6 +139,27 @@ def split_dataset(
   return X_train, X_test, Y_train, Y_test
 
 
+def get_metrics(pred: npt.NDArray[np.bool_],
+                actual: npt.NDArray[np.bool_]) -> Result:
+  tp = np.sum(np.logical_and(pred == 1, actual == 1))
+  tn = np.sum(np.logical_and(pred == 0, actual == 0))
+  fp = np.sum(np.logical_and(pred == 1, actual == 0))
+  fn = np.sum(np.logical_and(pred == 0, actual == 1))
+  accuracy = (tp + tn) / (tp + tn + fp + fn)
+  precision = tp / (tp + fp)
+  recall = tp / (tp + fn)
+  return Result(
+      tp=tp,
+      tn=tn,
+      fp=fp,
+      fn=fn,
+      accuracy=accuracy,
+      precision=precision,
+      recall=recall,
+      fscore=2 * precision * recall / (precision + recall),
+  )
+
+
 def fit(X_train: npt.NDArray[np.bool_],
         Y_train: npt.NDArray[np.bool_],
         X_test: npt.NDArray[np.bool_],
@@ -156,7 +189,8 @@ def fit(X_train: npt.NDArray[np.bool_],
   with open(weights_filename, 'w') as f:
     f.write('')
   with open(log_filename, 'w') as f:
-    f.write('')
+    f.write('train_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore\t'
+            'test_accuracy\ttest_precision\ttest_recall\ttest_fscore\n')
   print('Outputting learned weights to %s ...' % (weights_filename))
 
   phis: typing.Dict[int, float] = dict()
@@ -170,7 +204,7 @@ def fit(X_train: npt.NDArray[np.bool_],
   assert (X_test.shape[0] == Y_test.shape[0]
          ), 'Testing entries and labels should have the same number of items.'
 
-  if jax_installed:
+  if jax_ready:
     X_train = device_put(X_train)
     Y_train = device_put(Y_train)
     X_test = device_put(X_test)
@@ -192,8 +226,9 @@ def fit(X_train: npt.NDArray[np.bool_],
     m_best = int(err.argmin())
     pol_best = res[m_best] < 0.5
     err_min = err[m_best]
-    print('min error:\t', err_min)
-    print('best tree:\t', m_best)
+    print('min error:\t%.5f' % err_min)
+    print('best tree:\t%d' % m_best)
+    print()
     alpha = jnp.log((1 - err_min) / (err_min + EPS))
     phis.setdefault(m_best, 0)
     phis[m_best] += alpha if pol_best else -alpha
@@ -205,16 +240,31 @@ def fit(X_train: npt.NDArray[np.bool_],
     with open(weights_filename, 'a') as f:
       feature = features[m_best] if m_best < len(features) else 'BIAS'
       f.write('%s\t%.3f\n' % (feature, alpha if pol_best else -alpha))
-    if jax_installed:
-      acc_train = (jit(pred)(phis, X_train) == Y_train).mean()
-      acc_test = (jit(pred)(phis, X_test) == Y_test).mean()
-    else:
-      acc_train = (pred(phis, X_train) == Y_train).mean()
-      acc_test = (pred(phis, X_test) == Y_test).mean()
-    print('training accuracy:\t', acc_train)
-    print('testing accuracy:\t', acc_test)
+    pred_train = jit(pred)(phis, X_train) if jax_ready else pred(phis, X_train)
+    pred_test = jit(pred)(phis, X_test) if jax_ready else pred(phis, X_test)
+    metrics_train = get_metrics(pred_train, Y_train)
+    metrics_test = get_metrics(pred_test, Y_test)
+    print('train accuracy:\t%.5f' % metrics_train.accuracy)
+    print('train prec.:\t%.5f' % metrics_train.precision)
+    print('train recall:\t%.5f' % metrics_train.recall)
+    print('train fscore:\t%.5f' % metrics_train.fscore)
+    print()
+    print('test accuracy:\t%.5f' % metrics_test.accuracy)
+    print('test prec.:\t%.5f' % metrics_test.precision)
+    print('test recall:\t%.5f' % metrics_test.recall)
+    print('test fscore:\t%.5f' % metrics_test.fscore)
+    print()
     with open(log_filename, 'a') as f:
-      f.write('%.5f\t%.5f\n' % (acc_train, acc_test))
+      f.write('%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n' % (
+          metrics_train.accuracy,
+          metrics_train.precision,
+          metrics_train.recall,
+          metrics_train.fscore,
+          metrics_test.accuracy,
+          metrics_test.precision,
+          metrics_test.recall,
+          metrics_test.fscore,
+      ))
   return phis
 
 
