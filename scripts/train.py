@@ -26,7 +26,7 @@ try:
   from jax import device_put, jit
   jax_installed = True
 except ModuleNotFoundError:
-  import numpy as jnp
+  import numpy as jnp  # type: ignore
 
 EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
 
@@ -90,10 +90,12 @@ def pred(phis: typing.Dict[int, float],
   alphas: npt.NDArray[np.float64]
   y: npt.NDArray[np.int64]
 
-  alphas = jnp.array(list(phis.values()))
-  y = 2 * (X[:, list(phis.keys())]
-           == True) - 1  # noqa (cannot replace `==` with `is`)
-  return y.dot(alphas) > 0
+  alphas = jnp.array(list(phis.values()))  # type: ignore
+  y = 2 * (
+      X[:, list(phis.keys())] == True  # noqa (cannot replace `==` with `is`)
+  ) - 1
+  result: npt.NDArray[np.bool_] = y.dot(alphas) > 0
+  return result
 
 
 def split_dataset(
@@ -174,7 +176,7 @@ def fit(X_train: npt.NDArray[np.bool_],
     X_test = device_put(X_test)
     Y_test = device_put(Y_test)
   N_train, M_train = X_train.shape
-  w = jnp.ones(N_train) / N_train
+  w = jnp.ones(N_train) / N_train  # type: ignore
   YX_train = Y_train[:, None] ^ X_train
   for t in range(iters):
     print('=== %s ===' % (t))
