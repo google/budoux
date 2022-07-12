@@ -12,6 +12,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install ".[dev]"
+          pip install jax[cpu]
       - name: Run isort
         run: |
           isort --diff --check .
@@ -19,12 +20,8 @@ jobs:
         run: |
           yapf --diff --recursive budoux tests scripts
       - name: Run mypy
-        if: ${{ always() }}
-        uses: sasanquaneuf/mypy-github-action@a0c442aa252655d7736ce6696e06227ccdd62870
-        with:
-          checkName: python-style-check
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mypy budoux tests scripts
       - name: Run flake8
         if: ${{ always() }}
         uses: suo/flake8-github-action@3e87882219642e01aa8a6bbd03b4b0adb8542c2a
