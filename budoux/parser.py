@@ -16,6 +16,7 @@
 import json
 import os
 import typing
+import warnings
 from html.parser import HTMLParser
 
 from .feature_extractor import get_feature
@@ -23,7 +24,6 @@ from .utils import INVALID, SEP, Result
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
-DEFAULT_THRES = 1000
 with open(os.path.join(os.path.dirname(__file__), 'skip_nodes.json')) as f:
   SKIP_NODES: typing.Set[str] = set(json.load(f))
 
@@ -113,7 +113,7 @@ class Parser:
 
   def parse(self,
             sentence: str,
-            thres: int = DEFAULT_THRES) -> typing.List[str]:
+            thres: typing.Optional[int] = None) -> typing.List[str]:
     """Parses the input sentence and returns a list of semantic chunks.
 
     Args:
@@ -123,6 +123,9 @@ class Parser:
     Returns:
       A list of semantic chunks (List[str]).
     """
+    if thres is not None:
+      warnings.warn('`thres` argument is deprecated. '
+      'The argument will be removed in the future version.')
     if sentence == '':
       return []
     p1 = Result.UNKNOWN.value
@@ -136,11 +139,9 @@ class Parser:
           sentence[i + 1] if i + 1 < len(sentence) else INVALID,
           sentence[i + 2] if i + 2 < len(sentence) else INVALID, p1, p2, p3)
       score = 0
-      for f in feature:
-        if f not in self.model:
-          continue
-        score += self.model[f]
-      if score > thres:
+      for m in self.model:
+        score += self.model[m] if m in feature else -self.model[m]
+      if score > 0:
         chunks.append(sentence[i])
       else:
         chunks[-1] += sentence[i]
@@ -150,7 +151,7 @@ class Parser:
       p3 = p
     return chunks
 
-  def translate_html_string(self, html: str, thres: int = DEFAULT_THRES) -> str:
+  def translate_html_string(self, html: str, thres: typing.Optional[int] = None) -> str:
     """Translates the given HTML string with markups for semantic line breaks.
 
     Args:

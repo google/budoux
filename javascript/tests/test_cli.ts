@@ -108,22 +108,6 @@ describe('cli', () => {
     });
   });
 
-  it('should change the chunk granularity when --thres option is given.', () => {
-    const inputText = '今日は天気です。';
-    const argv = ['node', 'budoux', '--thres', '100000', inputText];
-    const expectedStdOut = '今日は天気です。';
-    cli(argv);
-    expect(console.log).toHaveBeenCalledWith(expectedStdOut);
-  });
-
-  it('should change the chunk granularity when -t option is given.', () => {
-    const inputText = '今日は天気です。';
-    const argv = ['node', 'budoux', '-t', '100000', inputText];
-    const expectedStdOut = '今日は天気です。';
-    cli(argv);
-    expect(console.log).toHaveBeenCalledWith(expectedStdOut);
-  });
-
   it('should output the separated sentence with separater when execute budoux with stdin inputed by pipe', async () => {
     const runCliWithStdin = (stdin: string): Promise<execFileCallBack> => {
       return new Promise(resolve => {

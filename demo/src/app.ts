@@ -27,7 +27,6 @@ const defaultInputs = new Map([
 const inputTextElement = document.getElementById('input') as HTMLTextAreaElement;
 const outputContainerElement = document.getElementById('output') as HTMLElement;
 const fontSizeElement = document.getElementById('fontsize') as HTMLInputElement;
-const thresholdElement = document.getElementById('threshold') as HTMLInputElement;
 const brCheckElement = document.getElementById('wbr2br') as HTMLInputElement;
 const modelSelectElement = document.getElementById('model') as HTMLSelectElement;
 const url = new URL(document.location.href);
@@ -46,11 +45,10 @@ declare global {
  */
 const run = () => {
   outputContainerElement.innerHTML = window.DOMPurify.sanitize(inputTextElement.value);
-  const threshold = Number(thresholdElement.value);
   const model = modelSelectElement.value;
   const parser = parsers.get(model);
   if (!parser) return;
-  parser.applyElement(outputContainerElement, threshold);
+  parser.applyElement(outputContainerElement);
   outputContainerElement.style.fontSize = `${fontSizeElement.value}rem`;
   const renderWithBR = brCheckElement.checked;
   if (renderWithBR) {
@@ -75,10 +73,6 @@ fontSizeElement.addEventListener('input', () => {
 })
 
 inputTextElement.addEventListener('input', () => {
-  run();
-});
-
-thresholdElement.addEventListener('input', () => {
   run();
 });
 

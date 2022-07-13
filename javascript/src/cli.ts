@@ -18,7 +18,7 @@ import {readFileSync} from 'fs';
 import {resolve} from 'path';
 import * as readline from 'readline';
 import {Command} from 'commander';
-import {Parser, loadDefaultJapaneseParser, DEFAULT_THRES} from './parser';
+import {Parser, loadDefaultJapaneseParser} from './parser';
 
 /**
  * Run the command line interface program.
@@ -34,11 +34,6 @@ export const cli = (argv: string[]) => {
   program
     .option('-H, --html', 'HTML mode', false)
     .option('-d, --delim <str>', 'output delimiter in TEXT mode', '---')
-    .option(
-      '-t, --thres <number>',
-      'threshold value to separate chunks',
-      `${DEFAULT_THRES}`
-    )
     .option('-m, --model <json>', 'custom model file path')
     .argument('[txt]', 'text');
 
@@ -47,10 +42,9 @@ export const cli = (argv: string[]) => {
   program.parse(argv);
 
   const options = program.opts();
-  const {model, thres, delim, html} = options as {
+  const {model, delim, html} = options as {
     html: boolean;
     delim: string;
-    thres: number;
     model?: string;
   };
   const {args} = program;
@@ -68,12 +62,12 @@ export const cli = (argv: string[]) => {
         stdin += line + '\n';
       });
       process.stdin.on('end', () => {
-        outputParsedTexts(parser, html, delim, thres, [stdin]);
+        outputParsedTexts(parser, html, delim, [stdin]);
       });
       break;
     }
     case 1: {
-      outputParsedTexts(parser, html, delim, thres, args);
+      outputParsedTexts(parser, html, delim, args);
       break;
     }
     default: {
@@ -89,26 +83,24 @@ export const cli = (argv: string[]) => {
  * @param parser A parser.
  * @param html A flag of html output mode.
  * @param delim A delimiter to separate output sentence.
- * @param thres A threshold value to separate chunks.
  * @param args string array to parse. Array should have only one element.
  */
 const outputParsedTexts = (
   parser: Parser,
   html: boolean,
   delim: string,
-  thres: number,
   args: string[]
 ) => {
   if (html) {
     const text = args[0];
-    const output = parser.translateHTMLString(text, thres);
+    const output = parser.translateHTMLString(text);
     console.log(output);
   } else {
     const splitedTextsByNewLine = args[0]
       .split(/\r?\n/)
       .filter(text => text !== '');
     splitedTextsByNewLine.forEach((text, index) => {
-      const parsedTexts = parser.parse(text, thres);
+      const parsedTexts = parser.parse(text);
       parsedTexts.forEach(parsedText => {
         console.log(parsedText);
       });

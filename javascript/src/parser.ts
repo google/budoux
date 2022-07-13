@@ -21,11 +21,6 @@ import {parseFromString} from './dom';
 import {HTMLProcessor} from './html_processor';
 import {bisectRight, INVALID} from './utils';
 
-/**
- * The default threshold value for the parser.
- */
-export const DEFAULT_THRES = 1000;
-
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
 const NODETYPE = {
@@ -152,10 +147,9 @@ export class Parser {
    * Parses the input sentence and returns a list of semantic chunks.
    *
    * @param sentence An input sentence.
-   * @param thres A threshold score to control the granularity of output chunks.
    * @returns The retrieved chunks.
    */
-  parse(sentence: string, thres: number = DEFAULT_THRES) {
+  parse(sentence: string) {
     if (sentence === '') return [];
     let p1 = 'U';
     let p2 = 'U';
@@ -174,11 +168,11 @@ export class Parser {
         p2,
         p3
       );
-      const score = feature
-        .map(f => this.model.get(f) || 0)
+      const score = [...this.model.entries()]
+        .map(([key, value]) => (feature.indexOf(key) > -1 ? value : -value))
         .reduce((prev, curr) => prev + curr);
       const p = score > 0 ? 'B' : 'O';
-      if (score > thres) result.push('');
+      if (score > 0) result.push('');
       result[result.length - 1] += sentence[i];
       p1 = p2;
       p2 = p3;
@@ -190,12 +184,10 @@ export class Parser {
   /**
    * Applies markups for semantic line breaks to the given HTML element.
    * @param parentElement The input element.
-   * @param threshold The threshold score to control the granularity of chunks.
    */
-  applyElement(parentElement: HTMLElement, threshold = DEFAULT_THRES) {
+  applyElement(parentElement: HTMLElement) {
     const htmlProcessor = new HTMLProcessor(this, {
       separator: parentElement.ownerDocument.createElement('wbr'),
-      threshold: threshold,
     });
     htmlProcessor.applyToElement(parentElement);
   }
@@ -204,10 +196,9 @@ export class Parser {
    * Translates the given HTML string to another HTML string with markups
    * for semantic line breaks.
    * @param html An input html string.
-   * @param threshold A score to control the granularity of output chunks.
    * @returns The translated HTML string.
    */
-  translateHTMLString(html: string, threshold = DEFAULT_THRES) {
+  translateHTMLString(html: string) {
     if (html === '') return html;
     const doc = parseFromString(html);
     if (Parser.hasChildTextNode(doc.body)) {
@@ -215,7 +206,7 @@ export class Parser {
       wrapper.append(...doc.body.childNodes);
       doc.body.append(wrapper);
     }
-    this.applyElement(doc.body.childNodes[0] as HTMLElement, threshold);
+    this.applyElement(doc.body.childNodes[0] as HTMLElement);
     return doc.body.innerHTML;
   }
 }

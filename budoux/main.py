@@ -151,7 +151,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       "-t",
       "--thres",
       type=int,
-      default=budoux.DEFAULT_THRES,
+      default=None,
       help="threshold value to separate chunks",
   )
   parser.add_argument(

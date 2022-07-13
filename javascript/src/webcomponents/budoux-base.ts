@@ -15,7 +15,6 @@
  */
 
 import {Parser} from '..';
-import {DEFAULT_THRES} from '../parser';
 
 /**
  * Base BudouX Web component.
@@ -24,9 +23,6 @@ export abstract class BudouXBaseElement extends HTMLElement {
   shadow: ShadowRoot;
   parser: Parser;
 
-  static get observedAttributes() {
-    return ['thres'];
-  }
   /**
    * Base BudouX Web component constructor.
    */
@@ -52,10 +48,6 @@ export abstract class BudouXBaseElement extends HTMLElement {
   }
 
   sync() {
-    const thres = this.getAttribute('thres');
-    this.shadow.innerHTML = this.parser.translateHTMLString(
-      this.innerHTML,
-      thres === null ? DEFAULT_THRES : Number(thres)
-    );
+    this.shadow.innerHTML = this.parser.translateHTMLString(this.innerHTML);
   }
 }
