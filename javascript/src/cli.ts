@@ -42,7 +42,7 @@ export const cli = (argv: string[]) => {
     .option('-m, --model <json>', 'custom model file path')
     .argument('[txt]', 'text');
 
-  program.version('0.1.0');
+  program.version('0.1.1');
 
   program.parse(argv);
 
