@@ -14,8 +14,8 @@
   },
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
-    "build:cjs": "tsc --outDir dist --module CommonJS",
-    "build:es": "tsc --outDir module --module ES6",
+    "build:cjs": "tsc --outDir dist --module CommonJS --sourceMap false",
+    "build:es": "tsc --outDir module --module ES6 --sourceMap false && cp module/dom-browser.js module/dom.js",
     "bundle": "npm run bundle:webcomponent:ja && npm run bundle:webcomponent:zh-hans",
     "bundle:webcomponent:ja": "esbuild module/webcomponents/budoux-ja.js --bundle --minify --outfile=bundle/budoux-ja.min.js",
     "bundle:webcomponent:zh-hans": "esbuild module/webcomponents/budoux-zh-hans.js --bundle --minify --outfile=bundle/budoux-zh-hans.min.js",
