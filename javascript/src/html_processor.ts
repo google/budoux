@@ -90,16 +90,72 @@ const domActions: {[name: string]: DomAction} = {
   VAR: DomAction.Skip,
 };
 
+const defaultBlockElements = new Set([
+  // 15.3.2 The page
+  'HTML',
+  'BODY',
+  // 15.3.3 Flow content
+  'ADDRESS',
+  'BLOCKQUOTE',
+  'CENTER',
+  'DIALOG',
+  'DIV',
+  'FIGURE',
+  'FIGCAPTION',
+  'FOOTER',
+  'FORM',
+  'HEADER',
+  'LEGEND',
+  'LISTING',
+  'MAIN',
+  'P',
+  // 15.3.6 Sections and headings
+  'ARTICLE',
+  'ASIDE',
+  'H1',
+  'H2',
+  'H3',
+  'H4',
+  'H5',
+  'H6',
+  'HGROUP',
+  'NAV',
+  'SECTION',
+  // 15.3.7 Lists
+  'DIR',
+  'DD',
+  'DL',
+  'DT',
+  'MENU',
+  'OL',
+  'UL',
+  'LI',
+  // 15.3.8 Tables
+  'TABLE',
+  'CAPTION',
+  'COL',
+  'TR',
+  'TD',
+  'TH',
+  // 15.3.12 The fieldset and legend elements
+  'FIELDSET',
+  // 15.5.4 The details and summary elements
+  'DETAILS',
+  'SUMMARY',
+  // 15.5.12 The marquee element
+  'MARQUEE',
+]);
+
 /**
  * Determine the action for an element.
  * @param element An element to determine the action for.
  * @returns The {@link domActions} for the element.
  */
 function actionForElement(element: Element): DomAction {
-  const action = domActions[element.nodeName];
+  const nodeName = element.nodeName;
+  const action = domActions[nodeName];
   if (action !== undefined) return action;
 
-  // jsdom does not have `getComputedStyle`.
   if (typeof getComputedStyle === 'function') {
     const style = getComputedStyle(element);
     switch (style.whiteSpace) {
@@ -109,10 +165,15 @@ function actionForElement(element: Element): DomAction {
     }
 
     const display = style.display;
-    assert(display);
-    if (display !== 'inline') return DomAction.Block;
+    if (display)
+      return display === 'inline' ? DomAction.Inline : DomAction.Block;
+    // `display` is an empty string if the element is not connected.
   }
-  return DomAction.Inline;
+  // Use the built-in rules if the `display` property is empty, or if
+  // `getComputedStyle` is missing (e.g., jsdom.)
+  return defaultBlockElements.has(nodeName)
+    ? DomAction.Block
+    : DomAction.Inline;
 }
 
 /**
