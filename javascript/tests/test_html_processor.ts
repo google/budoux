@@ -19,14 +19,18 @@ import {JSDOM} from 'jsdom';
 import {loadDefaultJapaneseParser} from '../src/parser';
 import {HTMLProcessor, HTMLProcessorOptions} from '../src/html_processor';
 
+let emulateNotConnected = false;
+
 // Browser compatibilities.
 console.assert(!('getComputedStyle' in global));
 global.getComputedStyle = (element: Element) => {
   const window = element.ownerDocument.defaultView;
   console.assert(window);
   const style = window!.getComputedStyle(element);
-  // jsdom does not compute unspecified properties.
-  if (!style.display) {
+  if (emulateNotConnected) {
+    style.display = '';
+  } else if (!style.display) {
+    // jsdom does not compute unspecified properties.
     const blockify = style.float || style.position;
     style.display = blockify ? 'block' : 'inline';
   }
@@ -171,6 +175,17 @@ describe('HTMLProcessor.getBlocks', () => {
     expect(
       getBlocks('before<ruby>b1<rp>(</rp><rt>r1</rt>b2<rt>r2</rt></ruby>after')
     ).toEqual(['beforeb1b2after']);
+  });
+
+  it('should use the built-in rules if the `display` property is empty', () => {
+    emulateNotConnected = true;
+    expect(getBlocks('<div>123<span>456</span></div>')).toEqual(['123456']);
+    expect(getBlocks('<div>123<div>456</div></div>')).toEqual(['456', '123']);
+    expect(getBlocks('<div><h1>123</h1><li>456</li></div>')).toEqual([
+      '123',
+      '456',
+    ]);
+    emulateNotConnected = false;
   });
 });
 
