@@ -67,11 +67,10 @@ def main() -> None:
   source_filename = args.source_data
   entries_filename = args.outfile
   with open(source_filename, encoding=sys.getdefaultencoding()) as f:
-    data = f.readlines()
+    data = f.read().replace('\n', utils.SEP)
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
     f.write('')
-  for line in data:
-    process(line, entries_filename)
+  process(data, entries_filename)
   print('\033[92mEncoded training data is output to: %s\033[0m' %
         entries_filename)
 
