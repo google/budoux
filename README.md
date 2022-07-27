@@ -122,7 +122,7 @@ If you want to see help, run `budoux -h`.
 
 ```shellsession
 $ budoux -h
-usage: budoux [-h] [-H] [-m JSON | -l LANG] [-d STR] [-t THRES] [-V] [TXT]
+usage: budoux [-h] [-H] [-m JSON | -l LANG] [-d STR] [-V] [TXT]
 
 BudouX is the successor to Budou,
 the machine learning powered line break organizer tool.
@@ -136,7 +136,6 @@ options:
   -m JSON, --model JSON    custom model file path (default: /path/to/models/ja-knbc.json)
   -l LANG, --lang LANG     language of custom model (default: None)
   -d STR, --delim STR      output delimiter in TEXT mode (default: ---)
-  -t THRES, --thres THRES  threshold value to separate chunks (default: 1000)
   -V, --version            show program's version number and exit
 
 supported languages of `-l`, `--lang`:

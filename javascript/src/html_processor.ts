@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Parser, DEFAULT_THRES} from './parser';
+import {Parser} from './parser';
 
 const assert = console.assert;
 
@@ -220,11 +220,6 @@ export interface HTMLProcessorOptions {
    * The default value is U+200B ZERO WIDTH SPACE.
    */
   separator?: string | Node;
-  /**
-   * The threshold score to control the granularity of chunks.
-   * See {@link Parser.parse}.
-   */
-  threshold?: number;
 }
 
 /**
@@ -245,8 +240,6 @@ export class HTMLProcessor {
   className?: string;
   /** See {@link HTMLProcessorOptions.separator}. */
   separator: string | Node = ZWSP;
-  /** See {@link HTMLProcessorOptions.threshold}. */
-  threshold: number = DEFAULT_THRES;
 
   /**
    * @param parser A BudouX {@link Parser} to compute semantic line breaks.
@@ -256,7 +249,6 @@ export class HTMLProcessor {
     if (options !== undefined) {
       if (options.className !== undefined) this.className = options.className;
       if (options.separator !== undefined) this.separator = options.separator;
-      if (options.threshold !== undefined) this.threshold = options.threshold;
     }
   }
 
@@ -339,7 +331,7 @@ export class HTMLProcessor {
     if (/^\s*$/.test(text)) return;
 
     // Split the text into a list of phrases.
-    const phrases = this.parser_.parse(text, this.threshold);
+    const phrases = this.parser_.parse(text);
     assert(phrases.length > 0);
     assert(
       phrases.reduce((sum, phrase) => sum + phrase.length, 0) === text.length

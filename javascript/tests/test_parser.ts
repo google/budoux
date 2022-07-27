@@ -118,13 +118,6 @@ describe('Parser.parse', () => {
     expect(result).toEqual(['a', 'bcdea', 'bcd']);
   });
 
-  it('should ignore features with scores lower than the threshold.', () => {
-    const model = new Map([['UW4:a', 10]]);
-    const parser = new Parser(model);
-    const result = parser.parse(TEST_SENTENCE, 100);
-    expect(result).toEqual([TEST_SENTENCE]);
-  });
-
   it('should return a blank list when the input is blank.', () => {
     const model = new Map();
     const parser = new Parser(model);

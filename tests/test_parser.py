@@ -78,14 +78,6 @@ class TestParser(unittest.TestCase):
         chunks, ['a', 'bcdea', 'bcd'],
         'Should separate even if it makes the first character a sole phrase.')
 
-    p = parser.Parser({
-        'UW4:a': 10,
-    })
-    chunks = p.parse(TestParser.TEST_SENTENCE, 100)
-    self.assertListEqual(
-        chunks, [TestParser.TEST_SENTENCE],
-        'Should ignore features with scores lower than the threshold.')
-
     p = parser.Parser({})
     chunks = p.parse('')
     self.assertListEqual(chunks, [],

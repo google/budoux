@@ -20,4 +20,3 @@ __version__ = "0.1.1"
 Parser = parser.Parser
 load_default_japanese_parser = parser.load_default_japanese_parser
 load_default_simplified_chinese_parser = parser.load_default_simplified_chinese_parser
-DEFAULT_THRES = parser.DEFAULT_THRES

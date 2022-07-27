@@ -148,13 +148,6 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       help="output delimiter in TEXT mode",
   )
   parser.add_argument(
-      "-t",
-      "--thres",
-      type=int,
-      default=budoux.DEFAULT_THRES,
-      help="threshold value to separate chunks",
-  )
-  parser.add_argument(
       "-V",
       "--version",
       action="version",
@@ -178,13 +171,13 @@ def _main(test: ArgList = None) -> str:
       inputs_html = sys.stdin.read()
     else:
       inputs_html = args.text
-    res = parser.translate_html_string(inputs_html, thres=args.thres)
+    res = parser.translate_html_string(inputs_html)
   else:
     if args.text is None:
       inputs = [v.rstrip() for v in sys.stdin.readlines()]
     else:
       inputs = [v.rstrip() for v in args.text.splitlines()]
-    outputs = [parser.parse(sentence, thres=args.thres) for sentence in inputs]
+    outputs = [parser.parse(sentence) for sentence in inputs]
     conbined_output = ["\n".join(output) for output in outputs]
     ors = "\n" + args.delim + "\n"
     res = ors.join(conbined_output)
