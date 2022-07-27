@@ -36,6 +36,11 @@ export const bisectRight = (arr: number[], i: number): number => {
   }
 };
 
+/**
+ * Finds the sum of the numbers in the list.
+ * @param arr The list of numbers.
+ * @returns The sum.
+ */
 export const sum = (arr: number[]) =>
   arr.reduce((prev, curr) => prev + curr, 0);
 
