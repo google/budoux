@@ -19,7 +19,7 @@ import {model as jaKNBCModel} from './data/models/ja-knbc';
 import {model as zhHansModel} from './data/models/zh-hans';
 import {parseFromString} from './dom';
 import {HTMLProcessor} from './html_processor';
-import {bisectRight, INVALID} from './utils';
+import {bisectRight, INVALID, sum} from './utils';
 
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
@@ -155,6 +155,7 @@ export class Parser {
     let p2 = 'U';
     let p3 = 'U';
     const result = [sentence[0]];
+    const baseScore = -sum([...this.model.values()]);
 
     for (let i = 1; i < sentence.length; i++) {
       const feature = Parser.getFeature(
@@ -168,9 +169,8 @@ export class Parser {
         p2,
         p3
       );
-      const score = [...this.model.entries()]
-        .map(([key, value]) => (feature.indexOf(key) > -1 ? value : -value))
-        .reduce((prev, curr) => prev + curr);
+      const score =
+        baseScore + 2 * sum(feature.map(f => this.model.get(f) || 0));
       const p = score > 0 ? 'B' : 'O';
       if (score > 0) result.push('');
       result[result.length - 1] += sentence[i];

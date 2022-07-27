@@ -16,7 +16,6 @@
 import json
 import os
 import typing
-import warnings
 from html.parser import HTMLParser
 
 from .feature_extractor import get_feature
@@ -111,36 +110,30 @@ class Parser:
     """
     self.model = model
 
-  def parse(self,
-            sentence: str,
-            thres: typing.Optional[int] = None) -> typing.List[str]:
+  def parse(self, sentence: str) -> typing.List[str]:
     """Parses the input sentence and returns a list of semantic chunks.
 
     Args:
       sentence (str): An input sentence.
-      thres (int, optional): A score to control the granularity of chunks.
 
     Returns:
       A list of semantic chunks (List[str]).
     """
-    if thres is not None:
-      warnings.warn('`thres` argument is deprecated. '
-      'The argument will be removed in the future version.')
     if sentence == '':
       return []
     p1 = Result.UNKNOWN.value
     p2 = Result.UNKNOWN.value
     p3 = Result.UNKNOWN.value
     chunks = [sentence[0]]
+    base_score = -sum(self.model.values())
     for i in range(1, len(sentence)):
       feature = get_feature(
           sentence[i - 3] if i > 2 else INVALID,
           sentence[i - 2] if i > 1 else INVALID, sentence[i - 1], sentence[i],
           sentence[i + 1] if i + 1 < len(sentence) else INVALID,
           sentence[i + 2] if i + 2 < len(sentence) else INVALID, p1, p2, p3)
-      score = 0
-      for m in self.model:
-        score += self.model[m] if m in feature else -self.model[m]
+      score = base_score + 2 * sum(
+          self.model[f] for f in feature if f in self.model)
       if score > 0:
         chunks.append(sentence[i])
       else:
@@ -151,12 +144,11 @@ class Parser:
       p3 = p
     return chunks
 
-  def translate_html_string(self, html: str, thres: typing.Optional[int] = None) -> str:
+  def translate_html_string(self, html: str) -> str:
     """Translates the given HTML string with markups for semantic line breaks.
 
     Args:
       html (str): An input html string.
-      threshold (int, optional): A score to control the granularity of chunks.
 
     Returns:
       The translated HTML string (str).
@@ -165,7 +157,7 @@ class Parser:
     text_content_extractor = TextContentExtractor()
     text_content_extractor.feed(html)
     text_content = text_content_extractor.output
-    chunks = self.parse(text_content, thres)
+    chunks = self.parse(text_content)
     resolver = HTMLChunkResolver(chunks)
     resolver.feed(html)
     return '<span style="%s">%s</span>' % (PARENT_CSS_STYLE, resolver.output)

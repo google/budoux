@@ -36,6 +36,9 @@ export const bisectRight = (arr: number[], i: number): number => {
   }
 };
 
+export const sum = (arr: number[]) =>
+  arr.reduce((prev, curr) => prev + curr, 0);
+
 /** The separator string to specify breakpoints. */
 export const SEP = '▁';
 
