@@ -13,15 +13,17 @@
     "budoux": "./bin/budoux.js"
   },
   "scripts": {
-    "build": "npm run build:es && npm run build:cjs && cp -r src/tests/models dist/tests/models && cp -r src/tests/models module/tests/models",
-    "build:cjs": "tsc --outDir dist --module CommonJS --sourceMap false",
-    "build:es": "tsc --outDir module --module ES6 --sourceMap false && cp module/dom-browser.js module/dom.js",
+    "build": "npm run build:es && npm run build:cjs",
+    "build:cjs": "tsc --outDir dist --module CommonJS --sourceMap false && cp -r src/tests/models dist/tests/models",
+    "build:es": "tsc --outDir module --module ES6 --sourceMap false && cp module/dom-browser.js module/dom.js && cp -r src/tests/models module/tests/models",
     "bundle": "npm run bundle:webcomponent:ja && npm run bundle:webcomponent:zh-hans",
     "bundle:webcomponent:ja": "esbuild module/webcomponents/budoux-ja.js --bundle --minify --sourcemap --outfile=bundle/budoux-ja.min.js",
     "bundle:webcomponent:zh-hans": "esbuild module/webcomponents/budoux-zh-hans.js --bundle --minify --sourcemap --outfile=bundle/budoux-zh-hans.min.js",
     "copy": "node ./scripts/copy-data.js",
     "prepare": "npm run copy && npm run build && npm run bundle",
-    "test": "jasmine dist/tests/test_*.js",
+    "test": "npm run test:jasmine && npm run test:cli-version",
+    "test:jasmine": "jasmine dist/tests/test_*.js",
+    "test:cli-version": "node ./scripts/check-cli-version.js $(node ./bin/budoux.js -V)",
     "lint": "gts lint",
     "fix": "gts fix",
     "clean": "rm -rf dist module src/data"
