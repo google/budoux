@@ -16,8 +16,8 @@
 
 import 'jasmine';
 import {JSDOM} from 'jsdom';
-import {loadDefaultJapaneseParser} from '../src/parser';
-import {HTMLProcessor, HTMLProcessorOptions} from '../src/html_processor';
+import {loadDefaultJapaneseParser} from '../parser';
+import {HTMLProcessor, HTMLProcessorOptions} from '../html_processor';
 
 let emulateNotConnected = false;
 
