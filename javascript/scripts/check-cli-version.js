@@ -15,11 +15,38 @@
  */
 
 const assert = require('assert');
+const path = require('path');
+const childProcess = require('child_process');
 const package = require('../package.json');
+
 const packageVersion = package.version;
-const cliVersion = process.argv[2];
-assert.equal(
-  cliVersion,
-  packageVersion,
-  'The package version and the CLI version should match.'
-);
+const runCli = args =>
+  new Promise(resolve => {
+    childProcess.execFile(
+      'node',
+      [path.resolve(__dirname, '..', 'bin', 'budoux.js'), ...args],
+      (error, stdout, stderr) => {
+        resolve({
+          error,
+          stdout,
+          stderr,
+        });
+      }
+    );
+  });
+
+runCli(['-V']).then(({stdout}) => {
+  assert.equal(
+    stdout.replace('\n', ''),
+    packageVersion,
+    'Package version and CLI version output (-V) should match.'
+  );
+});
+
+runCli(['--version']).then(({stdout}) => {
+  assert.equal(
+    stdout.replace('\n', ''),
+    packageVersion,
+    'Package version and CLI version output (--version) should match.'
+  );
+});
