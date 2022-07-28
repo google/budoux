@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Parser} from './parser';
+import {Parser} from './parser.js';
 
 const assert = console.assert;
 

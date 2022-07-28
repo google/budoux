@@ -16,8 +16,8 @@
 
 import 'jasmine';
 import {JSDOM} from 'jsdom';
-import {Parser} from '../parser';
-import {INVALID} from '../utils';
+import {Parser} from '../parser.js';
+import {INVALID} from '../utils.js';
 
 describe('Parser.getUnicodeBlockFeature', () => {
   const testFeature = (character: string, feature: string) => {

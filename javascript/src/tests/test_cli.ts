@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {cli} from '../cli';
+import {cli} from '../cli.js';
 import {execFile, ExecFileException} from 'child_process';
 import * as path from 'path';
 import stream from 'stream';

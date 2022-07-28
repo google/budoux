@@ -15,7 +15,7 @@
  */
 
 import 'jasmine';
-import {bisectRight} from '../utils';
+import {bisectRight} from '../utils.js';
 
 describe('utils.bisectRight', () => {
   const arr = [1, 3, 8, 12, 34];

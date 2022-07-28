@@ -18,7 +18,7 @@ import {readFileSync} from 'fs';
 import {resolve} from 'path';
 import * as readline from 'readline';
 import {Command} from 'commander';
-import {Parser, loadDefaultJapaneseParser} from './parser';
+import {Parser, loadDefaultJapaneseParser} from './parser.js';
 
 /**
  * Run the command line interface program.

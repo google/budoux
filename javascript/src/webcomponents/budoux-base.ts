@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Parser} from '..';
+import {Parser} from '../parser.js';
 
 /**
  * Base BudouX Web component.
