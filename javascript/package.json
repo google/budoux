@@ -23,7 +23,7 @@
     "prepare": "npm run copy && npm run build && npm run bundle",
     "test": "npm run test:jasmine && npm run test:cli-version",
     "test:jasmine": "jasmine dist/tests/test_*.js",
-    "test:cli-version": "node ./scripts/check-cli-version.js $(node ./bin/budoux.js -V)",
+    "test:cli-version": "node ./scripts/check-cli-version.js",
     "lint": "gts lint",
     "fix": "gts fix",
     "clean": "rm -rf dist module src/data"
