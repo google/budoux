@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {loadDefaultJapaneseParser} from '../parser';
-import {BudouXBaseElement} from './budoux-base';
+import {loadDefaultJapaneseParser} from '../parser.js';
+import {BudouXBaseElement} from './budoux-base.js';
 
 /**
  * BudouX Japanese Web component.

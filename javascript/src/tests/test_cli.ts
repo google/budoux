@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {cli} from '../src/cli';
-import {version} from '../package.json';
+import {cli} from '../cli.js';
 import {execFile, ExecFileException} from 'child_process';
 import * as path from 'path';
 import stream from 'stream';
@@ -64,7 +63,11 @@ describe('cli', () => {
 
   it('should output the separated sentence with custom model when execute budoux command with --model option.', () => {
     const inputText = 'abcdeabcd';
-    const customModelPath = 'tests/models/separate_right_before_a.json';
+    const customModelPath = path.resolve(
+      __dirname,
+      'models',
+      'separate_right_before_a.json'
+    );
     const argv = ['node', 'budoux', '--model', customModelPath, inputText];
     const expectedStdOuts = 'abcde\nabcd'.split('\n');
     cli(argv);
@@ -75,7 +78,11 @@ describe('cli', () => {
 
   it('should output the separated sentence with custom model when execute budoux command with -m option alias.', () => {
     const inputText = 'abcdeabcd';
-    const customModelPath = 'tests/models/separate_right_before_a.json';
+    const customModelPath = path.resolve(
+      __dirname,
+      'models',
+      'separate_right_before_a.json'
+    );
     const argv = ['node', 'budoux', '-m', customModelPath, inputText];
     const expectedStdOuts = 'abcde\nabcd'.split('\n');
     cli(argv);
@@ -164,11 +171,16 @@ describe('cli', () => {
   });
 
   it('should output the error message when get extra option argument.', () => {
+    const customModelPath = path.resolve(
+      __dirname,
+      'models',
+      'separate_right_before_a.json'
+    );
     const argv = [
       'node',
       'budoux',
       '--model',
-      'tests/models/separate_right_before_a.json',
+      customModelPath,
       '<extra model option arguments>',
       '今日は天気です。',
     ];
@@ -178,18 +190,6 @@ describe('cli', () => {
       'Too many arguments. Please, pass the only one argument.'
     );
   });
-
-  it('should output the version number when execute budoux command with --veriosn option.', async () => {
-    const {stdout} = await runCli(['--version']);
-
-    expect(stdout).toBe(`${version}\n`);
-  }, 3000);
-
-  it('should output the version number when execute budoux command with -V option alias.', async () => {
-    const {stdout} = await runCli(['-V']);
-
-    expect(stdout).toBe(`${version}\n`);
-  }, 3000);
 
   it('should output the unknown option error when execute budoux command with -v option.', async () => {
     const {stderr} = await runCli(['-v']);
