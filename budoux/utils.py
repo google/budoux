@@ -13,17 +13,8 @@
 # limitations under the License.
 """Utilities for BudouX."""
 
-from enum import Enum
-
 SEP = '▁'
 """The separator string to specify breakpoints."""
 
 INVALID = '▔'
 """The invalid feature string."""
-
-
-class Result(Enum):
-  """An enum to represent the type of inference result."""
-  UNKNOWN = 'U'
-  POSITIVE = 'B'
-  NEGATIVE = 'O'

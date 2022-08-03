@@ -37,8 +37,7 @@ class TestFeatureExtractor(unittest.TestCase):
           'Should return INVALID when INVALID is given.')
 
   def test_get_feature(self) -> None:
-    feature = feature_extractor.get_feature('a', 'b', 'c', 'd', 'e', 'f', 'x',
-                                            'y', 'z')
+    feature = feature_extractor.get_feature('a', 'b', 'c', 'd', 'e', 'f')
     self.assertSetEqual(
         set(feature),
         {
@@ -50,11 +49,6 @@ class TestFeatureExtractor(unittest.TestCase):
             'UW5:e',
             'UW6:f',
 
-            # Unigram of Previous Results (UP)
-            'UP1:x',
-            'UP2:y',
-            'UP3:z',
-
             # Unigram of Unicode Blocks (UB)
             'UB1:001',
             'UB2:001',
@@ -63,28 +57,15 @@ class TestFeatureExtractor(unittest.TestCase):
             'UB5:001',
             'UB6:001',
 
-            # Combination of UW and UP
-            'UQ1:x001',
-            'UQ2:y001',
-            'UQ3:z001',
-
-            # Bigram of Words (BW), Previous Results (BP), Unicode Blocks (BB), and
-            # its combination (BQ)
+            # Bigram of Words (BW) and Unicode Blocks (BB)
             'BW1:bc',
             'BW2:cd',
             'BW3:de',
-            'BP1:xy',
-            'BP2:yz',
             'BB1:001001',
             'BB2:001001',
             'BB3:001001',
-            'BQ1:y001001',
-            'BQ2:y001001',
-            'BQ3:z001001',
-            'BQ4:z001001',
 
-            # Trigram of Words (BW), Previous Results (BP), Unicode Blocks (BB), and
-            # its combination (BQ)
+            # Trigram of Words (TW) and Unicode Blocks (TB)
             'TW1:abc',
             'TW2:bcd',
             'TW3:cde',
@@ -93,10 +74,6 @@ class TestFeatureExtractor(unittest.TestCase):
             'TB2:001001001',
             'TB3:001001001',
             'TB4:001001001',
-            'TQ1:y001001001',
-            'TQ2:y001001001',
-            'TQ3:z001001001',
-            'TQ4:z001001001',
         },
         'Features should be extracted.')
 
@@ -107,7 +84,7 @@ class TestFeatureExtractor(unittest.TestCase):
       return False
 
     feature = feature_extractor.get_feature('a', 'a', utils.INVALID, 'a', 'a',
-                                            'a', 'a', 'a', 'a')
+                                            'a')
     self.assertFalse(
         find_by_prefix('UW3:', feature),
         'Should omit the Unigram feature when the character is invalid.')

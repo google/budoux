@@ -38,9 +38,9 @@ def unicode_block_index(w: str) -> str:
   return '%03d' % (bisect.bisect_right(block_starts, ord(w[0])))
 
 
-def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
-                p2: str, p3: str) -> typing.List[str]:
-  """Generates a feature from characters around (w1-6) and past results (p1-3).
+def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str,
+                w6: str) -> typing.List[str]:
+  """Generates a feature from characters around (w1-6).
 
   Args:
     w1 (str): The character 3 characters before the break point.
@@ -49,9 +49,6 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
     w4 (str): The character right after the break point.
     w5 (str): The character 2 characters after the break point.
     w6 (str): The character 3 characters after the break point.
-    p1 (str): The result 3 steps ago.
-    p2 (str): The result 2 steps ago.
-    p3 (str): The last result.
 
   Returns:
     The feature (list[str]).
@@ -64,11 +61,6 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
   b5 = unicode_block_index(w5)
   b6 = unicode_block_index(w6)
   raw_feature = {
-      'UP1': p1,
-      'UP2': p2,
-      'UP3': p3,
-      'BP1': p1 + p2,
-      'BP2': p2 + p3,
       'UW1': w1,
       'UW2': w2,
       'UW3': w3,
@@ -95,17 +87,6 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str, p1: str,
       'TB2': b2 + b3 + b4,
       'TB3': b3 + b4 + b5,
       'TB4': b4 + b5 + b6,
-      'UQ1': p1 + b1,
-      'UQ2': p2 + b2,
-      'UQ3': p3 + b3,
-      'BQ1': p2 + b2 + b3,
-      'BQ2': p2 + b3 + b4,
-      'BQ3': p3 + b2 + b3,
-      'BQ4': p3 + b3 + b4,
-      'TQ1': p2 + b1 + b2 + b3,
-      'TQ2': p2 + b2 + b3 + b4,
-      'TQ3': p3 + b1 + b2 + b3,
-      'TQ4': p3 + b2 + b3 + b4,
   }
   for key, value in list(raw_feature.items()):
     if INVALID in value:
