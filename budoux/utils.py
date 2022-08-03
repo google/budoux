@@ -13,8 +13,6 @@
 # limitations under the License.
 """Utilities for BudouX."""
 
-from enum import Enum
-
 SEP = '▁'
 """The separator string to specify breakpoints."""
 
