@@ -20,6 +20,8 @@ import * as readline from 'readline';
 import {Command} from 'commander';
 import {Parser, loadDefaultJapaneseParser} from './parser.js';
 
+const CLI_VERSION = '0.2.0';
+
 /**
  * Run the command line interface program.
  * @param argv process.argv.
@@ -37,7 +39,7 @@ export const cli = (argv: string[]) => {
     .option('-m, --model <json>', 'custom model file path')
     .argument('[txt]', 'text');
 
-  program.version('0.1.2');
+  program.version(CLI_VERSION);
 
   program.parse(argv);
 
