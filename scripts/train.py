@@ -102,7 +102,7 @@ def pred(phis: typing.Dict[int, float],
   alphas: npt.NDArray[np.float64]
   y: npt.NDArray[np.int64]
 
-  alphas = jnp.array(list(phis.values()))  # type: ignore
+  alphas = jnp.array(list(phis.values()))
   y = 2 * (
       X[:, list(phis.keys())] == True  # noqa (cannot replace `==` with `is`)
   ) - 1
