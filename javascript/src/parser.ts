@@ -50,8 +50,7 @@ export class Parser {
   }
 
   /**
-   * Generates a feature from characters around (w1-w6) and past
-   * results (p1-p3).
+   * Generates a feature from characters around (w1-w6).
    *
    * @param w1 The character 3 characters before the break point.
    * @param w2 The character 2 characters before the break point.
