@@ -15,3 +15,4 @@
  */
 
 export * from './parser.js';
+export {HTMLProcessor} from './html_processor.js';
