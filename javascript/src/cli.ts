@@ -20,7 +20,7 @@ import * as readline from 'readline';
 import {Command} from 'commander';
 import {Parser, loadDefaultJapaneseParser} from './parser.js';
 
-const CLI_VERSION = '0.2.0';
+const CLI_VERSION = '0.2.1';
 
 /**
  * Run the command line interface program.

@@ -50,8 +50,7 @@ export class Parser {
   }
 
   /**
-   * Generates a feature from characters around (w1-w6) and past
-   * results (p1-p3).
+   * Generates a feature from characters around (w1-w6).
    *
    * @param w1 The character 3 characters before the break point.
    * @param w2 The character 2 characters before the break point.
@@ -59,9 +58,6 @@ export class Parser {
    * @param w4 The character right after the break point.
    * @param w5 The character 2 characters after the break point.
    * @param w6 The character 3 characters after the break point.
-   * @param p1 The result 3 steps ago.
-   * @param p2 The result 2 steps ago.
-   * @param p3 The last result.
    * @returns A feature to be consumed by a classifier.
    */
   static getFeature(
@@ -70,10 +66,7 @@ export class Parser {
     w3: string,
     w4: string,
     w5: string,
-    w6: string,
-    p1: string,
-    p2: string,
-    p3: string
+    w6: string
   ) {
     const b1 = Parser.getUnicodeBlockFeature(w1);
     const b2 = Parser.getUnicodeBlockFeature(w2);
@@ -82,11 +75,6 @@ export class Parser {
     const b5 = Parser.getUnicodeBlockFeature(w5);
     const b6 = Parser.getUnicodeBlockFeature(w6);
     const rawFeature = {
-      UP1: p1,
-      UP2: p2,
-      UP3: p3,
-      BP1: p1 + p2,
-      BP2: p2 + p3,
       UW1: w1,
       UW2: w2,
       UW3: w3,
@@ -113,17 +101,6 @@ export class Parser {
       TB2: b2 + b3 + b4,
       TB3: b3 + b4 + b5,
       TB4: b4 + b5 + b6,
-      UQ1: p1 + b1,
-      UQ2: p2 + b2,
-      UQ3: p3 + b3,
-      BQ1: p2 + b2 + b3,
-      BQ2: p2 + b3 + b4,
-      BQ3: p3 + b2 + b3,
-      BQ4: p3 + b3 + b4,
-      TQ1: p2 + b1 + b2 + b3,
-      TQ2: p2 + b2 + b3 + b4,
-      TQ3: p3 + b1 + b2 + b3,
-      TQ4: p3 + b2 + b3 + b4,
     };
     return Object.entries(rawFeature)
       .filter(entry => !entry[1].includes(INVALID))
@@ -151,9 +128,6 @@ export class Parser {
    */
   parse(sentence: string) {
     if (sentence === '') return [];
-    let p1 = 'U';
-    let p2 = 'U';
-    let p3 = 'U';
     const result = [sentence[0]];
     const baseScore = -sum([...this.model.values()]);
 
@@ -164,19 +138,12 @@ export class Parser {
         sentence[i - 1],
         sentence[i],
         sentence[i + 1] || INVALID,
-        sentence[i + 2] || INVALID,
-        p1,
-        p2,
-        p3
+        sentence[i + 2] || INVALID
       );
       const score =
         baseScore + 2 * sum(feature.map(f => this.model.get(f) || 0));
-      const p = score > 0 ? 'B' : 'O';
       if (score > 0) result.push('');
       result[result.length - 1] += sentence[i];
-      p1 = p2;
-      p2 = p3;
-      p3 = p;
     }
     return result;
   }

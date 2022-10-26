@@ -45,26 +45,14 @@ describe('Parser.getUnicodeBlockFeature', () => {
 });
 
 describe('Parser.getFeature', () => {
-  const feature = Parser.getFeature(
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'f',
-    'x',
-    'y',
-    'z'
-  );
+  const feature = Parser.getFeature('a', 'b', 'c', 'd', 'e', 'f');
 
   it('should include certain features.', () => {
     expect(feature).toContain('UW1:a');
     expect(feature).toContain('UB1:001');
-    expect(feature).toContain('UP1:x');
 
     expect(feature).toContain('BW1:bc');
     expect(feature).toContain('BB1:001001');
-    expect(feature).toContain('BP1:xy');
 
     expect(feature).toContain('TW1:abc');
     expect(feature).toContain('TB1:001001001');
@@ -72,17 +60,7 @@ describe('Parser.getFeature', () => {
 });
 
 describe('Parser.getFeature with invalid inputs.', () => {
-  const feature = Parser.getFeature(
-    'a',
-    'a',
-    INVALID,
-    'a',
-    'a',
-    'a',
-    'a',
-    'a',
-    'a'
-  );
+  const feature = Parser.getFeature('a', 'a', INVALID, 'a', 'a', 'a');
   const findByPrefix = (prefix: string, feature: string[]) => {
     for (const item of feature) {
       if (item.startsWith(prefix)) return true;
