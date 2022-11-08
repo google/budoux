@@ -210,7 +210,7 @@ def fit(X_train: npt.NDArray[np.bool_],
     X_test = device_put(X_test)
     Y_test = device_put(Y_test)
   N_train, M_train = X_train.shape
-  w = jnp.ones(N_train) / N_train  # type: ignore
+  w = jnp.ones(N_train) / N_train
   YX_train = Y_train[:, None] ^ X_train
   for t in range(iters):
     print('=== %s ===' % (t))
