@@ -15,28 +15,6 @@
  */
 
 /**
- * Finds the insertion point maintaining the sorted order with a basic
- * bisection algorithm. This works the same as Python's bisect.bisect_right
- * method.
- *
- * @param arr The sorted array.
- * @param i The item to check the insertion point.
- * @returns The insertion point.
- */
-export const bisectRight = (arr: number[], i: number): number => {
-  const mid = Math.floor(arr.length / 2);
-  if (i === arr[mid]) {
-    return mid + 1;
-  } else if (i < arr[mid]) {
-    if (arr.length === 1) return 0;
-    return bisectRight(arr.slice(0, mid), i);
-  } else {
-    if (arr.length === 1) return 1;
-    return mid + bisectRight(arr.slice(mid), i);
-  }
-};
-
-/**
  * Finds the sum of the numbers in the list.
  * @param arr The list of numbers.
  * @returns The sum.

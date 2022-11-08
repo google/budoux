@@ -18,7 +18,7 @@ import {model as jaKNBCModel} from './data/models/ja-knbc.js';
 import {model as zhHansModel} from './data/models/zh-hans.js';
 import {parseFromString} from './dom.js';
 import {HTMLProcessor} from './html_processor.js';
-import {bisectRight, INVALID, sum} from './utils.js';
+import {INVALID, sum} from './utils.js';
 
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
