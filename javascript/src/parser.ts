@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {unicodeBlocks} from './data/unicode_blocks.js';
 import {model as jaKNBCModel} from './data/models/ja-knbc.js';
 import {model as zhHansModel} from './data/models/zh-hans.js';
 import {parseFromString} from './dom.js';
@@ -36,20 +35,6 @@ export class Parser {
   }
 
   /**
-   * Generates a Unicode Block feature from the given character.
-   *
-   * @param w A character input.
-   * @returns A Unicode Block feature.
-   */
-  static getUnicodeBlockFeature(w: string) {
-    if (!w || w === INVALID) return INVALID;
-    const cp = w.codePointAt(0);
-    if (cp === undefined) return INVALID;
-    const bn = bisectRight(unicodeBlocks, cp);
-    return `${bn}`.padStart(3, '0');
-  }
-
-  /**
    * Generates a feature from characters around (w1-w6).
    *
    * @param w1 The character 3 characters before the break point.
@@ -68,12 +53,6 @@ export class Parser {
     w5: string,
     w6: string
   ) {
-    const b1 = Parser.getUnicodeBlockFeature(w1);
-    const b2 = Parser.getUnicodeBlockFeature(w2);
-    const b3 = Parser.getUnicodeBlockFeature(w3);
-    const b4 = Parser.getUnicodeBlockFeature(w4);
-    const b5 = Parser.getUnicodeBlockFeature(w5);
-    const b6 = Parser.getUnicodeBlockFeature(w6);
     const rawFeature = {
       UW1: w1,
       UW2: w2,
@@ -88,19 +67,6 @@ export class Parser {
       TW2: w2 + w3 + w4,
       TW3: w3 + w4 + w5,
       TW4: w4 + w5 + w6,
-      UB1: b1,
-      UB2: b2,
-      UB3: b3,
-      UB4: b4,
-      UB5: b5,
-      UB6: b6,
-      BB1: b2 + b3,
-      BB2: b3 + b4,
-      BB3: b4 + b5,
-      TB1: b1 + b2 + b3,
-      TB2: b2 + b3 + b4,
-      TB3: b3 + b4 + b5,
-      TB4: b4 + b5 + b6,
     };
     return Object.entries(rawFeature)
       .filter(entry => !entry[1].includes(INVALID))

@@ -21,21 +21,6 @@ from budoux import feature_extractor, utils
 
 class TestFeatureExtractor(unittest.TestCase):
 
-  def test_unicode_block_index(self) -> None:
-
-    def check(character: str, block: str, msg: str) -> None:
-      self.assertEqual(
-          feature_extractor.unicode_block_index(character), block, msg)
-
-    check('a', '001', '"a" should be the 1st block "Basic Latin".')
-    check('あ', '108', '"あ" should be the 108th block "Hiragana".')
-    check('安', '120', '"安" should be the 120th block "Kanji"')
-    check('あ安', '108', 'Only the first character should be recognized')
-    check('', utils.INVALID,
-          'Should return INVALID when a blank string is given.')
-    check(utils.INVALID, utils.INVALID,
-          'Should return INVALID when INVALID is given.')
-
   def test_get_feature(self) -> None:
     feature = feature_extractor.get_feature('a', 'b', 'c', 'd', 'e', 'f')
     self.assertSetEqual(
@@ -49,31 +34,16 @@ class TestFeatureExtractor(unittest.TestCase):
             'UW5:e',
             'UW6:f',
 
-            # Unigram of Unicode Blocks (UB)
-            'UB1:001',
-            'UB2:001',
-            'UB3:001',
-            'UB4:001',
-            'UB5:001',
-            'UB6:001',
-
-            # Bigram of Words (BW) and Unicode Blocks (BB)
+            # Bigram of Words (BW)
             'BW1:bc',
             'BW2:cd',
             'BW3:de',
-            'BB1:001001',
-            'BB2:001001',
-            'BB3:001001',
 
-            # Trigram of Words (TW) and Unicode Blocks (TB)
+            # Trigram of Words (TW)
             'TW1:abc',
             'TW2:bcd',
             'TW3:cde',
             'TW4:def',
-            'TB1:001001001',
-            'TB2:001001001',
-            'TB3:001001001',
-            'TB4:001001001',
         },
         'Features should be extracted.')
 
@@ -89,14 +59,8 @@ class TestFeatureExtractor(unittest.TestCase):
         find_by_prefix('UW3:', feature),
         'Should omit the Unigram feature when the character is invalid.')
     self.assertFalse(
-        find_by_prefix('UB3:', feature),
-        'Should omit the Unicode block feature when the character is invalid.')
-    self.assertFalse(
         find_by_prefix('BW2:', feature),
         'Should omit the Bigram feature that covers an invalid character.')
-    self.assertFalse(
-        find_by_prefix('BB2:', feature),
-        'Should omit the Unicode feature that covers an invalid character.')
 
 
 if __name__ == '__main__':

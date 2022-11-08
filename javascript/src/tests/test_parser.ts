@@ -19,43 +19,13 @@ import {JSDOM} from 'jsdom';
 import {Parser} from '../parser.js';
 import {INVALID} from '../utils.js';
 
-describe('Parser.getUnicodeBlockFeature', () => {
-  const testFeature = (character: string, feature: string) => {
-    const result = Parser.getUnicodeBlockFeature(character);
-    expect(result).toBe(feature);
-  };
-  it('"a" should be the 1st block "Basic Latin".', () => {
-    testFeature('a', '001');
-  });
-  it('"あ" should be the 108th block "Hiragana".', () => {
-    testFeature('あ', '108');
-  });
-  it('"安" should be the 120th block "Kanji"', () => {
-    testFeature('安', '120');
-  });
-  it('Only the first character should be recoghnized', () => {
-    testFeature('あ安', '108');
-  });
-  it('Should return INVALID when a blank string is given.', () => {
-    testFeature('', INVALID);
-  });
-  it('Should return INVALID when INVALID is given.', () => {
-    testFeature(INVALID, INVALID);
-  });
-});
-
 describe('Parser.getFeature', () => {
   const feature = Parser.getFeature('a', 'b', 'c', 'd', 'e', 'f');
 
   it('should include certain features.', () => {
     expect(feature).toContain('UW1:a');
-    expect(feature).toContain('UB1:001');
-
     expect(feature).toContain('BW1:bc');
-    expect(feature).toContain('BB1:001001');
-
     expect(feature).toContain('TW1:abc');
-    expect(feature).toContain('TB1:001001001');
   });
 });
 
@@ -69,9 +39,7 @@ describe('Parser.getFeature with invalid inputs.', () => {
   };
   it('should not include invalid features.', () => {
     expect(findByPrefix('UW3:', feature)).toBeFalse();
-    expect(findByPrefix('UB3:', feature)).toBeFalse();
     expect(findByPrefix('BW2:', feature)).toBeFalse();
-    expect(findByPrefix('BB2:', feature)).toBeFalse();
   });
 });
 

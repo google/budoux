@@ -82,7 +82,7 @@ class TestModelOption(unittest.TestCase):
     cmdargs = ['-l', 'ja', '今日はいい天気ですね。']
     output = main._main(cmdargs)
 
-    self.assertEqual(output, '今日は\nいい\n天気ですね。')
+    self.assertEqual(output, '今日は\nいい天気ですね。')
 
   def test_cmdargs_lang_zh_hans(self) -> None:
     cmdargs = ['-l', 'zh-hans', '今天天气晴朗。']
