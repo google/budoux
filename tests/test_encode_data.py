@@ -22,7 +22,7 @@ from budoux import utils
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
-from scripts import encode_data  # noqa (module hack)
+from scripts import encode_data  # type: ignore # noqa (module hack)
 
 
 class TestArgParse(unittest.TestCase):
