@@ -16,71 +16,92 @@
 import os
 import sys
 import unittest
-from pathlib import Path
 
 from budoux import utils
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
-from scripts import encode_data  # type: ignore # noqa (module hack)
-
-ENTRIES_FILE_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
+from scripts import encode_data  # noqa (module hack)
 
 
-class TestEncodeData(unittest.TestCase):
+class TestArgParse(unittest.TestCase):
+
+  def test_cmdargs_invalid_option(self) -> None:
+    cmdargs = ['-v']
+    with self.assertRaises(SystemExit) as cm:
+      encode_data.parse_args(cmdargs)
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_help(self) -> None:
+    cmdargs = ['-h']
+    with self.assertRaises(SystemExit) as cm:
+      encode_data.parse_args(cmdargs)
+    self.assertEqual(cm.exception.code, 0)
+
+  def test_cmdargs_no_source(self) -> None:
+    with self.assertRaises(SystemExit) as cm:
+      encode_data.parse_args([])
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_default(self) -> None:
+    cmdargs = ['source.txt']
+    output = encode_data.parse_args(cmdargs)
+    self.assertEqual(output.source_data, 'source.txt')
+    self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
+    self.assertIsNone(output.processes)
+
+  def test_cmdargs_with_outfile(self) -> None:
+    cmdargs = ['source.txt', '-o', 'out.txt']
+    output = encode_data.parse_args(cmdargs)
+    self.assertEqual(output.source_data, 'source.txt')
+    self.assertEqual(output.outfile, 'out.txt')
+    self.assertIsNone(output.processes)
+
+  def test_cmdargs_with_processes(self) -> None:
+    cmdargs = ['source.txt', '--processes', '8']
+    output = encode_data.parse_args(cmdargs)
+    self.assertEqual(output.source_data, 'source.txt')
+    self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
+    self.assertEqual(output.processes, 8)
+
+
+class TestProcess(unittest.TestCase):
+
+  sentence = '六本木ヒルズでお昼を食べる。'
+  sep_indices = {7, 10, 13}
+
+  def test_on_positive_point(self) -> None:
+    line = encode_data.process(8, self.sentence, self.sep_indices)
+    items = line.split('\t')
+    positive = items[0]
+    features = set(items[1:])
+    self.assertEqual(positive, '-1')
+    self.assertIn('UW2:で', features)
+
+  def test_on_negative_point(self) -> None:
+    line = encode_data.process(7, self.sentence, self.sep_indices)
+    items = line.split('\t')
+    positive = items[0]
+    features = set(items[1:])
+    self.assertEqual(positive, '1')
+    self.assertIn('UW3:で', features)
+
+
+class TestReadSourceFile(unittest.TestCase):
+
+  ENTRIES_FILE_PATH = os.path.abspath(
+      os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
 
   def setUp(self) -> None:
-    Path(ENTRIES_FILE_PATH).touch()
-
-  def test_process(self) -> None:
-    separated_sentence = f'これは{utils.SEP}美しい{utils.SEP}ペンです。'
-    encode_data.process(separated_sentence, ENTRIES_FILE_PATH)
     with open(
-        ENTRIES_FILE_PATH, encoding=sys.getdefaultencoding(),
-        errors='replace') as f:
-      entries = f.read().splitlines()
-    original_sentence = ''.join(separated_sentence.split(utils.SEP))
-    self.assertEqual(
-        len(entries), len(original_sentence),
-        'Should start making entries from the first character.')
+        self.ENTRIES_FILE_PATH, 'w', encoding=sys.getdefaultencoding()) as f:
+      f.write(f'これは{utils.SEP}美しい{utils.SEP}ペンです。\n今日は{utils.SEP}晴天です。')
 
-    labels = [int(entry.split('\t')[0]) for entry in entries]
-    self.assertListEqual(
-        labels,
-        [
-            -1,  # こ
-            -1,  # れ
-            1,  # は
-            -1,  # 美
-            -1,  # し
-            1,  # い
-            -1,  # ペ
-            -1,  # ン
-            -1,  # で
-            -1,  # す
-            1  # 。
-        ],
-        'The first column of entries should be labels.')
-
-    features = [set(entry.split('\t')[1:]) for entry in entries]
-    self.assertIn(
-        'UW3:こ', features[0],
-        'The first feature set should include the first character as the UW3 feature.'
-    )
-    self.assertIn(
-        'UW3:れ', features[1],
-        'The second feature set should include the second character as the UW3 feature.'
-    )
-    self.assertIn(
-        'UW3:は', features[2],
-        'The third feature set should include the third character as the UW3 feature.'
-    )
-    self.assertIn(
-        'UW3:。', features[-1],
-        'The last feature set should include the last character as the UW3 feature.'
-    )
+  def test_read_source_file(self) -> None:
+    sentence, sep_indices = encode_data.read_source_file(self.ENTRIES_FILE_PATH)
+    self.assertEqual(sentence, 'これは美しいペンです。今日は晴天です。')
+    self.assertEqual(sep_indices, {3, 6, 11, 14, 19})
 
   def tearDown(self) -> None:
-    os.remove(ENTRIES_FILE_PATH)
+    os.remove(self.ENTRIES_FILE_PATH)
