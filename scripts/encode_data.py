@@ -14,11 +14,11 @@
 """Encodes the training data with extracted features."""
 
 import argparse
-import itertools
-import sys
-import multiprocessing
-import typing
 import functools
+import itertools
+import multiprocessing
+import sys
+import typing
 
 from budoux import feature_extractor, utils
 
