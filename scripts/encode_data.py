@@ -14,38 +14,27 @@
 """Encodes the training data with extracted features."""
 
 import argparse
+import functools
 import itertools
+import multiprocessing
 import sys
+import typing
 
 from budoux import feature_extractor, utils
 
+ArgList = typing.Optional[typing.List[str]]
+DEFAULT_OUTPUT_FILENAME = 'encoded_data.txt'
 
-def process(line: str, entries_filename: str) -> None:
-  """Extratcs features from a source sentence and outputs trainig data entries.
+
+def parse_args(test: ArgList = None) -> argparse.Namespace:
+  """Parses commandline arguments.
 
   Args:
-    source_filename (str): A file path to the source sentences.
-    entries_filename (str): A file path to the output entries.
+    test (typing.Optional[typing.List[str]], optional): Commandline args for testing. Defaults to None.
+
+  Returns:
+    argparse.Namespace: Parsed data of args.
   """
-  chunks = line.strip().split(utils.SEP)
-  chunk_lengths = [len(chunk) for chunk in chunks]
-  sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
-  sentence = ''.join(chunks)
-  lines = []
-  for i in range(1, len(sentence) + 1):
-    feature = feature_extractor.get_feature(
-        sentence[i - 3] if i > 2 else utils.INVALID,
-        sentence[i - 2] if i > 1 else utils.INVALID, sentence[i - 1],
-        sentence[i] if i < len(sentence) else utils.INVALID,
-        sentence[i + 1] if i + 1 < len(sentence) else utils.INVALID,
-        sentence[i + 2] if i + 2 < len(sentence) else utils.INVALID)
-    positive = i in sep_indices
-    lines.append('\t'.join(['1' if positive else '-1'] + feature) + '\n')
-  with open(entries_filename, 'a', encoding=sys.getdefaultencoding()) as f:
-    f.write(''.join(lines))
-
-
-def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       'source_data',
@@ -55,17 +44,71 @@ def main() -> None:
       '--outfile',
       help='''Output file path for the encoded training data.
             (default: encoded_data.txt)''',
-      default='encoded_data.txt')
-  args = parser.parse_args()
-  source_filename = args.source_data
-  entries_filename = args.outfile
-  with open(source_filename, encoding=sys.getdefaultencoding()) as f:
+      default=DEFAULT_OUTPUT_FILENAME)
+  parser.add_argument(
+      '--processes',
+      type=int,
+      help='''Number of processes to use.
+          (default: the number of CPUs in the system)''',
+      default=None)
+  if test is None:
+    return parser.parse_args()
+  else:
+    return parser.parse_args(test)
+
+
+def process(i: int, sentence: str, sep_indices: typing.Set[int]) -> str:
+  """Outputs an encoded line of features from the given index.
+
+  Args:
+    i (int): index
+    sentence (str): A sentence
+    sep_indices (typing.Set[int]): A set of separator indices.
+  """
+  feature = feature_extractor.get_feature(
+      sentence[i - 3] if i > 2 else utils.INVALID,
+      sentence[i - 2] if i > 1 else utils.INVALID, sentence[i - 1],
+      sentence[i] if i < len(sentence) else utils.INVALID,
+      sentence[i + 1] if i + 1 < len(sentence) else utils.INVALID,
+      sentence[i + 2] if i + 2 < len(sentence) else utils.INVALID)
+  positive = i in sep_indices
+  line = '\t'.join(['1' if positive else '-1'] + feature)
+  return line
+
+
+def read_source_file(filename: str) -> typing.Tuple[str, typing.Set[int]]:
+  """Reads the sentence and separator indices from the source file.
+
+  Args:
+    filename (str): A source file path.
+
+  Returns:
+    typing.Tuple[str, typing.Set[int]]: A tuple of the sentence and the separator indices.
+  """
+  with open(filename, encoding=sys.getdefaultencoding()) as f:
     data = f.read().replace('\n', utils.SEP)
+  chunks = data.strip().split(utils.SEP)
+  chunk_lengths = [len(chunk) for chunk in chunks]
+  sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
+  sentence = ''.join(chunks)
+  return (sentence, sep_indices)
+
+
+def main(test: ArgList = None) -> None:
+  args = parse_args(test)
+  source_filename: str = args.source_data
+  entries_filename: str = args.outfile
+  processes = None if args.processes is None else int(args.processes)
+  sentence, sep_indices = read_source_file(source_filename)
+  with multiprocessing.Pool(processes) as p:
+    func = functools.partial(
+        process, sentence=sentence, sep_indices=sep_indices)
+    lines = p.map(func, range(1, len(sentence) + 1))
+
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
-    f.write('')
-  process(data, entries_filename)
-  print('\033[92mEncoded training data is output to: %s\033[0m' %
-        entries_filename)
+    f.write('\n'.join(lines))
+
+  print('\033[92mEncoded training data is out at: %s\033[0m' % entries_filename)
 
 
 if __name__ == '__main__':
