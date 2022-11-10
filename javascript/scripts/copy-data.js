@@ -21,15 +21,6 @@ const PROJECT_ROOT = path.join(__dirname, '..', '..');
 const DATA_DIR = path.join(PROJECT_ROOT, 'javascript', 'src', 'data');
 fs.mkdirSync(path.join(DATA_DIR, 'models'), {recursive: true});
 
-const copyUnicodeBlocks = () => {
-  const sourcePath = path.join(PROJECT_ROOT, 'budoux', 'unicode_blocks.json');
-  const targetPath = path.join(DATA_DIR, 'unicode_blocks.ts');
-  fs.writeFileSync(
-    targetPath,
-    `export const unicodeBlocks = ${fs.readFileSync(sourcePath)}`
-  );
-};
-
 const copyModels = () => {
   const modelsDirPath = path.join(PROJECT_ROOT, 'budoux', 'models');
   const files = fs.readdirSync(modelsDirPath);
@@ -57,7 +48,6 @@ const copySkipNodes = () => {
 };
 
 const main = () => {
-  copyUnicodeBlocks();
   copyModels();
   copySkipNodes();
 };
