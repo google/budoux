@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests the training script."""
 
+import math
 import os
 import sys
 import unittest
@@ -33,6 +34,51 @@ WEIGHTS_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'weights_test.txt'))
 LOG_FILE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'train_test.log'))
+
+
+class TestArgParse(unittest.TestCase):
+
+  def test_cmdargs_invalid_option(self) -> None:
+    cmdargs = ['-v']
+    with self.assertRaises(SystemExit) as cm:
+      train.parse_args(cmdargs)
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_help(self) -> None:
+    cmdargs = ['-h']
+    with self.assertRaises(SystemExit) as cm:
+      train.parse_args(cmdargs)
+    self.assertEqual(cm.exception.code, 0)
+
+  def test_cmdargs_no_data(self) -> None:
+    with self.assertRaises(SystemExit) as cm:
+      train.parse_args([])
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_default(self) -> None:
+    cmdargs = ['encoded.txt']
+    output = train.parse_args(cmdargs)
+    self.assertEqual(output.encoded_train_data, 'encoded.txt')
+    self.assertEqual(output.output, train.DEFAULT_OUTPUT_NAME)
+    self.assertEqual(output.log, train.DEFAULT_LOG_NAME)
+    self.assertEqual(output.feature_thres, train.DEFAULT_FEATURE_THRES)
+    self.assertEqual(output.iter, train.DEFAULT_ITERATION)
+    self.assertEqual(output.out_span, train.DEFAULT_OUT_SPAN)
+    self.assertEqual(output.chunk_size, None)
+
+  def test_cmdargs_full(self) -> None:
+    cmdargs = [
+        'encoded.txt', '-o', 'out.txt', '--log', 'foo.log', '--feature-thres',
+        '100', '--iter', '10', '--chunk-size', '1000', '--out-span', '50'
+    ]
+    output = train.parse_args(cmdargs)
+    self.assertEqual(output.encoded_train_data, 'encoded.txt')
+    self.assertEqual(output.output, 'out.txt')
+    self.assertEqual(output.log, 'foo.log')
+    self.assertEqual(output.feature_thres, 100)
+    self.assertEqual(output.iter, 10)
+    self.assertEqual(output.chunk_size, 1000)
+    self.assertEqual(output.out_span, 50)
 
 
 class TestTrain(unittest.TestCase):
@@ -148,13 +194,33 @@ class TestTrain(unittest.TestCase):
         True,
     ])
     features = ['a', 'b', 'c']
-    iters = 1
-    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH)
+    iters = 5
+    out_span = 2
+    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH,
+              out_span)
     with open(WEIGHTS_FILE_PATH) as f:
-      weights = f.read().splitlines()
-    top_feature = weights[0].split('\t')[0]
+      weights = [
+          line.split('\t') for line in f.read().splitlines() if line.strip()
+      ]
+    top_feature = weights[0][0]
     self.assertEqual(
         top_feature, 'b', msg='The most effective feature should be selected.')
+    self.assertEqual(
+        len(weights),
+        iters,
+        msg='The number of lines should equal to the iteration count.')
+
+    with open(LOG_FILE_PATH) as f:
+      log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
+    self.assertEqual(
+        len(log),
+        math.ceil(iters / out_span) + 1,
+        msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header'
+    )
+    self.assertEqual(
+        len(set(len(line) for line in log)),
+        1,
+        msg='The header and the body should have the same number of columns.')
 
   def tearDown(self) -> None:
     os.remove(WEIGHTS_FILE_PATH)
