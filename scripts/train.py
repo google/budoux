@@ -66,7 +66,9 @@ def preprocess(
     features (List[str]): Effective features.
   """
   with open(entries_filename) as f:
-    entries = [row.strip().split('\t') for row in f.read().splitlines()]
+    entries = [
+        row.strip().split('\t') for row in f.read().splitlines() if row.strip()
+    ]
   print('#entries:\t%d' % (len(entries)))
 
   features_counter: typing.Counter[str] = Counter()
