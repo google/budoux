@@ -34,7 +34,10 @@ def rollup(weights_filename: str,
   """
   decision_trees: typing.Dict[str, float] = dict()
   with open(weights_filename) as f:
-    for row in f:
+    for row in f.readlines():
+      row = row.strip()
+      if not row:
+        continue
       feature = row.split('\t')[0]
       score = float(row.split('\t')[1])
       decision_trees.setdefault(feature, 0)
