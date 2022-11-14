@@ -227,15 +227,13 @@ def fit(X_train: npt.NDArray[np.bool_],
 
   def output_progress(t: int) -> None:
     with open(weights_filename, 'a') as f:
-      f.write('\n'.join('%s\t%.3f' % p for p in phi_buffer) + '\n')
+      f.write('\n'.join('%s\t%.6f' % p for p in phi_buffer) + '\n')
     phi_buffer.clear()
     pred_train = jit(pred)(phis, X_train) if jax_ready else pred(phis, X_train)
     pred_test = jit(pred)(phis, X_test) if jax_ready else pred(phis, X_test)
     metrics_train = get_metrics(pred_train, Y_train)
     metrics_test = get_metrics(pred_test, Y_test)
     print('=== %s ===' % t)
-    print('min error:\t%.5f' % err_min)
-    print('best tree:\t%d' % m_best)
     print()
     print('train accuracy:\t%.5f' % metrics_train.accuracy)
     print('train prec.:\t%.5f' % metrics_train.precision)
