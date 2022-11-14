@@ -76,18 +76,17 @@ def process(i: int, sentence: str, sep_indices: typing.Set[int]) -> str:
   return line
 
 
-def read_source_file(filename: str) -> typing.Tuple[str, typing.Set[int]]:
-  """Reads the sentence and separator indices from the source file.
+def normalize_input(data: str) -> typing.Tuple[str, typing.Set[int]]:
+  """Normalizes the input to one line with separators.
 
   Args:
-    filename (str): A source file path.
+    data(str): Source input
 
   Returns:
-    typing.Tuple[str, typing.Set[int]]: A tuple of the sentence and the separator indices.
+    typing.Tuple[str, typing.Set[int]]: A tuple of the sentence and the
+      separator indices.
   """
-  with open(filename, encoding=sys.getdefaultencoding()) as f:
-    data = f.read().replace('\n', utils.SEP)
-  chunks = data.strip().split(utils.SEP)
+  chunks = data.replace('\n', utils.SEP).strip().split(utils.SEP)
   chunk_lengths = [len(chunk) for chunk in chunks]
   sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
   sentence = ''.join(chunks)
@@ -99,7 +98,9 @@ def main(test: ArgList = None) -> None:
   source_filename: str = args.source_data
   entries_filename: str = args.outfile
   processes = None if args.processes is None else int(args.processes)
-  sentence, sep_indices = read_source_file(source_filename)
+  with open(source_filename, encoding=sys.getdefaultencoding()) as f:
+    data = f.read()
+  sentence, sep_indices = normalize_input(data)
   with multiprocessing.Pool(processes) as p:
     func = functools.partial(
         process, sentence=sentence, sep_indices=sep_indices)
