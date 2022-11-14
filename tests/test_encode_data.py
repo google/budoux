@@ -88,20 +88,22 @@ class TestProcess(unittest.TestCase):
     self.assertIn('UW3:で', features)
 
 
-class TestReadSourceFile(unittest.TestCase):
+class TestNormalizeInput(unittest.TestCase):
 
-  ENTRIES_FILE_PATH = os.path.abspath(
-      os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
+  def test_standard_input(self) -> None:
+    source = f'ABC{utils.SEP}DE{utils.SEP}FGHI'
+    sentence, sep_indices = encode_data.normalize_input(source)
+    self.assertEqual(sentence, 'ABCDEFGHI')
+    self.assertEqual(sep_indices, {3, 5, 9})
 
-  def setUp(self) -> None:
-    with open(
-        self.ENTRIES_FILE_PATH, 'w', encoding=sys.getdefaultencoding()) as f:
-      f.write(f'これは{utils.SEP}美しい{utils.SEP}ペンです。\n今日は{utils.SEP}晴天です。')
+  def test_with_linebreaks(self) -> None:
+    source = f'AB\nCDE{utils.SEP}FG'
+    sentence, sep_indices = encode_data.normalize_input(source)
+    self.assertEqual(sentence, 'ABCDEFG')
+    self.assertEqual(sep_indices, {2, 5, 7})
 
-  def test_read_source_file(self) -> None:
-    sentence, sep_indices = encode_data.read_source_file(self.ENTRIES_FILE_PATH)
-    self.assertEqual(sentence, 'これは美しいペンです。今日は晴天です。')
-    self.assertEqual(sep_indices, {3, 6, 11, 14, 19})
-
-  def tearDown(self) -> None:
-    os.remove(self.ENTRIES_FILE_PATH)
+  def test_doubled_seps(self) -> None:
+    source = f'ABC{utils.SEP}{utils.SEP}DE\n\nFG'
+    sentence, sep_indices = encode_data.normalize_input(source)
+    self.assertEqual(sentence, 'ABCDEFG')
+    self.assertEqual(sep_indices, {3, 5, 7})
