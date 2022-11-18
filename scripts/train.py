@@ -168,6 +168,20 @@ def get_metrics(pred: npt.NDArray[np.bool_],
   )
 
 
+def step(
+    w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_]
+) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
+  res = w.dot(YX)
+  err = 0.5 - jnp.abs(res - 0.5)
+  m_best = err.argmin()
+  pol_best = res.at[m_best].get() < 0.5
+  err_min = err.at[m_best].get()
+  alpha = jnp.log((1 - err_min) / (err_min + EPS))
+  w = w * jnp.exp(alpha * (YX[:, m_best] == pol_best))
+  w = w / w.sum()
+  return w, alpha, m_best, pol_best
+
+
 def fit(X_train: npt.NDArray[np.bool_],
         Y_train: npt.NDArray[np.bool_],
         X_test: npt.NDArray[np.bool_],
@@ -259,29 +273,15 @@ def fit(X_train: npt.NDArray[np.bool_],
       ))
 
   for t in range(iters):
-    if chunk_size is None:
-      res: npt.NDArray[np.float64] = w.dot(YX_train)
-    else:
-      res = np.zeros(M_train)
-      for i in range(0, N_train, chunk_size):
-        YX_train_chunk = YX_train[i:i + chunk_size]
-        w_chunk = w[i:i + chunk_size]
-        res += w_chunk.dot(YX_train_chunk)
-    err = 0.5 - jnp.abs(res - 0.5)
-    m_best = int(err.argmin())
-    pol_best = res[m_best] < 0.5
-    err_min: float = err[m_best]
-
-    alpha: float = jnp.log((1 - err_min) / (err_min + EPS))
+    w, alpha, m_best, pol_best = jit(step)(w, YX_train) if jax_ready else step(
+        w, YX_train)
+    w.block_until_ready()
+    m_best = int(m_best)
+    alpha_signed = alpha if pol_best else -alpha
     phis.setdefault(m_best, 0)
-    phis[m_best] += alpha if pol_best else -alpha
-    miss = YX_train[:, m_best]
-    if not pol_best:
-      miss = ~(miss)
-    w = w * jnp.exp(alpha * miss)
-    w = w / w.sum()
+    phis[m_best] += alpha_signed
     feature = features[m_best] if m_best < len(features) else 'BIAS'
-    phi_buffer.append((feature, alpha if pol_best else -alpha))
+    phi_buffer.append((feature, alpha_signed))
     if (t + 1) % out_span == 0:
       output_progress(t + 1)
   if len(phi_buffer) > 0:
