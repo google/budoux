@@ -91,8 +91,7 @@ def postprocess(chunks: typing.List[str]) -> typing.List[str]:
 
 def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument(
-      'source_dir', help='Path to the KNBC corpus directory.')
+  parser.add_argument('source_dir', help='Path to the KNBC corpus directory.')
   parser.add_argument(
       '-o',
       '--outfile',
