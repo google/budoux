@@ -187,10 +187,12 @@ Good news is that the training algorithm is an [anytime algorithm](https://en.wi
 ## Constructing a training dataset from the KNBC corpus for Japanese
 
 The default model for Japanese (`budoux/models/ja_knbc.json`) is built using the [KNBC corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/).
-You can create a training dataset, which we name `source_knbc.txt` here, from that corpus by running the command below.
+You can create a training dataset, which we name `source_knbc.txt` for example, from the corpus by running the commands below.
 
 ```shellsession
-$ python scripts/load_knbc.py -o source_knbc.txt
+$ curl -o knbc.tar.bz2 https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2
+$ tar -xf knbc.tar.bz2  # outputs KNBC_v1.0_090925_utf8 directory
+$ python scripts/prepare_knbc.py KNBC_v1.0_090925_utf8 -o source_knbc.txt
 ```
 
 ## Author

@@ -15,16 +15,10 @@
 
 import argparse
 import os
-import tarfile
 import typing
-import urllib.error
-import urllib.request
 from html.parser import HTMLParser
 
 from budoux import utils
-
-RESOURCE_URL = (
-    'https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2')
 
 
 class KNBCHTMLParser(HTMLParser):
@@ -95,25 +89,9 @@ def postprocess(chunks: typing.List[str]) -> typing.List[str]:
   return chunks
 
 
-def download_knbc(target_dir: str) -> None:
-  """Downloads the KNBC corpus and extracts files.
-
-  Args:
-    target_dir: A path to the directory to expand files.
-  """
-  os.makedirs(target_dir, exist_ok=True)
-  download_file_path = os.path.join(target_dir, 'knbc.tar.bz2')
-  try:
-    urllib.request.urlretrieve(RESOURCE_URL, download_file_path)
-  except urllib.error.HTTPError:
-    print(f'\033[91mResource unavailable: {RESOURCE_URL}\033[0m')
-    raise
-  with tarfile.open(download_file_path, 'r:bz2') as t:
-    t.extractall(path=target_dir)
-
-
 def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(description=__doc__)
+  parser.add_argument('source_dir', help='Path to the KNBC corpus directory.')
   parser.add_argument(
       '-o',
       '--outfile',
@@ -125,10 +103,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
   args = parse_args()
+  source_dir = args.source_dir
   outfile = args.outfile
-  html_dir = 'data/KNBC_v1.0_090925_utf8/html/'
-  if not os.path.isdir(html_dir):
-    download_knbc('data')
+  html_dir = os.path.join(source_dir, 'html')
   with open(outfile, 'w') as f:
     for file in sorted(os.listdir(html_dir)):
       if file[-11:] != '-morph.html':
