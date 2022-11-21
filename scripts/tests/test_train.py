@@ -23,7 +23,7 @@ import numpy as np
 import numpy.typing as npt
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import train  # type: ignore # noqa (module hack)
@@ -221,6 +221,54 @@ class TestTrain(unittest.TestCase):
         len(set(len(line) for line in log)),
         1,
         msg='The header and the body should have the same number of columns.')
+
+  def test_fit_chunk(self) -> None:
+    # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
+    # correlates with Y in a negative way.
+    X: npt.NDArray[np.bool_] = np.array([
+        [False, True, True, False],
+        [True, True, False, True],
+        [False, False, True, False],
+        [True, False, False, True],
+    ])
+    Y: npt.NDArray[np.bool_] = np.array([
+        False,
+        False,
+        True,
+        True,
+    ])
+    features = ['a', 'b', 'c']
+    iters = 5
+    out_span = 2
+    chunk_size = 2
+    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH,
+              out_span, chunk_size)
+    with open(WEIGHTS_FILE_PATH) as f:
+      weights = [
+          line.split('\t') for line in f.read().splitlines() if line.strip()
+      ]
+    top_feature = weights[0][0]
+    self.assertEqual(
+        top_feature, 'b', msg='The most effective feature should be selected.')
+    self.assertEqual(
+        len(weights),
+        iters,
+        msg='The number of lines should equal to the iteration count.')
+
+    with open(LOG_FILE_PATH) as f:
+      log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
+    self.assertEqual(
+        len(log),
+        math.ceil(iters / out_span) + 1,
+        msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header'
+    )
+    self.assertEqual(
+        len(set(len(line) for line in log)),
+        1,
+        msg='The header and the body should have the same number of columns.')
+
+    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH,
+              out_span, 2)
 
   def tearDown(self) -> None:
     os.remove(WEIGHTS_FILE_PATH)

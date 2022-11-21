@@ -16,18 +16,13 @@
 import argparse
 import typing
 from collections import Counter
+from functools import partial
 from typing import NamedTuple
 
+import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
-
-jax_ready = False
-try:
-  import jax.numpy as jnp
-  from jax import device_put, jit
-  jax_ready = True
-except ModuleNotFoundError:
-  import numpy as jnp  # type: ignore
+from jax import device_put, jit
 
 EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
 DEFAULT_OUTPUT_NAME = 'weights.txt'
@@ -95,6 +90,7 @@ def preprocess(
   return X, Y, features
 
 
+@jit
 def pred(phis: typing.Dict[int, float],
          X: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
   """Predicts the output from the given classifiers and input entries.
@@ -168,6 +164,39 @@ def get_metrics(pred: npt.NDArray[np.bool_],
   )
 
 
+@jit
+def update_weight(
+    w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_]
+) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
+  res = w.dot(YX)
+  err = 0.5 - jnp.abs(res - 0.5)
+  m_best = err.argmin()
+  pol_best = res.at[m_best].get() < 0.5
+  err_min = err.at[m_best].get()
+  alpha = jnp.log((1 - err_min) / (err_min + EPS))
+  w = w * jnp.exp(alpha * (YX[:, m_best] == pol_best))
+  w = w / w.sum()
+  return w, alpha, m_best, pol_best
+
+
+@partial(jit, static_argnames=['chunk_size'])
+def update_weight_chunk(
+    w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_],
+    chunk_size: int) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
+  N, M = YX.shape
+  res = jnp.zeros(M)
+  for chunk in range(0, N, chunk_size):
+    res += w[chunk:chunk + chunk_size].dot(YX[chunk:chunk + chunk_size])
+  err = 0.5 - jnp.abs(res - 0.5)
+  m_best = err.argmin()
+  pol_best = res.at[m_best].get() < 0.5
+  err_min = err.at[m_best].get()
+  alpha = jnp.log((1 - err_min) / (err_min + EPS))
+  w = w * jnp.exp(alpha * (YX[:, m_best] == pol_best))
+  w = w / w.sum()
+  return w, alpha, m_best, pol_best
+
+
 def fit(X_train: npt.NDArray[np.bool_],
         Y_train: npt.NDArray[np.bool_],
         X_test: npt.NDArray[np.bool_],
@@ -216,12 +245,11 @@ def fit(X_train: npt.NDArray[np.bool_],
   assert (X_test.shape[0] == Y_test.shape[0]
          ), 'Testing entries and labels should have the same number of items.'
 
-  if jax_ready:
-    X_train = device_put(X_train)
-    Y_train = device_put(Y_train)
-    X_test = device_put(X_test)
-    Y_test = device_put(Y_test)
-  N_train, M_train = X_train.shape
+  X_train = device_put(X_train)
+  Y_train = device_put(Y_train)
+  X_test = device_put(X_test)
+  Y_test = device_put(Y_test)
+  N_train, _ = X_train.shape
   w = jnp.ones(N_train) / N_train
   YX_train = Y_train[:, None] ^ X_train
 
@@ -229,8 +257,8 @@ def fit(X_train: npt.NDArray[np.bool_],
     with open(weights_filename, 'a') as f:
       f.write('\n'.join('%s\t%.6f' % p for p in phi_buffer) + '\n')
     phi_buffer.clear()
-    pred_train = jit(pred)(phis, X_train) if jax_ready else pred(phis, X_train)
-    pred_test = jit(pred)(phis, X_test) if jax_ready else pred(phis, X_test)
+    pred_train = pred(phis, X_train)
+    pred_test = pred(phis, X_test)
     metrics_train = get_metrics(pred_train, Y_train)
     metrics_test = get_metrics(pred_test, Y_test)
     print('=== %s ===' % t)
@@ -259,29 +287,17 @@ def fit(X_train: npt.NDArray[np.bool_],
       ))
 
   for t in range(iters):
-    if chunk_size is None:
-      res: npt.NDArray[np.float64] = w.dot(YX_train)
+    if chunk_size:
+      w, alpha, m_best, pol_best = update_weight_chunk(w, YX_train, chunk_size)
     else:
-      res = np.zeros(M_train)
-      for i in range(0, N_train, chunk_size):
-        YX_train_chunk = YX_train[i:i + chunk_size]
-        w_chunk = w[i:i + chunk_size]
-        res += w_chunk.dot(YX_train_chunk)
-    err = 0.5 - jnp.abs(res - 0.5)
-    m_best = int(err.argmin())
-    pol_best = res[m_best] < 0.5
-    err_min: float = err[m_best]
-
-    alpha: float = jnp.log((1 - err_min) / (err_min + EPS))
+      w, alpha, m_best, pol_best = update_weight(w, YX_train)
+    w.block_until_ready()
+    m_best = int(m_best)
+    alpha_signed = alpha if pol_best else -alpha
     phis.setdefault(m_best, 0)
-    phis[m_best] += alpha if pol_best else -alpha
-    miss = YX_train[:, m_best]
-    if not pol_best:
-      miss = ~(miss)
-    w = w * jnp.exp(alpha * miss)
-    w = w / w.sum()
+    phis[m_best] += alpha_signed
     feature = features[m_best] if m_best < len(features) else 'BIAS'
-    phi_buffer.append((feature, alpha if pol_best else -alpha))
+    phi_buffer.append((feature, alpha_signed))
     if (t + 1) % out_span == 0:
       output_progress(t + 1)
   if len(phi_buffer) > 0:
@@ -352,6 +368,7 @@ def main() -> None:
 
   X, Y, features = preprocess(train_data_filename, feature_thres)
   X_train, X_test, Y_train, Y_test = split_dataset(X, Y)
+  del X, Y
   fit(X_train, Y_train, X_test, Y_test, features, iterations, weights_filename,
       log_filename, out_span, chunk_size)
 
