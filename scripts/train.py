@@ -16,6 +16,7 @@
 import argparse
 import typing
 from collections import Counter
+from functools import partial
 from typing import NamedTuple
 
 import numpy as np
@@ -168,10 +169,27 @@ def get_metrics(pred: npt.NDArray[np.bool_],
   )
 
 
-def step(
+def update_weight(
     w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_]
 ) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
   res = w.dot(YX)
+  err = 0.5 - jnp.abs(res - 0.5)
+  m_best = err.argmin()
+  pol_best = res.at[m_best].get() < 0.5
+  err_min = err.at[m_best].get()
+  alpha = jnp.log((1 - err_min) / (err_min + EPS))
+  w = w * jnp.exp(alpha * (YX[:, m_best] == pol_best))
+  w = w / w.sum()
+  return w, alpha, m_best, pol_best
+
+
+def update_weight_chunk(
+    w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_],
+    chunk_size: int) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
+  N, M = YX.shape
+  res = jnp.zeros(M)
+  for chunk in range(0, N, chunk_size):
+    res += w[chunk:chunk + chunk_size].dot(YX[chunk:chunk + chunk_size])
   err = 0.5 - jnp.abs(res - 0.5)
   m_best = err.argmin()
   pol_best = res.at[m_best].get() < 0.5
@@ -235,7 +253,7 @@ def fit(X_train: npt.NDArray[np.bool_],
     Y_train = device_put(Y_train)
     X_test = device_put(X_test)
     Y_test = device_put(Y_test)
-  N_train, M_train = X_train.shape
+  N_train, _ = X_train.shape
   w = jnp.ones(N_train) / N_train
   YX_train = Y_train[:, None] ^ X_train
 
@@ -273,8 +291,14 @@ def fit(X_train: npt.NDArray[np.bool_],
       ))
 
   for t in range(iters):
-    w, alpha, m_best, pol_best = jit(step)(w, YX_train) if jax_ready else step(
-        w, YX_train)
+    if chunk_size:
+      w, alpha, m_best, pol_best = partial(
+          jit, static_argnames=['chunk_size'])(update_weight_chunk)(
+              w, YX_train, chunk_size) if jax_ready else update_weight_chunk(
+                  w, YX_train, chunk_size)
+    else:
+      w, alpha, m_best, pol_best = jit(update_weight)(
+          w, YX_train) if jax_ready else update_weight(w, YX_train)
     w.block_until_ready()
     m_best = int(m_best)
     alpha_signed = alpha if pol_best else -alpha
@@ -352,6 +376,7 @@ def main() -> None:
 
   X, Y, features = preprocess(train_data_filename, feature_thres)
   X_train, X_test, Y_train, Y_test = split_dataset(X, Y)
+  del X, Y
   fit(X_train, Y_train, X_test, Y_test, features, iterations, weights_filename,
       log_filename, out_span, chunk_size)
 
