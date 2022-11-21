@@ -25,10 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[dev]"
       - name: Run unittest
-        run: pytest
+        run: pytest ./tests
       - name: Install Jax
         if: matrix.os != 'windows-latest'
         run: pip install jax[cpu]
       - name: Run unittest with Jax
         if: matrix.os != 'windows-latest'
-        run: pytest
+        run: pytest ./scripts/tests

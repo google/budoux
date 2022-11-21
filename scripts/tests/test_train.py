@@ -23,7 +23,7 @@ import numpy as np
 import numpy.typing as npt
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import train  # type: ignore # noqa (module hack)
@@ -268,8 +268,7 @@ class TestTrain(unittest.TestCase):
         msg='The header and the body should have the same number of columns.')
 
     train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH,
-      out_span, 2)
-
+              out_span, 2)
 
   def tearDown(self) -> None:
     os.remove(WEIGHTS_FILE_PATH)

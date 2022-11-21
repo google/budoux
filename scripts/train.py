@@ -22,13 +22,8 @@ from typing import NamedTuple
 import numpy as np
 import numpy.typing as npt
 
-jax_ready = False
-try:
-  import jax.numpy as jnp
-  from jax import device_put, jit
-  jax_ready = True
-except ModuleNotFoundError:
-  import numpy as jnp  # type: ignore
+import jax.numpy as jnp
+from jax import device_put, jit
 
 EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
 DEFAULT_OUTPUT_NAME = 'weights.txt'
@@ -96,6 +91,7 @@ def preprocess(
   return X, Y, features
 
 
+@jit
 def pred(phis: typing.Dict[int, float],
          X: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
   """Predicts the output from the given classifiers and input entries.
@@ -169,6 +165,7 @@ def get_metrics(pred: npt.NDArray[np.bool_],
   )
 
 
+@jit
 def update_weight(
     w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_]
 ) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
@@ -183,6 +180,7 @@ def update_weight(
   return w, alpha, m_best, pol_best
 
 
+@partial(jit, static_argnames=['chunk_size'])
 def update_weight_chunk(
     w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_],
     chunk_size: int) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
@@ -248,11 +246,10 @@ def fit(X_train: npt.NDArray[np.bool_],
   assert (X_test.shape[0] == Y_test.shape[0]
          ), 'Testing entries and labels should have the same number of items.'
 
-  if jax_ready:
-    X_train = device_put(X_train)
-    Y_train = device_put(Y_train)
-    X_test = device_put(X_test)
-    Y_test = device_put(Y_test)
+  X_train = device_put(X_train)
+  Y_train = device_put(Y_train)
+  X_test = device_put(X_test)
+  Y_test = device_put(Y_test)
   N_train, _ = X_train.shape
   w = jnp.ones(N_train) / N_train
   YX_train = Y_train[:, None] ^ X_train
@@ -261,8 +258,8 @@ def fit(X_train: npt.NDArray[np.bool_],
     with open(weights_filename, 'a') as f:
       f.write('\n'.join('%s\t%.6f' % p for p in phi_buffer) + '\n')
     phi_buffer.clear()
-    pred_train = jit(pred)(phis, X_train) if jax_ready else pred(phis, X_train)
-    pred_test = jit(pred)(phis, X_test) if jax_ready else pred(phis, X_test)
+    pred_train = pred(phis, X_train)
+    pred_test = pred(phis, X_test)
     metrics_train = get_metrics(pred_train, Y_train)
     metrics_test = get_metrics(pred_test, Y_test)
     print('=== %s ===' % t)
@@ -292,13 +289,9 @@ def fit(X_train: npt.NDArray[np.bool_],
 
   for t in range(iters):
     if chunk_size:
-      w, alpha, m_best, pol_best = partial(
-          jit, static_argnames=['chunk_size'])(update_weight_chunk)(
-              w, YX_train, chunk_size) if jax_ready else update_weight_chunk(
-                  w, YX_train, chunk_size)
+      w, alpha, m_best, pol_best = update_weight_chunk(w, YX_train, chunk_size)
     else:
-      w, alpha, m_best, pol_best = jit(update_weight)(
-          w, YX_train) if jax_ready else update_weight(w, YX_train)
+      w, alpha, m_best, pol_best = update_weight(w, YX_train)
     w.block_until_ready()
     m_best = int(m_best)
     alpha_signed = alpha if pol_best else -alpha
