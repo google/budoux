@@ -19,10 +19,9 @@ from collections import Counter
 from functools import partial
 from typing import NamedTuple
 
+import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
-
-import jax.numpy as jnp
 from jax import device_put, jit
 
 EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
