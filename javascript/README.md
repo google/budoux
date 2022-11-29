@@ -86,7 +86,7 @@ You can load your own custom model as follows.
 ```javascript
 import { Parser } from 'budoux';
 const model = JSON.parse('{"BB2:108120": 1817}');  // Content of the custom model JSON file.
-const parser = new Parser(model);
+const parser = new Parser(new Map(Object.entries(model)));
 ```
 
 ## Web components
