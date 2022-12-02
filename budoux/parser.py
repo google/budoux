@@ -23,7 +23,9 @@ from .utils import INVALID, SEP
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
-with open(os.path.join(os.path.dirname(__file__), 'skip_nodes.json')) as f:
+with open(
+    os.path.join(os.path.dirname(__file__), 'skip_nodes.json'),
+    encoding='utf-8') as f:
   SKIP_NODES: typing.Set[str] = set(json.load(f))
 
 HTMLAttr = typing.List[typing.Tuple[str, typing.Union[str, None]]]
@@ -162,7 +164,7 @@ def load_default_japanese_parser() -> Parser:
   Returns:
     A parser (:obj:`budoux.Parser`).
   """
-  with open(os.path.join(MODEL_DIR, 'ja-knbc.json')) as f:
+  with open(os.path.join(MODEL_DIR, 'ja-knbc.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
 
@@ -173,6 +175,6 @@ def load_default_simplified_chinese_parser() -> Parser:
   Returns:
     A parser (:obj:`budoux.Parser`).
   """
-  with open(os.path.join(MODEL_DIR, 'zh-hans.json')) as f:
+  with open(os.path.join(MODEL_DIR, 'zh-hans.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
