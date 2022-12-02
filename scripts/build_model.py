@@ -45,7 +45,7 @@ def rollup(weights_filename: str,
   with open(model_filename, 'w') as f:
     decision_trees_intscore = dict(
         (item[0], int(item[1] * scale)) for item in decision_trees.items())
-    json.dump(decision_trees_intscore, f)
+    json.dump(decision_trees_intscore, f, ensure_ascii=False)
 
 
 def main() -> None:
