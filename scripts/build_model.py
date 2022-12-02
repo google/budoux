@@ -43,9 +43,11 @@ def rollup(weights_filename: str,
       decision_trees.setdefault(feature, 0)
       decision_trees[feature] += score
   with open(model_filename, 'w', encoding='utf-8') as f:
-    decision_trees_intscore = dict(
-        (item[0], int(item[1] * scale)) for item in decision_trees.items())
-    json.dump(decision_trees_intscore, f, ensure_ascii=False)
+    decision_trees_intscore = dict((item[0], int(item[1] * scale))
+                                   for item in decision_trees.items()
+                                   if abs(int(item[1] * scale)) > 0)
+    json.dump(
+        decision_trees_intscore, f, ensure_ascii=False, separators=(',', ':'))
 
 
 def main() -> None:
