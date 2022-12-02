@@ -162,7 +162,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
 def _main(test: ArgList = None) -> str:
   args = parse_args(test=test)
   model_path = args.lang or args.model
-  with open(model_path, "r") as f:
+  with open(model_path, 'r', encoding='utf-8') as f:
     model = json.load(f)
 
   parser = budoux.Parser(model)
