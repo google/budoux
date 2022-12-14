@@ -41,6 +41,15 @@ console.log(parser.parse('是今天的天气。'));
 // ['是', '今天', '的', '天气。']
 ```
 
+**Traditional Chinese:**
+
+```javascript
+import { loadDefaultTraditionalChineseParser } from 'budoux';
+const parser = loadDefaultTraditionalChineseParser();
+console.log(parser.parse('是今天的天氣。'));
+// ['是', '今天', '的', '天氣。']
+```
+
 ### Translating an HTML string
 
 You can also translate an HTML string to wrap phrases with non-breaking markup.
@@ -92,12 +101,15 @@ const parser = new Parser(new Map(Object.entries(model)));
 ## Web components
 
 BudouX also offers Web components to integrate the parser with your website quickly.
-All you have to do is wrap sentences with `<budoux-ja>` for Japanese,
-and `<budoux-zh-hans>` for Simplified Chinese.
+All you have to do is wrap sentences with:
+- `<budoux-ja>` for Japanese
+- `<budoux-zh-hans>` for Simplified Chinese
+- `<budoux-zh-hant>` for Traditional Chinese
 
 ```html
 <budoux-ja>今日は天気です。</budoux-ja>
 <budoux-zh-hans>今天是晴天。</budoux-zh-hans>
+<budoux-zh-hant>今天是晴天。</budoux-zh-hant>
 ```
 
 In order to enable the custom element, you can simply add this line to load the bundle.
@@ -108,6 +120,9 @@ In order to enable the custom element, you can simply add this line to load the 
 
 <!-- For Simplified Chinese -->
 <script src="https://unpkg.com/budoux/bundle/budoux-zh-hans.min.js"></script>
+
+<!-- For Traditional Chinese -->
+<script src="https://unpkg.com/budoux/bundle/budoux-zh-hant.min.js"></script>
 ```
 
 Otherwise, if you wish to bundle the component with the rest of your source code,
@@ -119,6 +134,9 @@ import 'budoux/module/webcomponents/budoux-ja';
 
 // For Simplified Chinese
 import 'budoux/module/webcomponents/budoux-zh-hans';
+
+// For Traditional Chinese
+import 'budoux/module/webcomponents/budoux-zh-hant';
 ```
 
 ### CLI

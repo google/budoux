@@ -25,6 +25,7 @@ Last but not least, BudouX supports HTML inputs.
 
 - Japanese
 - Simplified Chinese
+- Traditional Chinese
 
 ## Supported Programming languages
 
@@ -66,6 +67,15 @@ print(parser.parse('今天是晴天。'))
 # ['今天', '是', '晴天。']
 ```
 
+**Traditional Chinese:**
+
+```python
+import budoux
+parser = budoux.load_default_traditional_chinese_parser()
+print(parser.parse('今天是晴天。'))
+# ['今天', '是', '晴天。']
+```
+
 You can also translate an HTML string by wrapping phrases with non-breaking markup.
 
 ```python
@@ -100,7 +110,13 @@ $ budoux -l ja 本日は晴天です。
 晴天です。
 
 $ budoux -l zh-hans 今天天气晴朗。
-今天天气
+今天
+天气
+晴朗。
+
+$ budoux -l zh-hant 今天天氣晴朗。
+今天
+天氣
 晴朗。
 ```
 
@@ -128,19 +144,20 @@ BudouX is the successor to Budou,
 the machine learning powered line break organizer tool.
 
 positional arguments:
-  TXT                      text (default: None)
+  TXT                    text (default: None)
 
-options:
-  -h, --help               show this help message and exit
-  -H, --html               HTML mode (default: False)
-  -m JSON, --model JSON    custom model file path (default: /path/to/models/ja-knbc.json)
-  -l LANG, --lang LANG     language of custom model (default: None)
-  -d STR, --delim STR      output delimiter in TEXT mode (default: ---)
-  -V, --version            show program's version number and exit
+optional arguments:
+  -h, --help             show this help message and exit
+  -H, --html             HTML mode (default: False)
+  -m JSON, --model JSON  custom model file path (default: /path/to/budoux/models/ja-knbc.json)
+  -l LANG, --lang LANG   language of custom model (default: None)
+  -d STR, --delim STR    output delimiter in TEXT mode (default: ---)
+  -V, --version          show program's version number and exit
 
 supported languages of `-l`, `--lang`:
-- zh-hans
 - ja
+- zh-hans
+- zh-hant
 ```
 
 ## Caveat
