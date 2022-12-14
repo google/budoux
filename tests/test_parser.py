@@ -139,11 +139,60 @@ class TestDefaultParser(unittest.TestCase):
 
   def test_load_default_japanese_parser(self) -> None:
     p_ja = parser.load_default_japanese_parser()
-    self.assertTrue("UW4:私" in p_ja.model)
+    phrases = p_ja.parse('Google の使命は、世界中の情報を整理し、世界中の人がアクセスできて使えるようにすることです。')
+    self.assertListEqual(phrases, [
+        'Google の',
+        '使命は、',
+        '世界中の',
+        '情報を',
+        '整理し、',
+        '世界中の',
+        '人が',
+        'アクセスできて',
+        '使えるように',
+        'する',
+        'ことです。',
+    ])
 
   def test_load_default_simplified_chinese_parser(self) -> None:
-    p_ch = parser.load_default_simplified_chinese_parser()
-    self.assertTrue("UW4:力" in p_ch.model)
+    p_hans = parser.load_default_simplified_chinese_parser()
+    phrases = p_hans.parse('我们的使命是整合全球信息，供大众使用，让人人受益。')
+    self.assertListEqual(phrases, [
+        '我们',
+        '的',
+        '使命',
+        '是',
+        '整合',
+        '全球',
+        '信息，',
+        '供',
+        '大众',
+        '使用，',
+        '让',
+        '人',
+        '人',
+        '受益。',
+    ])
+
+  def test_load_default_traditional_chinese_parser(self) -> None:
+    p_hant = parser.load_default_traditional_chinese_parser()
+    phrases = p_hant.parse('我們的使命是匯整全球資訊，供大眾使用，使人人受惠。')
+    self.assertListEqual(phrases, [
+        '我們',
+        '的',
+        '使命',
+        '是',
+        '匯整',
+        '全球',
+        '資訊，',
+        '供',
+        '大眾',
+        '使用，',
+        '使',
+        '人',
+        '人',
+        '受惠。',
+    ])
 
 
 if __name__ == '__main__':

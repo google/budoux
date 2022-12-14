@@ -178,3 +178,14 @@ def load_default_simplified_chinese_parser() -> Parser:
   with open(os.path.join(MODEL_DIR, 'zh-hans.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
+
+
+def load_default_traditional_chinese_parser() -> Parser:
+  """Loads a parser equipped with the default Traditional Chinese model.
+
+  Returns:
+    A parser (:obj:`budoux.Parser`).
+  """
+  with open(os.path.join(MODEL_DIR, 'zh-hant.json'), encoding='utf-8') as f:
+    model = json.load(f)
+  return Parser(model)
