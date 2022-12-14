@@ -16,6 +16,7 @@
 
 import {model as jaKNBCModel} from './data/models/ja-knbc.js';
 import {model as zhHansModel} from './data/models/zh-hans.js';
+import {model as zhHantModel} from './data/models/zh-hant.js';
 import {parseFromString} from './dom.js';
 import {HTMLProcessor} from './html_processor.js';
 import {INVALID, sum} from './utils.js';
@@ -152,6 +153,18 @@ export const loadDefaultJapaneseParser = () => {
   return new Parser(new Map(Object.entries(jaKNBCModel)));
 };
 
+/**
+ * Loads a parser equipped with the default Simplified Chinese model.
+ * @returns A parser with the default Simplified Chinese model.
+ */
 export const loadDefaultSimplifiedChineseParser = () => {
   return new Parser(new Map(Object.entries(zhHansModel)));
+};
+
+/**
+ * Loads a parser equipped with the default Traditional Chinese model.
+ * @returns A parser with the default Traditional Chinese model.
+ */
+export const loadDefaultTraditionalChineseParser = () => {
+  return new Parser(new Map(Object.entries(zhHantModel)));
 };
