@@ -102,6 +102,7 @@ const parser = new Parser(new Map(Object.entries(model)));
 
 BudouX also offers Web components to integrate the parser with your website quickly.
 All you have to do is wrap sentences with:
+
 - `<budoux-ja>` for Japanese
 - `<budoux-zh-hans>` for Simplified Chinese
 - `<budoux-zh-hant>` for Traditional Chinese
