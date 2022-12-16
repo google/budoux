@@ -18,6 +18,7 @@ import {cli} from '../cli.js';
 import {execFile, ExecFileException} from 'child_process';
 import * as path from 'path';
 import stream from 'stream';
+import {loadDefaultParsers} from '../parser.js';
 
 type execFileCallBack = {
   error: ExecFileException | null;
@@ -86,6 +87,53 @@ describe('cli', () => {
     const argv = ['node', 'budoux', '-m', customModelPath, inputText];
     const expectedStdOuts = 'abcde\nabcd'.split('\n');
     cli(argv);
+    expectedStdOuts.forEach(stdout => {
+      expect(console.log).toHaveBeenCalledWith(stdout);
+    });
+  });
+
+  it('should use the corresponding language model when the -l parameter is given.', () => {
+    const inputTextHans = '我们的使命是整合全球信息，供大众使用，让人人受益。';
+    const expectedStdOuts = loadDefaultParsers()
+      .get('zh-hans')!
+      .parse(inputTextHans);
+    const argv = ['node', 'budoux', '-l', 'zh-hans', inputTextHans];
+    cli(argv);
+    expectedStdOuts.forEach(stdout => {
+      expect(console.log).toHaveBeenCalledWith(stdout);
+    });
+  });
+
+  it('should use the corresponding language model when the --lang parameter is given.', () => {
+    const inputTextHans = '我們的使命是匯整全球資訊，供大眾使用，使人人受惠。';
+    const expectedStdOuts = loadDefaultParsers()
+      .get('zh-hant')!
+      .parse(inputTextHans);
+    const argv = ['node', 'budoux', '--lang', 'zh-hant', inputTextHans];
+    cli(argv);
+    expectedStdOuts.forEach(stdout => {
+      expect(console.log).toHaveBeenCalledWith(stdout);
+    });
+  });
+
+  it('should prioritize -m and --model over -l and --lang', () => {
+    const inputTextHans = '我們的使a命';
+    const customModelPath = path.resolve(
+      __dirname,
+      'models',
+      'separate_right_before_a.json'
+    );
+    const argv = [
+      'node',
+      'budoux',
+      '--model',
+      customModelPath,
+      '--lang',
+      'zh-hant',
+      inputTextHans,
+    ];
+    cli(argv);
+    const expectedStdOuts = '我們的使\na命'.split('\n');
     expectedStdOuts.forEach(stdout => {
       expect(console.log).toHaveBeenCalledWith(stdout);
     });

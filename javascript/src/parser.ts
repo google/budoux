@@ -168,3 +168,15 @@ export const loadDefaultSimplifiedChineseParser = () => {
 export const loadDefaultTraditionalChineseParser = () => {
   return new Parser(new Map(Object.entries(zhHantModel)));
 };
+
+/**
+ * Loads available default parsers.
+ * @returns A map between available lang codes and their default parsers.
+ */
+export const loadDefaultParsers = () => {
+  return new Map([
+    ['ja', loadDefaultJapaneseParser()],
+    ['zh-hans', loadDefaultSimplifiedChineseParser()],
+    ['zh-hant', loadDefaultTraditionalChineseParser()],
+  ]);
+};
