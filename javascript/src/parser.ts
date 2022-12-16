@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {model as jaKNBCModel} from './data/models/ja-knbc.js';
+import {model as jaModel} from './data/models/ja.js';
 import {model as zhHansModel} from './data/models/zh-hans.js';
 import {model as zhHantModel} from './data/models/zh-hant.js';
 import {parseFromString} from './dom.js';
@@ -150,7 +150,7 @@ export class Parser {
  * @returns A parser with the default Japanese model.
  */
 export const loadDefaultJapaneseParser = () => {
-  return new Parser(new Map(Object.entries(jaKNBCModel)));
+  return new Parser(new Map(Object.entries(jaModel)));
 };
 
 /**

@@ -164,7 +164,7 @@ def load_default_japanese_parser() -> Parser:
   Returns:
     A parser (:obj:`budoux.Parser`).
   """
-  with open(os.path.join(MODEL_DIR, 'ja-knbc.json'), encoding='utf-8') as f:
+  with open(os.path.join(MODEL_DIR, 'ja.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
 

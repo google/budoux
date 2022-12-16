@@ -72,7 +72,7 @@ class TestModelOption(unittest.TestCase):
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_invalid_lang_2(self) -> None:
-    cmdargs = ['-l', 'ja-knbc']
+    cmdargs = ['-l', 'ja-abc']
     with self.assertRaises(SystemExit) as cm:
       main.parse_args(cmdargs)
 
