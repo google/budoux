@@ -11,18 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Runs training and exports the learned weights to build a model."""
+"""Runs model training and exports the learned scores to build a model."""
 
 import argparse
+import array
 import typing
 from collections import Counter
 from functools import partial
 from typing import NamedTuple
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
-from jax import device_put, jit
 
 EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
 DEFAULT_OUTPUT_NAME = 'weights.txt'
@@ -46,9 +47,11 @@ class Result(NamedTuple):
 
 def preprocess(
     entries_filename: str, feature_thres: int
-) -> typing.Tuple[npt.NDArray[np.bool_], npt.NDArray[np.bool_],
-                  typing.List[str]]:
-  """Loads entries and translates them into NumPy arrays.
+) -> typing.Tuple[typing.Any, typing.Any, typing.Any, typing.List[str]]:
+  """Loads entries and translates them into JAX arrays. The boolean matrix of
+  the input data is represented by row indices and column indices of True values
+  instead of the matrix itself for memory efficiency, assuming the matrix is
+  highly sparse. Row and column indices are not guaranteed to be sorted.
 
   Args:
     entries_filename (str): A file path to the entries file.
@@ -56,99 +59,112 @@ def preprocess(
       below the given value.
 
   Returns:
-    X (numpy.ndarray): Input entries.
-    Y (numpy.ndarray): Output labels.
-    features (List[str]): Effective features.
+    A tuple of following items:
+    - rows (JAX array): Row indices of True values in the input data.
+    - cols (JAX array): Column indices of True values in the input data.
+    - Y (JAX array): The target output data.
+    - features (List[str]): The list of features.
   """
-  with open(entries_filename) as f:
-    entries = [
-        row.strip().split('\t') for row in f.read().splitlines() if row.strip()
-    ]
-  print('#entries:\t%d' % (len(entries)))
-
   features_counter: typing.Counter[str] = Counter()
-  for entry in entries:
-    features_counter.update(entry[1:])
+  N = 0
+  X = []
+  Y = array.array('B')
+  with open(entries_filename) as f:
+    for row in f:
+      cols = row.strip().split('\t')
+      if len(cols) < 2:
+        continue
+      Y.append(cols[0] == '1')
+      X.append(cols[1:])
+      features_counter.update(cols[1:])
+      N += 1
   features = [
       item[0]
       for item in features_counter.most_common()
       if item[1] > feature_thres
   ]
-  print('#features:\t%d' % (len(features)))
   feature_index = dict([(feature, i) for i, feature in enumerate(features)])
-
-  M = len(features) + 1
-  N = len(entries)
-  Y: npt.NDArray[np.bool_] = np.zeros(N, dtype=bool)
-  X: npt.NDArray[np.bool_] = np.zeros((N, M), dtype=bool)
-
-  for i, entry in enumerate(entries):
-    Y[i] = entry[0] == '1'
-    indices = [feature_index[col] for col in entry[1:] if col in feature_index]
-    X[i, indices] = True
-  X[:, -1] = True  # add a bias column.
-  return X, Y, features
+  rows = array.array('I')
+  cols = array.array('I')  # type: ignore
+  for i, x in enumerate(X):
+    hit_indices = [feature_index[feat] for feat in x if feat in feature_index]
+    rows.extend(i for _ in range(len(hit_indices)))
+    cols.extend(hit_indices)  # type: ignore
+    rows.append(i)
+    cols.append(len(features))  # type: ignore
+  return jnp.asarray(rows), jnp.asarray(cols), jnp.asarray(
+      Y, dtype=bool), features
 
 
-@jit
-def pred(phis: typing.Dict[int, float],
-         X: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
-  """Predicts the output from the given classifiers and input entries.
-
-  Args:
-    phis (Dict[int, float]): Classifiers represented as a mapping from the
-      feature index to its score.
-    X (numpy.ndarray): Input entries.
-
-  Returns:
-    A list of inferred labels.
-  """
-  alphas: npt.NDArray[np.float64]
-  y: npt.NDArray[np.int64]
-
-  alphas = jnp.array(list(phis.values()))
-  y = 2 * (
-      X[:, list(phis.keys())] == True  # noqa (cannot replace `==` with `is`)
-  ) - 1
-  result: npt.NDArray[np.bool_] = y.dot(alphas) > 0
-  return result
-
-
-def split_dataset(
-    X: npt.NDArray[typing.Any],
-    Y: npt.NDArray[typing.Any],
-    split_ratio: float = 0.9
-) -> typing.Tuple[npt.NDArray[typing.Any], npt.NDArray[typing.Any],
-                  npt.NDArray[typing.Any], npt.NDArray[typing.Any]]:
-  """Splits given entries and labels to training and testing datasets.
+def split_data(
+    rows: npt.NDArray[np.int64],
+    cols: npt.NDArray[np.int64],
+    Y: npt.NDArray[np.bool_],
+    split_ratio: float = .9
+) -> typing.Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64],
+                  npt.NDArray[np.int64], npt.NDArray[np.int64],
+                  npt.NDArray[np.bool_], npt.NDArray[np.bool_]]:
+  """Splits a dataset into a training dataset and a test dataset.
 
   Args:
-    X (numpy.ndarray): Entries to split.
-    Y (numpy.ndarray): Labels to split.
-    split_ratio (float, optional): The ratio to hold for the training dataset.
+    rows (numpy.ndarray): Row indices of True values in the input data.
+    cols (numpy.ndarray): Column indices of True values in the input data.
+    Y (numpy.ndarray): The target output.
+    split_ratio (float, optional): The split ratio for the training dataset.
+      The value should be between 0 and 1. The default value is 0.9 (=90% for
+      training).
 
   Returns:
-    X_train (numpy.ndarray): Training entries.
-    X_test (numpy.ndarray): Testing entries.
-    Y_train (numpy.ndarray): Training labels.
-    Y_test (numpy.ndarray): Testing labels.
+    A tuple of:
+    - rows_train (numpy.ndarray): Row indices of True values in the training input data.
+    - cols_train (numpy.ndarray): Column indices of True values in the training input data.
+    - rows_test (numpy.ndarray): Row indices of True values in the test input data.
+    - cols_test (numpy.ndarray): Column indices of True values in the test input data.
+    - Y_train (numpy.ndarray): The training target output.
+    - Y_test (numpy.ndarray): The test target output.
   """
-  N, _ = X.shape
-  np.random.seed(0)
-  indices = np.random.permutation(N)
-  X_train = X[indices[:int(N * split_ratio)]]
-  X_test = X[indices[int(N * split_ratio):]]
-  Y_train = Y[indices[:int(N * split_ratio)]]
-  Y_test = Y[indices[int(N * split_ratio):]]
-  return X_train, X_test, Y_train, Y_test
+  thres = int(Y.shape[0] * split_ratio)
+  return (rows[rows < thres], cols[rows < thres], rows[rows >= thres] - thres,
+          cols[rows >= thres], Y[:thres], Y[thres:])
 
 
+@partial(jax.jit, static_argnums=[3])
+def pred(phis: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
+         cols: npt.NDArray[np.int64], N: int) -> npt.NDArray[np.bool_]:
+  """Predicts the target output from the learned scores and input entries.
+
+  Args:
+    phis (numpy.ndarray): Contribution scores of features.
+    rows (numpy.ndarray): Row indices of True values in the input.
+    cols (numpy.ndarray): Column indices of True values in the input.
+    N (int): The number of input entries.
+
+  Returns:
+    res (numpy.ndarray): A prediction of the target.
+  """
+  # This is equivalent to phis.dot(2X - 1) = 2phis.dot(X) - phis.sum() but in a
+  # sparse matrix-friendly way.
+  r: npt.NDArray[np.float64] = 2 * jax.ops.segment_sum(
+      phis.take(cols), rows, N) - phis.sum()
+  return r > 0
+
+
+@jax.jit
 def get_metrics(pred: npt.NDArray[np.bool_],
                 actual: npt.NDArray[np.bool_]) -> Result:
-  tp = np.sum(np.logical_and(pred == 1, actual == 1))
-  tn = np.sum(np.logical_and(pred == 0, actual == 0))
-  fp = np.sum(np.logical_and(pred == 1, actual == 0))
-  fn = np.sum(np.logical_and(pred == 0, actual == 1))
+  """Gets evaluation metrics from the prediction and the actual target.
+
+  Args:
+    pred (numpy.ndarray): A prediction of the target.
+    actual (numpy.ndarray): The actual target.
+
+  Returns:
+    result (Result): A result.
+  """
+  tp = jnp.sum(jnp.logical_and(pred == 1, actual == 1))
+  tn = jnp.sum(jnp.logical_and(pred == 0, actual == 0))
+  fp = jnp.sum(jnp.logical_and(pred == 1, actual == 0))
+  fn = jnp.sum(jnp.logical_and(pred == 0, actual == 1))
   accuracy = (tp + tn) / (tp + tn + fp + fn)
   precision = tp / (tp + fp)
   recall = tp / (tp + fn)
@@ -164,66 +180,72 @@ def get_metrics(pred: npt.NDArray[np.bool_],
   )
 
 
-@jit
-def update_weight(
-    w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_]
-) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
-  res = w.dot(YX)
-  err = 0.5 - jnp.abs(res - 0.5)
-  m_best = err.argmin()
-  pol_best = res.at[m_best].get() < 0.5
-  err_min = err.at[m_best].get()
-  alpha = jnp.log((1 - err_min) / (err_min + EPS))
-  w = w * jnp.exp(alpha * (YX[:, m_best] == pol_best))
-  w = w / w.sum()
-  return w, alpha, m_best, pol_best
-
-
-@partial(jit, static_argnames=['chunk_size'])
-def update_weight_chunk(
-    w: npt.NDArray[np.float64], YX: npt.NDArray[np.bool_],
-    chunk_size: int) -> typing.Tuple[npt.NDArray[np.float64], float, int, bool]:
-  N, M = YX.shape
-  res = jnp.zeros(M)
-  for chunk in range(0, N, chunk_size):
-    res += w[chunk:chunk + chunk_size].dot(YX[chunk:chunk + chunk_size])
-  err = 0.5 - jnp.abs(res - 0.5)
-  m_best = err.argmin()
-  pol_best = res.at[m_best].get() < 0.5
-  err_min = err.at[m_best].get()
-  alpha = jnp.log((1 - err_min) / (err_min + EPS))
-  w = w * jnp.exp(alpha * (YX[:, m_best] == pol_best))
-  w = w / w.sum()
-  return w, alpha, m_best, pol_best
-
-
-def fit(X_train: npt.NDArray[np.bool_],
-        Y_train: npt.NDArray[np.bool_],
-        X_test: npt.NDArray[np.bool_],
-        Y_test: npt.NDArray[np.bool_],
-        features: typing.List[str],
-        iters: int,
-        weights_filename: str,
-        log_filename: str,
-        out_span: int,
-        chunk_size: typing.Optional[int] = None) -> typing.Dict[int, float]:
-  """Trains an AdaBoost classifier.
+@partial(jax.jit, static_argnums=[5])
+def update_weights(w: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
+                   cols: npt.NDArray[np.int64], Y: npt.NDArray[np.bool_],
+                   scores: typing.Any,
+                   M: int) -> typing.Tuple[typing.Any, typing.Any, int, float]:
+  """Calculates the new weight vector from the best feature and its score.
 
   Args:
-    X_train (numpy.ndarray): Training entries.
-    Y_train (numpy.ndarray): Training labels.
-    X_test (numpy.ndarray): Testing entries.
-    Y_test (numpy.ndarray): Testing labels.
+    w (numpy.ndarray): A weight vector.
+    rows (numpy.ndarray): Row indices of True values in the input data.
+    cols (numpy.ndarray): Column indices of True values in the input data.
+    Y (numpy.ndarray): The target output.
+    scores (JAX array): Contribution scores of features.
+    M (int): The number of columns in the input data.
+
+  Returns:
+    A tuple of following items:
+    - w (numpy.ndarray): The new weight vector.
+    - scores (JAX array): The new contribution scores.
+    - best_feature_index (int): The index of the best feature.
+    - score (float): The newly added score for the best feature.
+  """
+  # This is quivalent to w.dot(Y[:, None] ^ X). Note that y ^ x = y + x - 2yx,
+  # hence w.dot(y ^ x) = w.dot(y) - w(2y - 1).dot(x).
+  # `segment_sum` is used to implement sparse matrix-friendly dot products.
+  res = w.dot(Y) - jax.ops.segment_sum((w * (2 * Y - 1)).take(rows), cols, M)
+  err = 0.5 - jnp.abs(res - 0.5)
+  best_feature_index: int = err.argmin()
+  positivity: bool = res.at[best_feature_index].get() < 0.5
+  err_min = err.at[best_feature_index].get()
+  amount: float = jnp.log((1 - err_min) / (err_min + EPS))
+  N = Y.shape[0]
+
+  # This is equivalent to X_best = X[:, best_feature_index]
+  X_best = jnp.zeros(
+      N, dtype=bool).at[jnp.where(cols == best_feature_index, rows, N)].set(
+          True, mode='drop')
+  w = w * jnp.exp(amount * (Y ^ X_best == positivity))
+  w = w / w.sum()
+  score = amount * (2 * positivity - 1)
+  scores = scores.at[best_feature_index].add(score)
+  return w, scores, best_feature_index, score
+
+
+def fit(rows_train: npt.NDArray[np.int64], cols_train: npt.NDArray[np.int64],
+        rows_test: npt.NDArray[np.int64], cols_test: npt.NDArray[np.int64],
+        Y_train: npt.NDArray[np.bool_], Y_test: npt.NDArray[np.bool_],
+        features: typing.List[str], iters: int, weights_filename: str,
+        log_filename: str, out_span: int) -> typing.Any:
+  """Trains an AdaBoost binary classifier.
+
+  Args:
+    row_train (numpy.ndarray): Row indices of True values in the training input data.
+    col_train (numpy.ndarray): Column indices of True values in the training input data.
+    row_test (numpy.ndarray): Row indices of True values in the test input data.
+    col_test (numpy.ndarray): Column indices of True values in the test input data.
+    Y_train (numpy.ndarray): The training target output.
+    Y_test (numpy.ndarray): The test target output.
     features (List[str]): Features, which correspond to the columns of entries.
     iters (int): A number of training iterations.
     weights_filename (str): A file path to write the learned weights.
     log_filename (str): A file path to log the accuracy along with training.
     out_span (int): Iteration span to output metics and weights.
-    chunk_size (Optional[int]): A chunk size to split training entries for
-      memory efficiency.
 
   Returns:
-    phi (Dict[int, float]): Learned child classifiers.
+    scores (Any): The contribution scores.
   """
   with open(weights_filename, 'w') as f:
     f.write('')
@@ -233,35 +255,22 @@ def fit(X_train: npt.NDArray[np.bool_],
         'test_accuracy\ttest_precision\ttest_recall\ttest_fscore\n')
   print('Outputting learned weights to %s ...' % (weights_filename))
 
-  phis: typing.Dict[int, float] = dict()
-  phi_buffer: typing.List[typing.Tuple[str, float]] = []
-
-  assert (X_train.shape[1] == X_test.shape[1]
-         ), 'Training and test entries should have the same number of features.'
-  assert (X_train.shape[1] - 1 == len(features)
-         ), 'The training data should have the same number of features + BIAS.'
-  assert (X_train.shape[0] == Y_train.shape[0]
-         ), 'Training entries and labels should have the same number of items.'
-  assert (X_test.shape[0] == Y_test.shape[0]
-         ), 'Testing entries and labels should have the same number of items.'
-
-  X_train = device_put(X_train)
-  Y_train = device_put(Y_train)
-  X_test = device_put(X_test)
-  Y_test = device_put(Y_test)
-  N_train, _ = X_train.shape
+  M = len(features) + 1
+  scores = jnp.zeros(M)
+  feature_score_buffer: typing.List[typing.Tuple[str, float]] = []
+  N_train = Y_train.shape[0]
+  N_test = Y_test.shape[0]
   w = jnp.ones(N_train) / N_train
-  YX_train = Y_train[:, None] ^ X_train
 
   def output_progress(t: int) -> None:
+    print('=== %s ===' % t)
     with open(weights_filename, 'a') as f:
-      f.write('\n'.join('%s\t%.6f' % p for p in phi_buffer) + '\n')
-    phi_buffer.clear()
-    pred_train = pred(phis, X_train)
-    pred_test = pred(phis, X_test)
+      f.write('\n'.join('%s\t%.6f' % p for p in feature_score_buffer) + '\n')
+    feature_score_buffer.clear()
+    pred_train = pred(scores, rows_train, cols_train, N_train)
+    pred_test = pred(scores, rows_test, cols_test, N_test)
     metrics_train = get_metrics(pred_train, Y_train)
     metrics_test = get_metrics(pred_test, Y_test)
-    print('=== %s ===' % t)
     print()
     print('train accuracy:\t%.5f' % metrics_train.accuracy)
     print('train prec.:\t%.5f' % metrics_train.precision)
@@ -287,23 +296,17 @@ def fit(X_train: npt.NDArray[np.bool_],
       ))
 
   for t in range(iters):
-    if chunk_size:
-      w, alpha, m_best, pol_best = update_weight_chunk(w, YX_train, chunk_size)
-    else:
-      w, alpha, m_best, pol_best = update_weight(w, YX_train)
+    w, scores, best_feature_index, score = update_weights(
+      w, rows_train, cols_train, Y_train, scores, M)
     w.block_until_ready()
-    m_best = int(m_best)
-    alpha_signed = alpha if pol_best else -alpha
-    phis.setdefault(m_best, 0)
-    phis[m_best] += alpha_signed
-    feature = features[m_best] if m_best < len(features) else 'BIAS'
-    phi_buffer.append((feature, alpha_signed))
+    feature = features[best_feature_index] if (
+        best_feature_index < len(features)) else 'BIAS'
+    feature_score_buffer.append((feature, score))
     if (t + 1) % out_span == 0:
       output_progress(t + 1)
-  if len(phi_buffer) > 0:
+  if len(feature_score_buffer) > 0:
     output_progress(t + 1)
-
-  return phis
+  return scores
 
 
 def parse_args(test: ArgList = None) -> argparse.Namespace:
@@ -345,11 +348,6 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       help=f'Iteration span to output metrics and weights. (default: {DEFAULT_OUT_SPAN})',
       type=int,
       default=DEFAULT_OUT_SPAN)
-  parser.add_argument(
-      '--chunk-size',
-      type=int,
-      help='A chunk size to split training entries for memory efficiency. (default: None)',
-      default=None)
   if test is None:
     return parser.parse_args()
   else:
@@ -358,20 +356,18 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
 
 def main() -> None:
   args = parse_args()
-  train_data_filename: str = args.encoded_train_data
+  data_filename: str = args.encoded_train_data
   weights_filename: str = args.output
   log_filename: str = args.log
   feature_thres = int(args.feature_thres)
   iterations = int(args.iter)
   out_span = int(args.out_span)
-  chunk_size = int(args.chunk_size) if args.chunk_size is not None else None
 
-  X, Y, features = preprocess(train_data_filename, feature_thres)
-  X_train, X_test, Y_train, Y_test = split_dataset(X, Y)
-  del X, Y
-  fit(X_train, Y_train, X_test, Y_test, features, iterations, weights_filename,
-      log_filename, out_span, chunk_size)
-
+  X_rows, X_cols, Y, features = preprocess(data_filename, feature_thres)
+  X_rows_train, X_cols_train, X_rows_test, X_cols_test, Y_train, Y_test = split_data(
+      X_rows, X_cols, Y)
+  fit(X_rows_train, X_cols_train, X_rows_test, X_cols_test, Y_train, Y_test,
+      features, iterations, weights_filename, log_filename, out_span)
   print('Training done. Export the model by passing %s to build_model.py' %
         (weights_filename))
 

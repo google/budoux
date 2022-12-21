@@ -16,24 +16,17 @@
 import math
 import os
 import sys
+import typing
 import unittest
-from pathlib import Path
 
 import numpy as np
-import numpy.typing as npt
+from jax import numpy as jnp
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import train  # type: ignore # noqa (module hack)
-
-ENTRIES_FILE_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
-WEIGHTS_FILE_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'weights_test.txt'))
-LOG_FILE_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'train_test.log'))
 
 
 class TestArgParse(unittest.TestCase):
@@ -64,12 +57,11 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.feature_thres, train.DEFAULT_FEATURE_THRES)
     self.assertEqual(output.iter, train.DEFAULT_ITERATION)
     self.assertEqual(output.out_span, train.DEFAULT_OUT_SPAN)
-    self.assertEqual(output.chunk_size, None)
 
   def test_cmdargs_full(self) -> None:
     cmdargs = [
         'encoded.txt', '-o', 'out.txt', '--log', 'foo.log', '--feature-thres',
-        '100', '--iter', '10', '--chunk-size', '1000', '--out-span', '50'
+        '100', '--iter', '10', '--out-span', '50'
     ]
     output = train.parse_args(cmdargs)
     self.assertEqual(output.encoded_train_data, 'encoded.txt')
@@ -77,128 +69,164 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.log, 'foo.log')
     self.assertEqual(output.feature_thres, 100)
     self.assertEqual(output.iter, 10)
-    self.assertEqual(output.chunk_size, 1000)
     self.assertEqual(output.out_span, 50)
 
 
-class TestTrain(unittest.TestCase):
+class TestPreprocess(unittest.TestCase):
+  ENTRIES_FILE_PATH = os.path.abspath(
+      os.path.join(os.path.dirname(__file__), 'entries_test.txt'))
 
-  def setUp(self) -> None:
-    Path(WEIGHTS_FILE_PATH).touch()
-    Path(LOG_FILE_PATH).touch()
-    with open(ENTRIES_FILE_PATH, 'w') as f:
-      f.write((
-          ' 1\tA\tC\n'  # the first column represents the label (-1 / 1).
-          '-1\tA\tB\n'  # the rest columns represents the associated features.
-          ' 1\tA\tC\n'
-          '-1\tA\n'
-          ' 1\tA\tC\n'))
+  def test_standard_setup(self) -> None:
+    with open(self.ENTRIES_FILE_PATH, 'w') as f:
+      f.write(('1\tfoo\tbar\n'
+               '-1\tfoo\n'
+               '1\tfoo\tbar\tbaz\n'
+               '1\tbar\tfoo\n'
+               '-1\tbaz\tqux\n'))
+    # The input matrix X and the target vector Y should look like below now:
+    # Y    X(foo bar baz BIAS)
+    # 1      1   1   0   1
+    # -1     1   0   0   1
+    # 1      1   1   1   1
+    # 1      1   1   0   1
+    # -1     0   0   1   1
+    rows, cols, Y, features = train.preprocess(self.ENTRIES_FILE_PATH, 1)
+    self.assertEqual(features, ['foo', 'bar', 'baz'])
+    self.assertEqual(Y.tolist(), [True, False, True, True, False])
+    self.assertEqual(rows.tolist(), [0, 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4])
+    self.assertEqual(cols.tolist(), [0, 1, 3, 0, 3, 0, 1, 2, 3, 1, 0, 3, 2, 3])
 
-  def test_pred(self) -> None:
-    X: npt.NDArray[np.bool_] = np.array([
-        [True, False, True, False],
-        [False, True, False, True],
+  def test_skip_invalid_rows(self) -> None:
+    with open(self.ENTRIES_FILE_PATH, 'w') as f:
+      f.write(('\n1\tfoo\tbar\n'
+               '-1\n\n'
+               '-1\tfoo\n\n'))
+    # The input matrix X and the target vector Y should look like below now:
+    # Y    X(foo bar BIAS)
+    # 1      1   1   1
+    # -1     1   0   1
+    rows, cols, Y, features = train.preprocess(self.ENTRIES_FILE_PATH, 0)
+    self.assertEqual(features, ['foo', 'bar'])
+    self.assertEqual(Y.tolist(), [True, False])
+    self.assertEqual(rows.tolist(), [0, 0, 0, 1, 1])
+    self.assertEqual(cols.tolist(), [0, 1, 2, 0, 2])
+
+  def tearDown(self) -> None:
+    if (os.path.exists(self.ENTRIES_FILE_PATH)):
+      os.remove(self.ENTRIES_FILE_PATH)
+
+
+class TestSplitData(unittest.TestCase):
+
+  def test_standard_setup(self) -> None:
+    split_ratio = 0.6
+    X = np.array([
+        [0, 1, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+        [0, 1, 1],
+        [0, 1, 0],
     ])
-    phis = {
-        1: 8.0,  # Weights Feature #1 by 8.
-        2: 2.0,  # Weights Feature #2 by 2.
-    }
-    # Since Feature #1 (= the 2nd col in X) wins, the prediction should be:
-    # [
-    #   False,
-    #   True,
-    # ]
-    pred = train.pred(phis, X)
-    self.assertListEqual(pred.tolist(), [False, True])
+    Y = np.array([0, 1, 0, 1, 0], dtype=bool)
+    rows, cols = np.where(X == 1)
+    rows_train, cols_train, rows_test, cols_test, Y_train, Y_test = train.split_data(
+        rows, cols, Y, split_ratio)
+    self.assertEqual(rows_train.tolist(), [0, 1, 2, 2])
+    self.assertEqual(cols_train.tolist(), [1, 0, 0, 2])
+    self.assertEqual(rows_test.tolist(), [0, 0, 1])
+    self.assertEqual(cols_test.tolist(), [1, 2, 1])
+    self.assertEqual(Y_train.tolist(), [0, 1, 0])
+    self.assertEqual(Y_test.tolist(), [1, 0])
 
-  def test_preprocess(self) -> None:
-    freq_thres = 0
-    X, Y, features = train.preprocess(ENTRIES_FILE_PATH, freq_thres)
-    self.assertListEqual(features, ['A', 'C', 'B'],
-                         'Features should be ordered by frequency.')
 
-    self.assertListEqual(
-        X.tolist(),
-        [
-            # A    C     B      BIAS
-            [True, True, False, True],
-            [True, False, True, True],
-            [True, True, False, True],
-            [True, False, False, True],
-            [True, True, False, True],
-        ],
-        'X should represent the entry features with a bias column.')
+class TestPred(unittest.TestCase):
 
-    self.assertListEqual(Y.tolist(), [
-        True,
-        False,
-        True,
-        False,
-        True,
-    ], 'Y should represent the entry labels.')
+  def test_standard_setup(self) -> None:
+    X = np.array([
+        [1, 1, 0],
+        [1, 0, 1],
+        [0, 1, 0],
+        [0, 0, 1],
+    ])
+    phis = np.array([0.4, 0.2, -0.3])
+    N = X.shape[0]
+    rows, cols = np.where(X == 1)
+    res = train.pred(phis, rows, cols, N)
+    expected = [
+        0.4 + 0.2 - (-0.3) > 0,
+        0.4 - 0.2 + (-0.3) > 0,
+        -0.4 + 0.2 - (-0.3) > 0,
+        -0.4 - 0.2 + (-0.3) > 0,
+    ]
+    self.assertEqual(res.tolist(), expected)
 
-    freq_thres = 4
-    X, Y, features = train.preprocess(ENTRIES_FILE_PATH, freq_thres)
-    self.assertListEqual(
-        features, ['A'],
-        'Features with smaller frequency than the threshold should be filtered.'
-    )
 
-    self.assertListEqual(
-        X.tolist(),
-        [
-            # A    BIAS
-            [True, True],
-            [True, True],
-            [True, True],
-            [True, True],
-            [True, True],
-        ],
-        'X should represent the filtered entry features with a bias column.')
+class TestGetMetrics(unittest.TestCase):
 
-    self.assertListEqual(
-        Y.tolist(), [
-            True,
-            False,
-            True,
-            False,
-            True,
-        ], 'Y should represent the entry labels even some labels are filtered.')
+  def test_standard_setup(self) -> None:
+    pred = np.array([0, 0, 1, 0, 0], dtype=bool)
+    target = np.array([1, 0, 1, 1, 1], dtype=bool)
+    result = train.get_metrics(pred, target)
+    self.assertEqual(result.tp, 1)
+    self.assertEqual(result.tn, 1)
+    self.assertEqual(result.fp, 0)
+    self.assertEqual(result.fn, 3)
+    self.assertEqual(result.accuracy, 2 / 5)
+    p = 1 / 1
+    r = 1 / 4
+    self.assertEqual(result.precision, p)
+    self.assertEqual(result.recall, r)
+    self.assertEqual(result.fscore, 2 * p * r / (p + r))
 
-  def test_split_dataset(self) -> None:
-    N = 100
-    X = np.random.rand(N, 2)
-    Y = np.arange(N)
-    split_ratio = .8
-    X_train, X_test, Y_train, Y_test = train.split_dataset(X, Y, split_ratio)
-    self.assertAlmostEqual(X_train.shape[0], N * split_ratio)
-    self.assertAlmostEqual(X_test.shape[0], N * (1 - split_ratio))
-    self.assertAlmostEqual(X_train.shape[1], 2)
-    self.assertAlmostEqual(X_test.shape[1], 2)
-    self.assertAlmostEqual(Y_train.shape[0], N * split_ratio)
-    self.assertAlmostEqual(Y_test.shape[0], N * (1 - split_ratio))
+
+class TestUpdateWeights(unittest.TestCase):
+  X = np.array([
+      [1, 0, 1, 0],
+      [0, 1, 0, 0],
+      [0, 0, 0, 0],
+      [1, 0, 0, 0],
+      [0, 1, 1, 0],
+  ])
+
+  def test_standard_setup1(self) -> None:
+    rows, cols = np.where(self.X == 1)
+    M = self.X.shape[-1]
+    Y = np.array([1, 1, 0, 0, 1], dtype=bool)
+    w = np.array([0.1, 0.3, 0.1, 0.1, 0.4])
+    scores = jnp.zeros(M)
+    new_w, new_scores, best_feature_index, added_score = train.update_weights(
+        w, rows, cols, Y, scores, M)
+    self.assertFalse(w.argmax() == 0)
+    self.assertTrue(new_w.argmax() == 0)
+    self.assertFalse(scores.argmax() == 1)
+    self.assertTrue(new_scores.argmax() == 1)
+    self.assertEqual(best_feature_index, 1)
+    self.assertTrue(added_score > 0)
+
+
+class TestFit(unittest.TestCase):
+  WEIGHTS_FILE_PATH = os.path.abspath(
+      os.path.join(os.path.dirname(__file__), 'weights_test.txt'))
+  LOG_FILE_PATH = os.path.abspath(
+      os.path.join(os.path.dirname(__file__), 'train_test.log'))
 
   def test_fit(self) -> None:
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
-    X: npt.NDArray[np.bool_] = np.array([
-        [False, True, True, False],
-        [True, True, False, True],
-        [False, False, True, False],
-        [True, False, False, True],
+    X = np.array([
+        [0, 1, 1, 1],
+        [1, 1, 0, 1],
+        [0, 0, 1, 1],
+        [1, 0, 0, 1],
     ])
-    Y: npt.NDArray[np.bool_] = np.array([
-        False,
-        False,
-        True,
-        True,
-    ])
+    Y = np.array([0, 0, 1, 1])
+    rows, cols = np.where(X == 1)
     features = ['a', 'b', 'c']
     iters = 5
     out_span = 2
-    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH,
-              out_span)
-    with open(WEIGHTS_FILE_PATH) as f:
+    scores = train.fit(rows, cols, rows, cols, Y, Y, features, iters,
+                       self.WEIGHTS_FILE_PATH, self.LOG_FILE_PATH, out_span)
+    with open(self.WEIGHTS_FILE_PATH) as f:
       weights = [
           line.split('\t') for line in f.read().splitlines() if line.strip()
       ]
@@ -210,7 +238,7 @@ class TestTrain(unittest.TestCase):
         iters,
         msg='The number of lines should equal to the iteration count.')
 
-    with open(LOG_FILE_PATH) as f:
+    with open(self.LOG_FILE_PATH) as f:
       log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
     self.assertEqual(
         len(log),
@@ -222,58 +250,18 @@ class TestTrain(unittest.TestCase):
         1,
         msg='The header and the body should have the same number of columns.')
 
-  def test_fit_chunk(self) -> None:
-    # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
-    # correlates with Y in a negative way.
-    X: npt.NDArray[np.bool_] = np.array([
-        [False, True, True, False],
-        [True, True, False, True],
-        [False, False, True, False],
-        [True, False, False, True],
-    ])
-    Y: npt.NDArray[np.bool_] = np.array([
-        False,
-        False,
-        True,
-        True,
-    ])
-    features = ['a', 'b', 'c']
-    iters = 5
-    out_span = 2
-    chunk_size = 2
-    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH,
-              out_span, chunk_size)
-    with open(WEIGHTS_FILE_PATH) as f:
-      weights = [
-          line.split('\t') for line in f.read().splitlines() if line.strip()
-      ]
-    top_feature = weights[0][0]
-    self.assertEqual(
-        top_feature, 'b', msg='The most effective feature should be selected.')
-    self.assertEqual(
-        len(weights),
-        iters,
-        msg='The number of lines should equal to the iteration count.')
-
-    with open(LOG_FILE_PATH) as f:
-      log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
-    self.assertEqual(
-        len(log),
-        math.ceil(iters / out_span) + 1,
-        msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header'
-    )
-    self.assertEqual(
-        len(set(len(line) for line in log)),
-        1,
-        msg='The header and the body should have the same number of columns.')
-
-    train.fit(X, Y, X, Y, features, iters, WEIGHTS_FILE_PATH, LOG_FILE_PATH,
-              out_span, 2)
+    model: typing.Dict[str, float] = {}
+    for weight in weights:
+      model.setdefault(weight[0], 0)
+      model[weight[0]] += float(weight[1])
+    self.assertEqual(scores.shape[0], len(features) + 1)
+    loaded_scores = [model.get(feature, 0) for feature in features
+                    ] + [model.get('BIAS', 0)]
+    self.assertTrue(np.all(np.isclose(scores, loaded_scores)))
 
   def tearDown(self) -> None:
-    os.remove(WEIGHTS_FILE_PATH)
-    os.remove(LOG_FILE_PATH)
-    os.remove(ENTRIES_FILE_PATH)
+    os.remove(self.WEIGHTS_FILE_PATH)
+    os.remove(self.LOG_FILE_PATH)
 
 
 if __name__ == '__main__':
