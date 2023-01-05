@@ -95,12 +95,12 @@ def preprocess(
 
 
 def split_data(
-    rows: npt.NDArray[np.int64],
-    cols: npt.NDArray[np.int64],
+    rows: npt.NDArray[np.int32],
+    cols: npt.NDArray[np.int32],
     Y: npt.NDArray[np.bool_],
     split_ratio: float = .9
-) -> typing.Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64],
-                  npt.NDArray[np.int64], npt.NDArray[np.int64],
+) -> typing.Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32],
+                  npt.NDArray[np.int32], npt.NDArray[np.int32],
                   npt.NDArray[np.bool_], npt.NDArray[np.bool_]]:
   """Splits a dataset into a training dataset and a test dataset.
 
@@ -127,8 +127,8 @@ def split_data(
 
 
 @partial(jax.jit, static_argnums=[3])
-def pred(scores: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
-         cols: npt.NDArray[np.int64], N: int) -> npt.NDArray[np.bool_]:
+def pred(scores: npt.NDArray[np.float32], rows: npt.NDArray[np.int32],
+         cols: npt.NDArray[np.int32], N: int) -> npt.NDArray[np.bool_]:
   """Predicts the target output from the learned scores and input entries.
 
   Args:
@@ -142,7 +142,7 @@ def pred(scores: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
   """
   # This is equivalent to scores.dot(2X - 1) = 2 * scores.dot(X) - scores.sum()
   # but in a sparse matrix-friendly way.
-  r: npt.NDArray[np.float64] = 2 * jax.ops.segment_sum(
+  r: npt.NDArray[np.float32] = 2 * jax.ops.segment_sum(
       scores.take(cols), rows, N) - scores.sum()
   return r > 0
 
@@ -179,8 +179,8 @@ def get_metrics(pred: npt.NDArray[np.bool_],
 
 
 @partial(jax.jit, static_argnums=[5])
-def update_weights(w: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
-                   cols: npt.NDArray[np.int64], Y: npt.NDArray[np.bool_],
+def update_weights(w: npt.NDArray[np.float32], rows: npt.NDArray[np.int32],
+                   cols: npt.NDArray[np.int32], Y: npt.NDArray[np.bool_],
                    scores: typing.Any,
                    M: int) -> typing.Tuple[typing.Any, typing.Any, int, float]:
   """Calculates the new weight vector from the best feature and its score.
@@ -222,8 +222,8 @@ def update_weights(w: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
   return w, scores, best_feature_index, score
 
 
-def fit(rows_train: npt.NDArray[np.int64], cols_train: npt.NDArray[np.int64],
-        rows_test: npt.NDArray[np.int64], cols_test: npt.NDArray[np.int64],
+def fit(rows_train: npt.NDArray[np.int32], cols_train: npt.NDArray[np.int32],
+        rows_test: npt.NDArray[np.int32], cols_test: npt.NDArray[np.int32],
         Y_train: npt.NDArray[np.bool_], Y_test: npt.NDArray[np.bool_],
         features: typing.List[str], iters: int, weights_filename: str,
         log_filename: str, out_span: int) -> typing.Any:
