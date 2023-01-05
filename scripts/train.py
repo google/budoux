@@ -297,7 +297,7 @@ def fit(rows_train: npt.NDArray[np.int64], cols_train: npt.NDArray[np.int64],
 
   for t in range(iters):
     w, scores, best_feature_index, score = update_weights(
-      w, rows_train, cols_train, Y_train, scores, M)
+        w, rows_train, cols_train, Y_train, scores, M)
     w.block_until_ready()
     feature = features[best_feature_index] if (
         best_feature_index < len(features)) else 'BIAS'
