@@ -84,17 +84,17 @@ class TestPreprocess(unittest.TestCase):
                '1\tbar\tfoo\n'
                '-1\tbaz\tqux\n'))
     # The input matrix X and the target vector Y should look like below now:
-    # Y    X(foo bar baz BIAS)
-    # 1      1   1   0   1
-    # -1     1   0   0   1
-    # 1      1   1   1   1
-    # 1      1   1   0   1
-    # -1     0   0   1   1
+    # Y    X(foo bar baz)
+    # 1      1   1   0
+    # -1     1   0   0
+    # 1      1   1   1
+    # 1      1   1   0
+    # -1     0   0   1
     rows, cols, Y, features = train.preprocess(self.ENTRIES_FILE_PATH, 1)
     self.assertEqual(features, ['foo', 'bar', 'baz'])
     self.assertEqual(Y.tolist(), [True, False, True, True, False])
-    self.assertEqual(rows.tolist(), [0, 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4])
-    self.assertEqual(cols.tolist(), [0, 1, 3, 0, 3, 0, 1, 2, 3, 1, 0, 3, 2, 3])
+    self.assertEqual(rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
+    self.assertEqual(cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
 
   def test_skip_invalid_rows(self) -> None:
     with open(self.ENTRIES_FILE_PATH, 'w') as f:
@@ -102,14 +102,14 @@ class TestPreprocess(unittest.TestCase):
                '-1\n\n'
                '-1\tfoo\n\n'))
     # The input matrix X and the target vector Y should look like below now:
-    # Y    X(foo bar BIAS)
-    # 1      1   1   1
-    # -1     1   0   1
+    # Y    X(foo bar)
+    # 1      1   1
+    # -1     1   0
     rows, cols, Y, features = train.preprocess(self.ENTRIES_FILE_PATH, 0)
     self.assertEqual(features, ['foo', 'bar'])
     self.assertEqual(Y.tolist(), [True, False])
-    self.assertEqual(rows.tolist(), [0, 0, 0, 1, 1])
-    self.assertEqual(cols.tolist(), [0, 1, 2, 0, 2])
+    self.assertEqual(rows.tolist(), [0, 0, 1])
+    self.assertEqual(cols.tolist(), [0, 1, 0])
 
   def tearDown(self) -> None:
     if (os.path.exists(self.ENTRIES_FILE_PATH)):
@@ -179,7 +179,7 @@ class TestGetMetrics(unittest.TestCase):
     self.assertEqual(result.fscore, 2 * p * r / (p + r))
 
 
-class TestUpdateWeights(unittest.TestCase):
+class TestUpdate(unittest.TestCase):
   X = np.array([
       [1, 0, 1, 0],
       [0, 1, 0, 0],
@@ -194,8 +194,8 @@ class TestUpdateWeights(unittest.TestCase):
     Y = np.array([1, 1, 0, 0, 1], dtype=bool)
     w = np.array([0.1, 0.3, 0.1, 0.1, 0.4])
     scores = jnp.zeros(M)
-    new_w, new_scores, best_feature_index, added_score = train.update_weights(
-        w, rows, cols, Y, scores, M)
+    new_w, new_scores, best_feature_index, added_score = train.update(
+        w, scores, rows, cols, Y)
     self.assertFalse(w.argmax() == 0)
     self.assertTrue(new_w.argmax() == 0)
     self.assertFalse(scores.argmax() == 1)
@@ -254,9 +254,8 @@ class TestFit(unittest.TestCase):
     for weight in weights:
       model.setdefault(weight[0], 0)
       model[weight[0]] += float(weight[1])
-    self.assertEqual(scores.shape[0], len(features) + 1)
-    loaded_scores = [model.get(feature, 0) for feature in features
-                    ] + [model.get('BIAS', 0)]
+    self.assertEqual(scores.shape[0], len(features))
+    loaded_scores = [model.get(feature, 0) for feature in features]
     self.assertTrue(np.all(np.isclose(scores, loaded_scores)))
 
   def tearDown(self) -> None:
