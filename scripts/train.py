@@ -176,20 +176,20 @@ def get_metrics(pred: npt.NDArray[np.bool_],
   )
 
 
-@partial(jax.jit, static_argnums=[5])
-def update_weights(w: npt.NDArray[np.float32], rows: npt.NDArray[np.int32],
-                   cols: npt.NDArray[np.int32], Y: npt.NDArray[np.bool_],
-                   scores: typing.Any,
-                   M: int) -> typing.Tuple[typing.Any, typing.Any, int, float]:
-  """Calculates the new weight vector from the best feature and its score.
+@jax.jit
+def update(
+    w: npt.NDArray[np.float32], scores: typing.Any, rows: npt.NDArray[np.int32],
+    cols: npt.NDArray[np.int32], Y: npt.NDArray[np.bool_]
+) -> typing.Tuple[typing.Any, typing.Any, int, float]:
+  """Calculates the new weight vector and the contribution scores.
 
   Args:
     w (numpy.ndarray): A weight vector.
+    scores (JAX array): Contribution scores of features.
     rows (numpy.ndarray): Row indices of True values in the input data.
     cols (numpy.ndarray): Column indices of True values in the input data.
     Y (numpy.ndarray): The target output.
-    scores (JAX array): Contribution scores of features.
-    M (int): The number of columns in the input data.
+
 
   Returns:
     A tuple of following items:
@@ -198,6 +198,8 @@ def update_weights(w: npt.NDArray[np.float32], rows: npt.NDArray[np.int32],
     - best_feature_index (int): The index of the best feature.
     - score (float): The newly added score for the best feature.
   """
+  N = w.shape[0]
+  M = scores.shape[0]
   # This is quivalent to w.dot(Y[:, None] ^ X). Note that y ^ x = y + x - 2yx,
   # hence w.dot(y ^ x) = w.dot(y) - w(2y - 1).dot(x).
   # `segment_sum` is used to implement sparse matrix-friendly dot products.
@@ -207,7 +209,6 @@ def update_weights(w: npt.NDArray[np.float32], rows: npt.NDArray[np.int32],
   positivity: bool = res.at[best_feature_index].get() < 0.5
   err_min = err.at[best_feature_index].get()
   amount: float = jnp.log((1 - err_min) / (err_min + EPS))
-  N = Y.shape[0]
 
   # This is equivalent to X_best = X[:, best_feature_index]
   X_best = jnp.zeros(
@@ -292,8 +293,8 @@ def fit(rows_train: npt.NDArray[np.int32], cols_train: npt.NDArray[np.int32],
       ))
 
   for t in range(iters):
-    w, scores, best_feature_index, score = update_weights(
-        w, rows_train, cols_train, Y_train, scores, M)
+    w, scores, best_feature_index, score = update(w, scores, rows_train,
+                                                  cols_train, Y_train)
     w.block_until_ready()
     feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))

@@ -179,7 +179,7 @@ class TestGetMetrics(unittest.TestCase):
     self.assertEqual(result.fscore, 2 * p * r / (p + r))
 
 
-class TestUpdateWeights(unittest.TestCase):
+class TestUpdate(unittest.TestCase):
   X = np.array([
       [1, 0, 1, 0],
       [0, 1, 0, 0],
@@ -194,8 +194,8 @@ class TestUpdateWeights(unittest.TestCase):
     Y = np.array([1, 1, 0, 0, 1], dtype=bool)
     w = np.array([0.1, 0.3, 0.1, 0.1, 0.4])
     scores = jnp.zeros(M)
-    new_w, new_scores, best_feature_index, added_score = train.update_weights(
-        w, rows, cols, Y, scores, M)
+    new_w, new_scores, best_feature_index, added_score = train.update(
+        w, scores, rows, cols, Y)
     self.assertFalse(w.argmax() == 0)
     self.assertTrue(new_w.argmax() == 0)
     self.assertFalse(scores.argmax() == 1)
