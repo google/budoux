@@ -66,7 +66,6 @@ def preprocess(
     - features (List[str]): The list of features.
   """
   features_counter: typing.Counter[str] = Counter()
-  N = 0
   X = []
   Y = array.array('B')
   with open(entries_filename) as f:
@@ -77,7 +76,6 @@ def preprocess(
       Y.append(cols[0] == '1')
       X.append(cols[1:])
       features_counter.update(cols[1:])
-      N += 1
   features = [
       item[0]
       for item in features_counter.most_common()
@@ -129,12 +127,12 @@ def split_data(
 
 
 @partial(jax.jit, static_argnums=[3])
-def pred(phis: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
+def pred(scores: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
          cols: npt.NDArray[np.int64], N: int) -> npt.NDArray[np.bool_]:
   """Predicts the target output from the learned scores and input entries.
 
   Args:
-    phis (numpy.ndarray): Contribution scores of features.
+    scores (numpy.ndarray): Contribution scores of features.
     rows (numpy.ndarray): Row indices of True values in the input.
     cols (numpy.ndarray): Column indices of True values in the input.
     N (int): The number of input entries.
@@ -142,10 +140,10 @@ def pred(phis: npt.NDArray[np.float64], rows: npt.NDArray[np.int64],
   Returns:
     res (numpy.ndarray): A prediction of the target.
   """
-  # This is equivalent to phis.dot(2X - 1) = 2phis.dot(X) - phis.sum() but in a
-  # sparse matrix-friendly way.
+  # This is equivalent to scores.dot(2X - 1) = 2 * scores.dot(X) - scores.sum()
+  # but in a sparse matrix-friendly way.
   r: npt.NDArray[np.float64] = 2 * jax.ops.segment_sum(
-      phis.take(cols), rows, N) - phis.sum()
+      scores.take(cols), rows, N) - scores.sum()
   return r > 0
 
 
