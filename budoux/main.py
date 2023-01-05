@@ -59,14 +59,11 @@ def get_model_langs() -> typing.Dict[str, str]:
       typing.Dict[str, str]: A dictionary of model languages and its paths.
   """
   models = glob.glob(
-      pkg_resources.resource_filename(__name__, "models") + "/*-*.json")
+      pkg_resources.resource_filename(__name__, "models") + "/*.json")
   langs = {}
   for model in models:
-    model_name = model.split(os.sep)[-1][:-5]
-    if model_name.startswith('zh-'):
-      langs[model_name] = model
-    else:
-      langs[model_name[:2]] = model
+    lang = model.split(os.sep)[-1][:-5]
+    langs[lang] = model
   return langs
 
 
@@ -129,7 +126,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       "--model",
       metavar="JSON",
       type=check_file,
-      default=pkg_resources.resource_filename(__name__, "models/ja-knbc.json"),
+      default=pkg_resources.resource_filename(__name__, "models/ja.json"),
       help="custom model file path",
   )
   model_select_group.add_argument(

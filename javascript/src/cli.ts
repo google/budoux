@@ -15,12 +15,17 @@
  */
 
 import {readFileSync} from 'fs';
-import {resolve} from 'path';
+import * as path from 'path';
 import * as readline from 'readline';
 import {Command} from 'commander';
-import {Parser, loadDefaultJapaneseParser} from './parser.js';
+import {
+  Parser,
+  loadDefaultParsers,
+  loadDefaultJapaneseParser,
+} from './parser.js';
 
 const CLI_VERSION = '0.4.0';
+const defaultParsers = loadDefaultParsers();
 
 /**
  * Run the command line interface program.
@@ -29,14 +34,20 @@ const CLI_VERSION = '0.4.0';
 export const cli = (argv: string[]) => {
   const program = new Command('budoux');
 
-  program.usage('[-h] [-H] [-d STR] [-t THRES] [-m JSON] [-V] [TXT]');
+  program.usage('[-h] [-H] [-d STR] [-t THRES] [-m JSON] [-l LANG] [-V] [TXT]');
   program.description(
     'BudouX is the successor to Budou, the machine learning powered line break organizer tool.'
   );
   program
     .option('-H, --html', 'HTML mode', false)
     .option('-d, --delim <str>', 'output delimiter in TEXT mode', '---')
-    .option('-m, --model <json>', 'custom model file path')
+    .option('-m, --model <json>', 'model file path')
+    .option(
+      '-l, --lang <str>',
+      `language model to use. -m and --model will be prioritized if any.\navailable languages: ${[
+        ...defaultParsers.keys(),
+      ].join(', ')}`
+    )
     .argument('[txt]', 'text');
 
   program.version(CLI_VERSION);
@@ -44,14 +55,19 @@ export const cli = (argv: string[]) => {
   program.parse(argv);
 
   const options = program.opts();
-  const {model, delim, html} = options as {
+  const {lang, model, delim, html} = options as {
     html: boolean;
     delim: string;
     model?: string;
+    lang?: string;
   };
   const {args} = program;
 
-  const parser = model ? loadCustomParser(model) : loadDefaultJapaneseParser();
+  const parser = model
+    ? loadCustomParser(model)
+    : lang && defaultParsers.has(lang)
+    ? defaultParsers.get(lang)!
+    : loadDefaultJapaneseParser();
 
   switch (args.length) {
     case 0: {
@@ -115,8 +131,8 @@ const outputParsedTexts = (
  * Loads a parser equipped with custom model.
  * @returns A parser with the loaded model.
  */
-const loadCustomParser = (path: string) => {
-  const file = readFileSync(resolve(path)).toString();
+const loadCustomParser = (modelPath: string) => {
+  const file = readFileSync(path.resolve(modelPath)).toString();
   const json = JSON.parse(file);
   return new Parser(new Map(Object.entries(json)));
 };

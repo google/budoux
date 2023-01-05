@@ -149,7 +149,7 @@ positional arguments:
 optional arguments:
   -h, --help             show this help message and exit
   -H, --html             HTML mode (default: False)
-  -m JSON, --model JSON  custom model file path (default: /path/to/budoux/models/ja-knbc.json)
+  -m JSON, --model JSON  custom model file path (default: /path/to/budoux/models/ja.json)
   -l LANG, --lang LANG   language of custom model (default: None)
   -d STR, --delim STR    output delimiter in TEXT mode (default: ---)
   -V, --version          show program's version number and exit
@@ -203,8 +203,8 @@ Good news is that the training algorithm is an [anytime algorithm](https://en.wi
 
 ## Constructing a training dataset from the KNBC corpus for Japanese
 
-The default model for Japanese (`budoux/models/ja_knbc.json`) is built using the [KNBC corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/).
-You can create a training dataset, which we name `source_knbc.txt` for example, from the corpus by running the commands below.
+The default model for Japanese (`budoux/models/ja.json`) is built using the [KNBC corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/).
+You can create a training dataset, which we name `source_knbc.txt` below for example, from the corpus by running the following commands:
 
 ```shellsession
 $ curl -o knbc.tar.bz2 https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2
