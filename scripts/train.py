@@ -88,8 +88,6 @@ def preprocess(
     hit_indices = [feature_index[feat] for feat in x if feat in feature_index]
     rows.extend(i for _ in range(len(hit_indices)))
     cols.extend(hit_indices)  # type: ignore
-    rows.append(i)
-    cols.append(len(features))  # type: ignore
   return jnp.asarray(rows), jnp.asarray(cols), jnp.asarray(
       Y, dtype=bool), features
 
@@ -253,7 +251,7 @@ def fit(rows_train: npt.NDArray[np.int32], cols_train: npt.NDArray[np.int32],
         'test_accuracy\ttest_precision\ttest_recall\ttest_fscore\n')
   print('Outputting learned weights to %s ...' % (weights_filename))
 
-  M = len(features) + 1
+  M = len(features)
   scores = jnp.zeros(M)
   feature_score_buffer: typing.List[typing.Tuple[str, float]] = []
   N_train = Y_train.shape[0]
@@ -297,8 +295,7 @@ def fit(rows_train: npt.NDArray[np.int32], cols_train: npt.NDArray[np.int32],
     w, scores, best_feature_index, score = update_weights(
         w, rows_train, cols_train, Y_train, scores, M)
     w.block_until_ready()
-    feature = features[best_feature_index] if (
-        best_feature_index < len(features)) else 'BIAS'
+    feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))
     if (t + 1) % out_span == 0:
       output_progress(t + 1)
