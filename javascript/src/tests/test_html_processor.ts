@@ -102,8 +102,8 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
   it('should clone separator element deeply', () => {
     expect(document.body.innerHTML).toEqual(
       '<div class="applied">今日は' +
-        '<span style="white-space: normal;">\u200B</span>' +
-        '良い天気</div>'
+        '<span style="white-space: normal;">\u200B</span>良い'+
+        '<span style="white-space: normal;">\u200B</span>天気</div>'
     );
   });
 });
