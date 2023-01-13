@@ -55,7 +55,7 @@ describe('Parser.parse', () => {
     expect(result).toEqual(['abcde', 'abcd']);
   });
 
-  it('should separate even if it makes the first character a sole phrase', () => {
+  it('should separate even if it makes a phrase of one character.', () => {
     const model = new Map([
       ['UW4:b', 10000], // means "should separate right before 'b'".
     ]);
@@ -64,7 +64,7 @@ describe('Parser.parse', () => {
     expect(result).toEqual(['a', 'bcdea', 'bcd']);
   });
 
-  it('should return a blank list when the input is blank.', () => {
+  it('should return an empty list when the input is a blank string.', () => {
     const model = new Map();
     const parser = new Parser(model);
     const result = parser.parse('');
