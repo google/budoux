@@ -22,32 +22,49 @@ import json
 import typing
 
 
-def rollup(weights_filename: str,
-           model_filename: str,
-           scale: int = 1000) -> None:
-  """Rolls up the weights and outputs a model in JSON with integer scores.
+def aggregate_scores(
+    weights: typing.List[str]) -> typing.Dict[str, typing.Dict[str, float]]:
+  """Exports the model by aggregating the weight scores.
 
   Args:
-    weights_filename (str): A file path for the input weights file.
-    model_filename (str): A file path for the output model file.
-    scale (int, optional): A scale factor for the output score.
+    weights (List[str]): The lines of exported weight score file.
+
+  Returns:
+    model (Dict[string, Dict[string, float]]) The exported model.
   """
-  decision_trees: typing.Dict[str, float] = dict()
-  with open(weights_filename) as f:
-    for row in f.readlines():
-      row = row.strip()
-      if not row:
-        continue
-      feature = row.split('\t')[0]
-      score = float(row.split('\t')[1])
-      decision_trees.setdefault(feature, 0)
-      decision_trees[feature] += score
-  with open(model_filename, 'w', encoding='utf-8') as f:
-    decision_trees_intscore = dict((item[0], int(item[1] * scale))
-                                   for item in decision_trees.items()
-                                   if abs(int(item[1] * scale)) > 0)
-    json.dump(
-        decision_trees_intscore, f, ensure_ascii=False, separators=(',', ':'))
+  decision_trees: typing.Dict[str, typing.Dict[str, float]] = dict()
+  for row in weights:
+    row = row.strip()
+    if not row:
+      continue
+    feature = row.split('\t')[0]
+    feature_group, feature_content = feature.split(':')
+    score = float(row.split('\t')[1])
+    decision_trees.setdefault(feature_group, {})
+    decision_trees[feature_group].setdefault(feature_content, 0)
+    decision_trees[feature_group][feature_content] += score
+  return decision_trees
+
+
+def round_model(model: typing.Dict[str, typing.Dict[str, float]],
+                scale: int = 1000) -> typing.Dict[str, typing.Dict[str, int]]:
+  """Rounds the scores in the model to integer after scaling.
+
+  Args:
+    model (Dict[str, Dict[str, float]]): The model to round scores.
+    scale (int, optional): A scale factor to multiply scores.
+
+  Returns:
+    model_rounded (Dict[str, Dict[str, int]]) The rounded model.
+  """
+  model_rounded: typing.Dict[str, typing.Dict[str, int]] = dict()
+  for feature_group, features in model.items():
+    for feature_content, score in features.items():
+      scaled_score = int(score * scale)
+      if abs(scaled_score) > 0:
+        model_rounded.setdefault(feature_group, {})
+        model_rounded[feature_group][feature_content] = scaled_score
+  return model_rounded
 
 
 def main() -> None:
@@ -62,7 +79,12 @@ def main() -> None:
   args = parser.parse_args()
   weights_filename = args.weight_file
   model_filename = args.outfile
-  rollup(weights_filename, model_filename)
+  with open(weights_filename) as f:
+    weights = f.readlines()
+  model = aggregate_scores(weights)
+  model_rounded = round_model(model)
+  with open(model_filename, 'w', encoding='utf-8') as f:
+    json.dump(model_rounded, f, ensure_ascii=False, separators=(',', ':'))
   print('Model file is exported as', model_filename)
 
 

@@ -19,7 +19,7 @@ import {model as zhHansModel} from './data/models/zh-hans.js';
 import {model as zhHantModel} from './data/models/zh-hant.js';
 import {parseFromString} from './dom.js';
 import {HTMLProcessor} from './html_processor.js';
-import {INVALID, sum} from './utils.js';
+import {sum} from './utils.js';
 
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
@@ -31,47 +31,10 @@ const NODETYPE = {
 export class Parser {
   model;
 
-  constructor(model: Map<string, number>) {
-    this.model = model;
-  }
-
-  /**
-   * Generates a feature from characters around (w1-w6).
-   *
-   * @param w1 The character 3 characters before the break point.
-   * @param w2 The character 2 characters before the break point.
-   * @param w3 The character right before the break point.
-   * @param w4 The character right after the break point.
-   * @param w5 The character 2 characters after the break point.
-   * @param w6 The character 3 characters after the break point.
-   * @returns A feature to be consumed by a classifier.
-   */
-  static getFeature(
-    w1: string,
-    w2: string,
-    w3: string,
-    w4: string,
-    w5: string,
-    w6: string
-  ) {
-    const rawFeature = {
-      UW1: w1,
-      UW2: w2,
-      UW3: w3,
-      UW4: w4,
-      UW5: w5,
-      UW6: w6,
-      BW1: w2 + w3,
-      BW2: w3 + w4,
-      BW3: w4 + w5,
-      TW1: w1 + w2 + w3,
-      TW2: w2 + w3 + w4,
-      TW3: w3 + w4 + w5,
-      TW4: w4 + w5 + w6,
-    };
-    return Object.entries(rawFeature)
-      .filter(entry => !entry[1].includes(INVALID))
-      .map(([key, value]) => `${key}:${value}`);
+  constructor(model: {[key: string]: {[key: string]: number}}) {
+    this.model = new Map(
+      Object.entries(model).map(([k, v]) => [k, new Map(Object.entries(v))])
+    );
   }
 
   /**
@@ -96,19 +59,25 @@ export class Parser {
   parse(sentence: string) {
     if (sentence === '') return [];
     const result = [sentence[0]];
-    const baseScore = -sum([...this.model.values()]);
+    const baseScore =
+      -0.5 *
+      sum([...this.model.values()].map(group => [...group.values()]).flat());
 
     for (let i = 1; i < sentence.length; i++) {
-      const feature = Parser.getFeature(
-        sentence[i - 3] || INVALID,
-        sentence[i - 2] || INVALID,
-        sentence[i - 1],
-        sentence[i],
-        sentence[i + 1] || INVALID,
-        sentence[i + 2] || INVALID
-      );
-      const score =
-        baseScore + 2 * sum(feature.map(f => this.model.get(f) || 0));
+      let score = baseScore;
+      score += this.model.get('UW1')?.get(sentence.slice(i - 3, i - 2)) || 0;
+      score += this.model.get('UW2')?.get(sentence.slice(i - 2, i - 1)) || 0;
+      score += this.model.get('UW3')?.get(sentence.slice(i - 1, i)) || 0;
+      score += this.model.get('UW4')?.get(sentence.slice(i, i + 1)) || 0;
+      score += this.model.get('UW5')?.get(sentence.slice(i + 1, i + 2)) || 0;
+      score += this.model.get('UW6')?.get(sentence.slice(i + 2, i + 3)) || 0;
+      score += this.model.get('BW1')?.get(sentence.slice(i - 2, i)) || 0;
+      score += this.model.get('BW2')?.get(sentence.slice(i - 1, i + 1)) || 0;
+      score += this.model.get('BW3')?.get(sentence.slice(i, i + 2)) || 0;
+      score += this.model.get('TW1')?.get(sentence.slice(i - 3, i)) || 0;
+      score += this.model.get('TW2')?.get(sentence.slice(i - 2, i + 1)) || 0;
+      score += this.model.get('TW3')?.get(sentence.slice(i - 1, i + 2)) || 0;
+      score += this.model.get('TW4')?.get(sentence.slice(i, i + 3)) || 0;
       if (score > 0) result.push('');
       result[result.length - 1] += sentence[i];
     }
@@ -150,7 +119,7 @@ export class Parser {
  * @returns A parser with the default Japanese model.
  */
 export const loadDefaultJapaneseParser = () => {
-  return new Parser(new Map(Object.entries(jaModel)));
+  return new Parser(jaModel);
 };
 
 /**
@@ -158,7 +127,7 @@ export const loadDefaultJapaneseParser = () => {
  * @returns A parser with the default Simplified Chinese model.
  */
 export const loadDefaultSimplifiedChineseParser = () => {
-  return new Parser(new Map(Object.entries(zhHansModel)));
+  return new Parser(zhHansModel);
 };
 
 /**
@@ -166,7 +135,7 @@ export const loadDefaultSimplifiedChineseParser = () => {
  * @returns A parser with the default Traditional Chinese model.
  */
 export const loadDefaultTraditionalChineseParser = () => {
-  return new Parser(new Map(Object.entries(zhHantModel)));
+  return new Parser(zhHantModel);
 };
 
 /**

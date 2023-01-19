@@ -33,7 +33,7 @@ const copyModels = () => {
     const content = fs.readFileSync(sourcePath);
     fs.writeFileSync(
       targetPath,
-      `export const model: {[key:string]: number} = ${content}`
+      `export const model: {[key:string]: {[key:string]: number}} = ${content}`
     );
   });
 };
