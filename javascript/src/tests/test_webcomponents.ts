@@ -30,10 +30,10 @@ describe('Web Components', () => {
     global.MutationObserver = dom.window.MutationObserver;
     await import('../webcomponents/budoux-ja.js');
     await dom.window.customElements.whenDefined('budoux-ja');
-  })
+  });
 
   it('should process the provided text.', () => {
-    const inputText = '今日は良い天気です。'
+    const inputText = '今日は良い天気です。';
 
     const budouxElement = dom.window.document.createElement('budoux-ja');
     budouxElement.textContent = inputText;
@@ -46,12 +46,12 @@ describe('Web Components', () => {
     expect(budouxElement.shadowRoot!.innerHTML).toBe(mirroredElement.outerHTML);
   });
 
-  it('should react to the text content change after attached.', (resolve) => {
+  it('should react to the text content change after attached.', resolve => {
     const budouxElement = dom.window.document.createElement('budoux-ja');
     budouxElement.textContent = '今日は良い天気です。';
     dom.window.document.body.appendChild(budouxElement);
 
-    const inputText = '明日はどうなるかな。'
+    const inputText = '明日はどうなるかな。';
     const mirroredElement = dom.window.document.createElement('span');
     mirroredElement.textContent = inputText;
     parser.applyElement(mirroredElement);
@@ -66,5 +66,5 @@ describe('Web Components', () => {
     });
 
     budouxElement.textContent = inputText;
-  })
+  });
 });
