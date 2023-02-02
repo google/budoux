@@ -35,6 +35,7 @@ export abstract class BudouXBaseElement extends HTMLElement {
     observer.observe(this, {
       attributes: false,
       characterData: true,
+      childList: true,
       subtree: true,
     });
   }
