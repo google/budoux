@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import build_model  # type: ignore # noqa (module hack)
 
+
 class TestAggregateScores(unittest.TestCase):
   def test_standard(self) -> None:
     weights = [
@@ -54,6 +55,7 @@ class TestAggregateScores(unittest.TestCase):
             'y': 1.357
         }
     }, 'should skip blank lines.')
+
 
 class TestRoundModel(unittest.TestCase):
   def test_standard(self) -> None:
