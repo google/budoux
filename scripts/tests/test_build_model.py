@@ -25,6 +25,7 @@ from scripts import build_model  # type: ignore # noqa (module hack)
 
 
 class TestAggregateScores(unittest.TestCase):
+
   def test_standard(self) -> None:
     weights = [
         'AB:x\t2.893\n', 'BC:y\t0.123\n', 'AB:y\t2.123\n', 'BC:y\t1.234\n'
@@ -58,15 +59,16 @@ class TestAggregateScores(unittest.TestCase):
 
 
 class TestRoundModel(unittest.TestCase):
+
   def test_standard(self) -> None:
     model = {
-      'AB': {
-        'x': 1.0002,
-        'y': 4.1237,
-      },
-      'BC': {
-        'z': 2.1111,
-      }
+        'AB': {
+            'x': 1.0002,
+            'y': 4.1237,
+        },
+        'BC': {
+            'z': 2.1111,
+        }
     }
     model_rounded = build_model.round_model(model, 1000)
     self.assertDictEqual(model_rounded, {
@@ -81,13 +83,13 @@ class TestRoundModel(unittest.TestCase):
 
   def test_insignificant_score(self) -> None:
     model = {
-      'AB': {
-        'x': 0.0009,
-        'y': 4.1237,
-      },
-      'BC': {
-        'z': 2.1111,
-      }
+        'AB': {
+            'x': 0.0009,
+            'y': 4.1237,
+        },
+        'BC': {
+            'z': 2.1111,
+        }
     }
     model_rounded = build_model.round_model(model, 1000)
     self.assertDictEqual(model_rounded, {
