@@ -29,7 +29,7 @@ export abstract class BudouXBaseElement extends HTMLElement {
   constructor() {
     super();
 
-    this.parser = new Parser(new Map());
+    this.parser = new Parser({});
     this.shadow = this.attachShadow({mode: 'open'});
     const observer = new MutationObserver(this.sync.bind(this));
     observer.observe(this, {

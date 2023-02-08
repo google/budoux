@@ -17,56 +17,30 @@
 import 'jasmine';
 import {JSDOM} from 'jsdom';
 import {Parser} from '../parser.js';
-import {INVALID} from '../utils.js';
-
-describe('Parser.getFeature', () => {
-  const feature = Parser.getFeature('a', 'b', 'c', 'd', 'e', 'f');
-
-  it('should include certain features.', () => {
-    expect(feature).toContain('UW1:a');
-    expect(feature).toContain('BW1:bc');
-    expect(feature).toContain('TW1:abc');
-  });
-});
-
-describe('Parser.getFeature with invalid inputs.', () => {
-  const feature = Parser.getFeature('a', 'a', INVALID, 'a', 'a', 'a');
-  const findByPrefix = (prefix: string, feature: string[]) => {
-    for (const item of feature) {
-      if (item.startsWith(prefix)) return true;
-    }
-    return false;
-  };
-  it('should not include invalid features.', () => {
-    expect(findByPrefix('UW3:', feature)).toBeFalse();
-    expect(findByPrefix('BW2:', feature)).toBeFalse();
-  });
-});
 
 describe('Parser.parse', () => {
   const TEST_SENTENCE = 'abcdeabcd';
 
   it('should separate if a strong feature item supports.', () => {
-    const model = new Map([
-      ['UW4:a', 10000], // means "should separate right before 'a'".
-    ]);
+    const model = {
+      UW4: {a: 10000}, // means "should separate right before 'a'".
+    };
     const parser = new Parser(model);
     const result = parser.parse(TEST_SENTENCE);
     expect(result).toEqual(['abcde', 'abcd']);
   });
 
   it('should separate even if it makes a phrase of one character.', () => {
-    const model = new Map([
-      ['UW4:b', 10000], // means "should separate right before 'b'".
-    ]);
+    const model = {
+      UW4: {b: 10000}, // means "should separate right before 'b'".
+    };
     const parser = new Parser(model);
     const result = parser.parse(TEST_SENTENCE);
     expect(result).toEqual(['a', 'bcdea', 'bcd']);
   });
 
   it('should return an empty list when the input is a blank string.', () => {
-    const model = new Map();
-    const parser = new Parser(model);
+    const parser = new Parser({});
     const result = parser.parse('');
     expect(result).toEqual([]);
   });
@@ -74,7 +48,7 @@ describe('Parser.parse', () => {
 
 describe('Parser.applyElement', () => {
   const checkEqual = (
-    model: Map<string, number>,
+    model: {[key: string]: {[key: string]: number}},
     inputHTML: string,
     expectedHTML: string
   ) => {
@@ -96,9 +70,9 @@ describe('Parser.applyElement', () => {
     const expectedHTML = `
     <p style="word-break: keep-all; overflow-wrap: break-word;"
     >xyz<wbr>abc<wbr>abc</p>`;
-    const model = new Map([
-      ['UW4:a', 1001], // means "should separate right before 'a'".
-    ]);
+    const model = {
+      UW4: {a: 1001}, // means "should separate right before 'a'".
+    };
     checkEqual(model, inputHTML, expectedHTML);
   });
 
@@ -106,19 +80,19 @@ describe('Parser.applyElement', () => {
     const inputHTML = '<p>xy<a href="#">zabca</a>bc</p>';
     const expectedHTML = `<p style="word-break: keep-all; overflow-wrap: break-word;"
     >xy<a href="#">z<wbr>abc<wbr>a</a>bc</p>`;
-    const model = new Map([
-      ['UW4:a', 1001], // means "should separate right before 'a'".
-    ]);
+    const model = {
+      UW4: {a: 1001}, // means "should separate right before 'a'".
+    };
     checkEqual(model, inputHTML, expectedHTML);
   });
 });
 
 describe('Parser.translateHTMLString', () => {
-  const defaultModel = new Map([
-    ['UW4:a', 1001], // means "should separate right before 'a'".
-  ]);
+  const defaultModel = {
+    UW4: {a: 1001}, // means "should separate right before 'a'".
+  };
   const checkEqual = (
-    model: Map<string, number>,
+    model: {[key: string]: {[key: string]: number}},
     inputHTML: string,
     expectedHTML: string
   ) => {
@@ -150,8 +124,7 @@ describe('Parser.translateHTMLString', () => {
   it('should return a blank string if the input is blank.', () => {
     const inputHTML = '';
     const expectedHTML = '';
-    const model = new Map();
-    checkEqual(model, inputHTML, expectedHTML);
+    checkEqual({}, inputHTML, expectedHTML);
   });
 
   it('should pass script tags as-is.', () => {

@@ -64,14 +64,18 @@ class TestParser(unittest.TestCase):
 
   def test_parse(self) -> None:
     p = parser.Parser({
-        'UW4:a': 10000,  # means "should separate right before 'a'".
+        'UW4': {
+            'a': 10000
+        },  # means "should separate right before 'a'".
     })
     chunks = p.parse(TestParser.TEST_SENTENCE)
     self.assertListEqual(chunks, ['abcde', 'abcd'],
                          'Should separate if a strong feature item supports.')
 
     p = parser.Parser({
-        'UW4:b': 10000,  # means "should separate right before 'b'".
+        'UW4': {
+            'b': 10000
+        },  # means "should separate right before 'b'".
     })
     chunks = p.parse(TestParser.TEST_SENTENCE)
     self.assertListEqual(
@@ -85,7 +89,9 @@ class TestParser(unittest.TestCase):
 
   def test_translate_html_string(self) -> None:
     p = parser.Parser({
-        'UW4:a': 10000,  # means "should separate right before 'a'".
+        'UW4': {
+            'a': 10000
+        },  # means "should separate right before 'a'".
     })
 
     input_html = 'xyzabcd'
