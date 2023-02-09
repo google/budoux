@@ -15,6 +15,3 @@
 
 SEP = '▁'
 """The separator string to specify breakpoints."""
-
-INVALID = '▔'
-"""The invalid feature string."""
