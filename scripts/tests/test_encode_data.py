@@ -15,14 +15,62 @@
 
 import os
 import sys
+import typing
 import unittest
 
 from budoux import utils
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
+
 from scripts import encode_data  # type: ignore # noqa (module hack)
+
+
+class TestGetFeature(unittest.TestCase):
+
+  def test_standard(self) -> None:
+    feature = encode_data.get_feature('a', 'b', 'c', 'd', 'e', 'f')
+    self.assertSetEqual(
+        set(feature),
+        {
+            # Unigram of Words (UW)
+            'UW1:a',
+            'UW2:b',
+            'UW3:c',
+            'UW4:d',
+            'UW5:e',
+            'UW6:f',
+
+            # Bigram of Words (BW)
+            'BW1:bc',
+            'BW2:cd',
+            'BW3:de',
+
+            # Trigram of Words (TW)
+            'TW1:abc',
+            'TW2:bcd',
+            'TW3:cde',
+            'TW4:def',
+        },
+        'Features should be extracted.')
+
+  def test_with_invalid(self) -> None:
+
+    def find_by_prefix(prefix: str, feature: typing.List[str]) -> bool:
+      for item in feature:
+        if item.startswith(prefix):
+          return True
+      return False
+
+    feature = encode_data.get_feature('a', 'a', encode_data.INVALID, 'a', 'a',
+                                      'a')
+    self.assertFalse(
+        find_by_prefix('UW3:', feature),
+        'Should omit the Unigram feature when the character is invalid.')
+    self.assertFalse(
+        find_by_prefix('BW2:', feature),
+        'Should omit the Bigram feature that covers an invalid character.')
 
 
 class TestArgParse(unittest.TestCase):
@@ -107,3 +155,7 @@ class TestNormalizeInput(unittest.TestCase):
     sentence, sep_indices = encode_data.normalize_input(source)
     self.assertEqual(sentence, 'ABCDEFG')
     self.assertEqual(sep_indices, {3, 5, 7})
+
+
+if __name__ == '__main__':
+  unittest.main()
