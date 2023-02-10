@@ -35,18 +35,18 @@ def translate_icu(model: typing.Dict[str, typing.Dict[str, int]]) -> str:
   output = 'jaml {\n'
   for group_name, members in model.items():
     output += f'{indent}{group_name}Keys {{\n'
-    for i in members.keys():
-      output += f'{indent}{indent}"{i}",\n'
+    for key in members.keys():
+      output += f'{indent}{indent}"{key}",\n'
     output += f'{indent}}}\n'
     output += f'{indent}{group_name}Values:intvector {{\n'
-    for i in members.values():
-      output += f'{indent}{indent}{i},\n'
+    for val in members.values():
+      output += f'{indent}{indent}{val},\n'
     output += f'{indent}}}\n'
   output += '}'
   return output
 
 
-def main():
+def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       'model', help='File path for the JSON format model file.', type=str)
