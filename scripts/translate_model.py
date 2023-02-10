@@ -53,7 +53,7 @@ def main():
   args = parser.parse_args()
   model_path: str = args.model
   with open(model_path) as f:
-    model = json.load(f.read())
+    model = json.load(f)
   print(translate_icu(model))
 
 
