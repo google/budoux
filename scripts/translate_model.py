@@ -58,8 +58,8 @@ def translate_icu(model: typing.Dict[str, typing.Dict[str, int]]) -> str:
 
 
 def normalize(
-    model: typing.Dict[str, typing.Union[int, typing.Dict[str, int]]]
-) -> typing.Dict[str, typing.Dict[str, int]]:
+    model: typing.Dict[str,
+                       typing.Any]) -> typing.Dict[str, typing.Dict[str, int]]:
   """Updates a model to the latest format. Does nothing if it's updated already.
 
   Args:
