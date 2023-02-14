@@ -37,13 +37,13 @@ class TestNormalize(unittest.TestCase):
     result = translate_model.normalize(model)
     self.assertDictEqual(result, model)
 
-  def test_broken_input(self) -> None:
+  def test_broken_input1(self) -> None:
     model = {'a:x': 23, 'b': {'x': 37, 'y': 18}}
     with self.assertRaises(Exception) as cm:
       translate_model.normalize(model)
     self.assertTrue('Unsupported model format' in str(cm.exception))
 
-  def test_broken_input(self) -> None:
+  def test_broken_input2(self) -> None:
     model = {'b': {'x': 37, 'y': {'z': 123}}}
     with self.assertRaises(Exception) as cm:
       translate_model.normalize(model)

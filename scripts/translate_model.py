@@ -81,9 +81,9 @@ def normalize(
         isinstance(v, int)
         for groups in model.values()
         for v in groups.values()
-    ]))
-  except:
-    raise Exception('Unsupported model format.')
+    ])), 'Scores should be integers'
+  except (AssertionError, AttributeError) as e:
+    raise Exception('Unsupported model format:', e)
   else:
     return model
 
