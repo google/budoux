@@ -24,9 +24,35 @@ sys.path.insert(0, os.path.abspath(LIB_PATH))
 from scripts import translate_model  # type: ignore # noqa (module hack)
 
 
-class TestTranslate(unittest.TestCase):
+class TestNormalize(unittest.TestCase):
 
-  def test_icu(self) -> None:
+  def test_old_format_input(self) -> None:
+    model = {'a:x': 48, 'a:y': 21, 'b:x': 2, 'b:z': 89}
+    expect = {'a': {'x': 48, 'y': 21}, 'b': {'x': 2, 'z': 89}}
+    result = translate_model.normalize(model)
+    self.assertDictEqual(result, expect)
+
+  def test_new_format_input(self) -> None:
+    model = {'a': {'x': 48, 'y': 21}, 'b': {'x': 2, 'z': 89}}
+    result = translate_model.normalize(model)
+    self.assertDictEqual(result, model)
+
+  def test_broken_input1(self) -> None:
+    model = {'a:x': 23, 'b': {'x': 37, 'y': 18}}
+    with self.assertRaises(Exception) as cm:
+      translate_model.normalize(model)
+    self.assertTrue('Unsupported model format' in str(cm.exception))
+
+  def test_broken_input2(self) -> None:
+    model = {'b': {'x': 37, 'y': {'z': 123}}}
+    with self.assertRaises(Exception) as cm:
+      translate_model.normalize(model)
+    self.assertTrue('Unsupported model format' in str(cm.exception))
+
+
+class TestTranslateICU(unittest.TestCase):
+
+  def test_standard(self) -> None:
     model = {'a': {'x': 12, 'y': 88}, 'b': {'x': 47, 'z': 13}}
     expect = '''
 jaml {
