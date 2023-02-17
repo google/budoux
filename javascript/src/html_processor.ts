@@ -202,12 +202,9 @@ class Paragraph {
  */
 export interface HTMLProcessorOptions {
   /**
-   * This class name is added to the containing block
-   * when the BudouX is applied.
-   *
-   * The caller is responsible for defining the class.
-   * {@link defineClassAs} can append a `<style>` element
-   * that defines the default styles as a class.
+   * This class name is added to the containing block when the BudouX is applied.
+   * The containing block should have following CSS properties to make it work.
+   * `{ word-break: keep-all; overflow-wrap: break-word; }`
    *
    * When falsy, an inline style is set instead.
    */
@@ -460,16 +457,5 @@ export class HTMLProcessor {
     const style = element.style;
     style.wordBreak = 'keep-all';
     style.overflowWrap = 'break-word';
-  }
-
-  /**
-   * Append a `<style>` element that defines the default styles as a class.
-   * @param document The document to append to.
-   * @param className The CSS class name.
-   */
-  static defineClassAs(document: Document, className: string): void {
-    const style = document.createElement('style');
-    style.textContent = `.${className} { word-break: keep-all; overflow-wrap: break-word; }`;
-    document.head.appendChild(style);
   }
 }
