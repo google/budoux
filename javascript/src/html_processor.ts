@@ -295,7 +295,6 @@ export class HTMLProcessor {
     assert(action === DomAction.Block || action === DomAction.Inline);
     const isNewBlock = !parent || action === DomAction.Block;
     const block = isNewBlock ? new Paragraph(element) : parent;
-    assert(block);
 
     // Collect all text nodes in this inline formatting context, while searching
     // descendant elements recursively.
