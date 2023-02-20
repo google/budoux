@@ -38,18 +38,8 @@ const copyModels = () => {
   });
 };
 
-const copySkipNodes = () => {
-  const sourcePath = path.join(PROJECT_ROOT, 'budoux', 'skip_nodes.json');
-  const targetPath = path.join(DATA_DIR, 'skip_nodes.ts');
-  fs.writeFileSync(
-    targetPath,
-    `export const skipNodes = ${fs.readFileSync(sourcePath)}`
-  );
-};
-
 const main = () => {
   copyModels();
-  copySkipNodes();
 };
 
 main();
