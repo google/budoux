@@ -11,7 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Loads the KNBC corpus to generate training data."""
+"""Prepares a dataset from the KNBC corpus.
+
+Before running this script, you need to download the KNBC corpus by running:
+
+$ curl -o knbc.tar.bz2 https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2
+$ tar -xf knbc.tar.bz2
+
+Now you should have a directory named `KNBC_v1.0_090925_utf8`.
+Run the following to generate a dataset named `source_knbc.txt`.
+
+$ python scripts/prepare_knbc.py KNBC_v1.0_090925_utf8 -o source_knbc.txt
+"""
 
 import argparse
 import os
@@ -55,25 +66,21 @@ class KNBCHTMLParser(HTMLParser):
       self.current_word = data
 
 
-def break_before_open_parentheses(chunks: typing.List[str]) -> typing.List[str]:
-  """Adds chunk breaks before every open parentheses.
+def break_before_sequence(chunks: typing.List[str],
+                          sequence: str) -> typing.List[str]:
+  """Breaks chunks before a specified character sequence appears.
 
   Args:
-    chunks (List[str]): Source chunks.
+    chunks (List[str]): Chunks to break.
+    sequence (str): A character sequence to break chunks before.
 
   Returns:
     Processed chunks.
   """
-  out: typing.List[str] = []
-  for chunk in chunks:
-    if '（' in chunk:
-      index = chunk.index('（')
-      if index > 0:
-        out.append(chunk[:index])
-      out.append(chunk[index:])
-    else:
-      out.append(chunk)
-  return out
+  chunks = utils.SEP.join(chunks).replace(sequence,
+                                          utils.SEP + sequence).split(utils.SEP)
+  chunks = [chunk for chunk in chunks if len(chunk) > 0]
+  return chunks
 
 
 def postprocess(chunks: typing.List[str]) -> typing.List[str]:
@@ -85,19 +92,21 @@ def postprocess(chunks: typing.List[str]) -> typing.List[str]:
   Returns:
     Processed chunks.
   """
-  chunks = break_before_open_parentheses(chunks)
+  chunks = break_before_sequence(chunks, '（')
+  chunks = break_before_sequence(chunks, 'もら')
   return chunks
 
 
 def parse_args() -> argparse.Namespace:
-  parser = argparse.ArgumentParser(description=__doc__)
+  DEFAULT_OUT_PATH = 'source.txt'
+  parser = argparse.ArgumentParser(
+      description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('source_dir', help='Path to the KNBC corpus directory.')
   parser.add_argument(
       '-o',
       '--outfile',
-      help='''File path to output the training data.
-            (default: source.txt)''',
-      default='source.txt')
+      help=f'File path to the output dataset. (default: {DEFAULT_OUT_PATH})',
+      default=DEFAULT_OUT_PATH)
   return parser.parse_args()
 
 
