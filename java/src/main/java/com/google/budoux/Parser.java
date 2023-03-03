@@ -17,7 +17,10 @@
 package com.google.budoux;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -90,10 +93,14 @@ public class Parser {
     Gson gson = new Gson();
     Type type = new TypeToken<Map<String, Map<String, Integer>>>() {}.getType();
     InputStream inputStream = Parser.class.getResourceAsStream(modelFileName);
-    Reader reader = new InputStreamReader(inputStream);
-    Map<String, Map<String, Integer>> model = gson.fromJson(reader, type);
-    Parser parser = new Parser(model);
-    return parser;
+    try (Reader reader = new InputStreamReader(inputStream, "UTF-8")) {
+      Map<String, Map<String, Integer>> model = gson.fromJson(reader, type);
+      Parser parser = new Parser(model);
+      return parser;
+    } catch (JsonIOException | JsonSyntaxException | IOException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   /**
