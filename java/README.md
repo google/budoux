@@ -31,6 +31,7 @@ public class App
 ```
 
 #### Supported languages and their default parsers
+
 - Japanese: `Parser.loadDefaultJapaneseParser()`
 - Simplified Chinese: `Parser.loadDefaultSimplifiedChineseParser()`
 - Traditional Chinese: `Parser.loadDefaultTraditionalChineseParser()`
