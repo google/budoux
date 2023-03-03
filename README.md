@@ -31,8 +31,7 @@ Last but not least, BudouX supports HTML inputs.
 
 - Python
 - [JavaScript](https://github.com/google/budoux/tree/main/javascript/)
-
-For details about the JavaScript module, please visit [JavaScript README](https://github.com/google/budoux/tree/main/javascript/README.md).
+- [Java](https://github.com/google/budoux/tree/main/java/)
 
 ## Python module
 
