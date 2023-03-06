@@ -3,9 +3,11 @@ on:
   push:
     paths-ignore:
       - 'javascript/**'
+      - 'java/**'
   pull_request:
     paths-ignore:
       - 'javascript/**'
+      - 'java/**'
 jobs:
   python-unittest:
     runs-on: ${{ matrix.os }}
