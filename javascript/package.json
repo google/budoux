@@ -43,6 +43,10 @@
     "esbuild": "^0.14.49",
     "gts": "^4.0.0",
     "jasmine": "^4.2.1",
+    "jasmine-core": "^4.5.0",
+    "karma": "^6.4.1",
+    "karma-chrome-launcher": "^3.1.1",
+    "karma-jasmine": "^5.1.0",
     "typescript": "^4.7.4"
   },
   "dependencies": {
