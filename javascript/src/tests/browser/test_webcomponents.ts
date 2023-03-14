@@ -16,7 +16,7 @@
 
 import 'jasmine';
 import {JSDOM} from 'jsdom';
-import {loadDefaultJapaneseParser} from '../parser.js';
+import {loadDefaultJapaneseParser} from '../../parser.js';
 
 const parser = loadDefaultJapaneseParser();
 
@@ -28,7 +28,7 @@ describe('Web Components', () => {
     global.customElements = dom.window.customElements;
     global.HTMLElement = dom.window.HTMLElement;
     global.MutationObserver = dom.window.MutationObserver;
-    await import('../webcomponents/budoux-ja.js');
+    await import('../../webcomponents/budoux-ja.js');
     await dom.window.customElements.whenDefined('budoux-ja');
   });
 

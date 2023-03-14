@@ -16,7 +16,7 @@
 
 import 'jasmine';
 import {JSDOM} from 'jsdom';
-import {Parser} from '../parser.js';
+import {Parser} from '../../parser.js';
 
 describe('Parser.parse', () => {
   const TEST_SENTENCE = 'abcdeabcd';
