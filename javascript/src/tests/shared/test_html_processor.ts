@@ -14,28 +14,9 @@
  * limitations under the License.
  */
 
-import 'jasmine';
-import {JSDOM} from 'jsdom';
 import {loadDefaultJapaneseParser} from '../../parser.js';
 import {HTMLProcessor, HTMLProcessorOptions} from '../../html_processor.js';
-
-let emulateNotConnected = false;
-
-// Browser compatibilities.
-console.assert(!('getComputedStyle' in global));
-global.getComputedStyle = (element: Element) => {
-  const window = element.ownerDocument.defaultView;
-  console.assert(window);
-  const style = window!.getComputedStyle(element);
-  if (emulateNotConnected) {
-    style.display = '';
-  } else if (!style.display) {
-    // jsdom does not compute unspecified properties.
-    const blockify = style.float || style.position;
-    style.display = blockify ? 'block' : 'inline';
-  }
-  return style;
-};
+import {win} from '../../win.js';
 
 const parser = loadDefaultJapaneseParser();
 
@@ -47,13 +28,14 @@ class MockHTMLProcessorBase extends HTMLProcessor {
 
 describe('HTMLProcessor.applyToElement', () => {
   function apply(html: string) {
-    const dom = new JSDOM(html);
+    const document = win.document;
+    document.body.innerHTML = html;
     const processor = new MockHTMLProcessorBase({
       separator: '/',
       className: 'applied',
     });
-    processor.applyToElement(dom.window.document.body);
-    return dom.window.document.body.innerHTML;
+    processor.applyToElement(document.body);
+    return document.body.innerHTML;
   }
 
   for (const test of [
@@ -89,18 +71,18 @@ describe('HTMLProcessor.applyToElement', () => {
 });
 
 describe('HTMLProcessor.applyToElement.separator.node', () => {
-  const dom = new JSDOM('<div>今日は良い天気</div>');
-  const document = dom.window.document;
-  const separator = document.createElement('span');
-  separator.style.whiteSpace = 'normal';
-  separator.textContent = '\u200B';
-  const processor = new MockHTMLProcessorBase({
-    separator: separator,
-    className: 'applied',
-  });
-  processor.applyToElement(document.body);
   it('should clone separator element deeply', () => {
-    expect(document.body.innerHTML).toEqual(
+    const doc = win.document;
+    doc.body.innerHTML = '<div>今日は良い天気</div>';
+    const separator = doc.createElement('span');
+    separator.style.whiteSpace = 'normal';
+    separator.textContent = '\u200B';
+    const processor = new MockHTMLProcessorBase({
+      separator: separator,
+      className: 'applied',
+    });
+    processor.applyToElement(doc.body);
+    expect(doc.body.innerHTML).toEqual(
       '<div class="applied">今日は' +
         '<span style="white-space: normal;">\u200B</span>良い' +
         '<span style="white-space: normal;">\u200B</span>天気</div>'
@@ -110,9 +92,10 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
 
 describe('HTMLProcessor.getBlocks', () => {
   const getBlocks = (html: string) => {
-    const dom = new JSDOM(html);
+    const document = win.document;
+    document.body.innerHTML = html;
     const processor = new MockHTMLProcessorBase();
-    const blocks = processor.getBlocks(dom.window.document.body);
+    const blocks = processor.getBlocks(document.body);
     const texts = Array.from(
       (function* (blocks) {
         for (const block of blocks)
@@ -176,14 +159,12 @@ describe('HTMLProcessor.getBlocks', () => {
   });
 
   it('should use the built-in rules if the `display` property is empty', () => {
-    emulateNotConnected = true;
     expect(getBlocks('<div>123<span>456</span></div>')).toEqual(['123456']);
     expect(getBlocks('<div>123<div>456</div></div>')).toEqual(['456', '123']);
     expect(getBlocks('<div><h1>123</h1><li>456</li></div>')).toEqual([
       '123',
       '456',
     ]);
-    emulateNotConnected = false;
   });
 });
 

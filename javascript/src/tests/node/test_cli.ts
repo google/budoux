@@ -66,7 +66,8 @@ describe('cli', () => {
     const inputText = 'abcdeabcd';
     const customModelPath = path.resolve(
       __dirname,
-      'models',
+      '..',
+      'data',
       'separate_right_before_a.json'
     );
     const argv = ['node', 'budoux', '--model', customModelPath, inputText];
@@ -81,7 +82,8 @@ describe('cli', () => {
     const inputText = 'abcdeabcd';
     const customModelPath = path.resolve(
       __dirname,
-      'models',
+      '..',
+      'data',
       'separate_right_before_a.json'
     );
     const argv = ['node', 'budoux', '-m', customModelPath, inputText];
@@ -120,7 +122,8 @@ describe('cli', () => {
     const inputTextHans = '我們的使a命';
     const customModelPath = path.resolve(
       __dirname,
-      'models',
+      '..',
+      'data',
       'separate_right_before_a.json'
     );
     const argv = [
@@ -221,7 +224,8 @@ describe('cli', () => {
   it('should output the error message when get extra option argument.', () => {
     const customModelPath = path.resolve(
       __dirname,
-      'models',
+      '..',
+      'data',
       'separate_right_before_a.json'
     );
     const argv = [
