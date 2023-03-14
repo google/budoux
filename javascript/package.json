@@ -15,7 +15,7 @@
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
     "build:cjs": "tsc && cp -r src/tests/models/ dist/tests/models/",
-    "build:es": "tsc --outDir module --module ES2020 && cp module/dom-browser.js module/dom.js && cp -r src/tests/models/ module/tests/models/",
+    "build:es": "tsc --outDir module --module ES2020 && cp -r src/tests/models/ module/tests/models/",
     "bundle": "npm run bundle:webcomponent:ja && npm run bundle:webcomponent:zh-hans && npm run bundle:webcomponent:zh-hant",
     "bundle:webcomponent:ja": "esbuild module/webcomponents/budoux-ja.js --bundle --minify --sourcemap --outfile=bundle/budoux-ja.min.js",
     "bundle:webcomponent:zh-hans": "esbuild module/webcomponents/budoux-zh-hans.js --bundle --minify --sourcemap --outfile=bundle/budoux-zh-hans.min.js",
@@ -33,8 +33,8 @@
   "author": "Shuhei Iitsuka",
   "license": "Apache-2.0",
   "browser": {
-    "./dist/dom.js": "./dist/dom-browser.js",
-    "./module/dom.js": "./module/dom-browser.js"
+    "./dist/win.js": "./dist/win-browser.js",
+    "./module/win.js": "./module/win-browser.js"
   },
   "devDependencies": {
     "@types/jasmine": "^4.0.3",

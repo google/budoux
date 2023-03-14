@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC
+ * Copyright 2023 Google LLC
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,13 +14,4 @@
  * limitations under the License.
  */
 
-import {win} from './win.js';
-
-/**
- * Parses an html string and returns a parsed html document.
- * @param html An HTML string.
- * @returns A Document.
- */
-export const parseFromString = (html: string) => {
-  return new win.DOMParser().parseFromString(html, 'text/html');
-};
+export const win = window;

@@ -15,6 +15,7 @@
  */
 
 import {Parser} from './parser.js';
+import {win} from './win.js';
 
 const assert = console.assert;
 
@@ -156,8 +157,8 @@ function actionForElement(element: Element): DomAction {
   const action = domActions[nodeName];
   if (action !== undefined) return action;
 
-  if (typeof getComputedStyle === 'function') {
-    const style = getComputedStyle(element);
+  if (typeof win.getComputedStyle === 'function') {
+    const style = win.getComputedStyle(element);
     switch (style.whiteSpace) {
       case 'nowrap':
       case 'pre':
