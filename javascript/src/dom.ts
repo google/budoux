@@ -25,6 +25,20 @@ export const parseFromString = (html: string) => {
   return new win.DOMParser().parseFromString(html, 'text/html');
 };
 
+/**
+ * Sets an innerHTML on a given Element or ShadowRoot.
+ * @param element An Element or ShadowRoot.
+ * @param html An HTML string to set.
+ */
 export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
   element.innerHTML = html;
+};
+
+/**
+ * Applies wrapping styles to make linebreak controls work in children.
+ * @param element A parent element to apply the styles.
+ */
+export const applyWrapStyle = (element: HTMLElement) => {
+  element.style.wordBreak = 'keep-all';
+  element.style.overflowWrap = 'break-word';
 };

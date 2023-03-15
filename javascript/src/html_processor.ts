@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {applyWrapStyle} from './dom.js';
 import {Parser} from './parser.js';
 import {win} from './win.js';
 
@@ -453,9 +454,6 @@ export class HTMLProcessor {
       element.classList.add(this.className);
       return;
     }
-
-    const style = element.style;
-    style.wordBreak = 'keep-all';
-    style.overflowWrap = 'break-word';
+    applyWrapStyle(element);
   }
 }
