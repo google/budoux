@@ -27,7 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[dev]"
       - name: Run unittest
-        run: pytest ./tests
+        run: pytest
       - name: Install Jax
         if: matrix.os != 'windows-latest'
         run: pip install jax[cpu]
