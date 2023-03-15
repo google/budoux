@@ -14,4 +14,7 @@
  * limitations under the License.
  */
 
+/**
+ * Exports a Window under browser environments.
+ */
 export const win = window;

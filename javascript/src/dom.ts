@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * This file is a collection of risky functions that interact with elements.
+ * BudouX does not apply any HTML sanitization by default, but this is the place
+ * to install a sanitizer if needed.
+ */
 import {win} from './win.js';
 
 /**

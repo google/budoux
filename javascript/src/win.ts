@@ -16,4 +16,7 @@
 
 import {JSDOM} from 'jsdom';
 
+/**
+ * Exports a Window under Node.js environments with JSDOM.
+ */
 export const win = new JSDOM().window;
