@@ -187,7 +187,7 @@ describe('HTMLProcessor.splitTextNodes', () => {
   class MockHTMLProcessor extends MockHTMLProcessorBase {
     nodeAndChunks: NodeAndChunks[] = [];
 
-    splitTextNode(node: Text, chunks: string[]) {
+    override splitTextNode(node: Text, chunks: string[]) {
       this.nodeAndChunks.push({node: node, chunks: chunks});
     }
   }
