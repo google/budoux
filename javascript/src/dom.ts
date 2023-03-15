@@ -24,3 +24,7 @@ import {win} from './win.js';
 export const parseFromString = (html: string) => {
   return new win.DOMParser().parseFromString(html, 'text/html');
 };
+
+export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
+  element.innerHTML = html;
+};

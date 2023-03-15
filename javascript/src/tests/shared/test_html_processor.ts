@@ -17,6 +17,7 @@
 import {loadDefaultJapaneseParser} from '../../parser.js';
 import {HTMLProcessor, HTMLProcessorOptions} from '../../html_processor.js';
 import {win} from '../../win.js';
+import {setInnerHtml} from '../../dom.js';
 
 const parser = loadDefaultJapaneseParser();
 
@@ -29,7 +30,7 @@ class MockHTMLProcessorBase extends HTMLProcessor {
 describe('HTMLProcessor.applyToElement', () => {
   function apply(html: string) {
     const document = win.document;
-    document.body.innerHTML = html;
+    setInnerHtml(document.body, html);
     const processor = new MockHTMLProcessorBase({
       separator: '/',
       className: 'applied',
@@ -73,7 +74,7 @@ describe('HTMLProcessor.applyToElement', () => {
 describe('HTMLProcessor.applyToElement.separator.node', () => {
   it('should clone separator element deeply', () => {
     const doc = win.document;
-    doc.body.innerHTML = '<div>今日は良い天気</div>';
+    setInnerHtml(doc.body, '<div>今日は良い天気</div>');
     const separator = doc.createElement('span');
     separator.style.whiteSpace = 'normal';
     separator.textContent = '\u200B';
@@ -93,7 +94,7 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
 describe('HTMLProcessor.getBlocks', () => {
   const getBlocks = (html: string) => {
     const document = win.document;
-    document.body.innerHTML = html;
+    setInnerHtml(document.body, html);
     const processor = new MockHTMLProcessorBase();
     const blocks = processor.getBlocks(document.body);
     const texts = Array.from(

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {setInnerHtml} from '../dom.js';
 import {Parser} from '../parser.js';
 
 /**
@@ -49,6 +50,6 @@ export abstract class BudouXBaseElement extends HTMLElement {
   }
 
   sync() {
-    this.shadow.innerHTML = this.parser.translateHTMLString(this.innerHTML);
+    setInnerHtml(this.shadow, this.parser.translateHTMLString(this.innerHTML));
   }
 }
