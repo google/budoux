@@ -13,7 +13,7 @@
 # limitations under the License.
 """BudouX module."""
 
-from . import html_processor, parser
+from . import parser
 
 __version__ = "0.5.0"
 
