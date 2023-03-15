@@ -57,6 +57,7 @@ class HTMLChunkResolver(HTMLParser):
     HTMLParser.__init__(self)
     self.chunks_joined = SEP.join(chunks)
     self.to_skip = False
+    self.scan_index = 0
 
   def handle_starttag(self, tag: str, attrs: HTMLAttr) -> None:
     attr_pairs = []
@@ -74,20 +75,13 @@ class HTMLChunkResolver(HTMLParser):
     self.to_skip = False
 
   def handle_data(self, data: str) -> None:
-    if self.to_skip:
-      self.output += data
-      if self.chunks_joined[0] == SEP:
-        self.chunks_joined = self.chunks_joined[1 + len(data):]
-      else:
-        self.chunks_joined = self.chunks_joined[len(data):]
-      return None
     for char in data:
-      if char == self.chunks_joined[0]:
-        self.chunks_joined = self.chunks_joined[1:]
-        self.output += char
-      else:
-        self.chunks_joined = self.chunks_joined[2:]
-        self.output += '<wbr>' + char
+      if not char == self.chunks_joined[self.scan_index]:
+        if not self.to_skip:
+          self.output += '<wbr>'
+        self.scan_index += 1
+      self.output += char
+      self.scan_index += 1
 
 
 def get_text(html: str) -> str:
