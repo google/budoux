@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {cli} from '../../cli.js';
+import {cli} from '../cli.js';
 import {execFile, ExecFileException} from 'child_process';
 import * as path from 'path';
 import stream from 'stream';
-import {loadDefaultParsers} from '../../parser.js';
+import {loadDefaultParsers} from '../parser.js';
 
 type execFileCallBack = {
   error: ExecFileException | null;
@@ -66,8 +66,7 @@ describe('cli', () => {
     const inputText = 'abcdeabcd';
     const customModelPath = path.resolve(
       __dirname,
-      '..',
-      'data',
+      'models',
       'separate_right_before_a.json'
     );
     const argv = ['node', 'budoux', '--model', customModelPath, inputText];
@@ -82,8 +81,7 @@ describe('cli', () => {
     const inputText = 'abcdeabcd';
     const customModelPath = path.resolve(
       __dirname,
-      '..',
-      'data',
+      'models',
       'separate_right_before_a.json'
     );
     const argv = ['node', 'budoux', '-m', customModelPath, inputText];
@@ -122,8 +120,7 @@ describe('cli', () => {
     const inputTextHans = '我們的使a命';
     const customModelPath = path.resolve(
       __dirname,
-      '..',
-      'data',
+      'models',
       'separate_right_before_a.json'
     );
     const argv = [
@@ -224,8 +221,7 @@ describe('cli', () => {
   it('should output the error message when get extra option argument.', () => {
     const customModelPath = path.resolve(
       __dirname,
-      '..',
-      'data',
+      'models',
       'separate_right_before_a.json'
     );
     const argv = [

@@ -14,18 +14,6 @@
  * limitations under the License.
  */
 
-module.exports = function (config) {
-  config.set({
-    basePath: '',
-    frameworks: ['jasmine'],
-    files: ['bundle/tests/*.js'],
-    reporters: ['progress'],
-    port: 9876,
-    colors: true,
-    logLevel: config.LOG_INFO,
-    autoWatch: false,
-    browsers: ['ChromeHeadless'],
-    singleRun: true,
-    concurrency: Infinity,
-  });
-};
+import './test_cli.js';
+import './test_html_processor.js';
+import './test_parser.js';

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {parseFromString} from '../../dom.js';
-import {Parser} from '../../parser.js';
+import {parseFromString} from '../dom.js';
+import {Parser} from '../parser.js';
 
 describe('Parser.parse', () => {
   const TEST_SENTENCE = 'abcdeabcd';

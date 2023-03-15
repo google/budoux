@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {loadDefaultJapaneseParser} from '../../parser.js';
-import {HTMLProcessor, HTMLProcessorOptions} from '../../html_processor.js';
-import {win} from '../../win.js';
-import {setInnerHtml} from '../../dom.js';
+import {loadDefaultJapaneseParser} from '../parser.js';
+import {HTMLProcessor, HTMLProcessorOptions} from '../html_processor.js';
+import {win} from '../win.js';
+import {setInnerHtml} from '../dom.js';
 
 const parser = loadDefaultJapaneseParser();
 
