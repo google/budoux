@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,13 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""BudouX module."""
+"Test utilities."
 
-from . import html_processor, parser
+import xml.etree.ElementTree as ET
 
-__version__ = "0.5.0"
+import html5lib
 
-Parser = parser.Parser
-load_default_japanese_parser = parser.load_default_japanese_parser
-load_default_simplified_chinese_parser = parser.load_default_simplified_chinese_parser
-load_default_traditional_chinese_parser = parser.load_default_traditional_chinese_parser
+html_parser = html5lib.HTMLParser()
+
+
+def compare_html_string(a: str, b: str) -> bool:
+  a_normalized = ET.tostring(html_parser.parse(a))
+  b_normalized = ET.tostring(html_parser.parse(b))
+  return a_normalized == b_normalized
