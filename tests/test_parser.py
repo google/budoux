@@ -17,7 +17,7 @@ import os
 import sys
 import unittest
 
-from test_utils import compare_html_string
+from utils import compare_html_string
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
