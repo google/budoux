@@ -57,8 +57,8 @@ describe('HTMLProcessor.applyToElement', () => {
       out: '<div class="applied"><span>今日は/晴れ</span>です</div>',
     },
     {
-      in: '<textarea>今日は晴れです</textarea>',
-      out: '<textarea>今日は晴れです</textarea>',
+      in: '<code>今日は晴れです</code>',
+      out: '<code>今日は晴れです</code>',
     },
     {
       in: '<div>今日は<code>code</code>晴れです</div>',
