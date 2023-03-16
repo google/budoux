@@ -63,11 +63,11 @@ class HTMLChunkResolver(HTMLParser):
     attr_pairs = []
     for attr in attrs:
       if attr[1] is None:
-        attr_pairs.append(attr[0])
+        attr_pairs.append(' ' + attr[0])
       else:
-        attr_pairs.append('%s="%s"' % (attr[0], attr[1]))
-    encoded_attrs = ' '.join(attr_pairs)
-    self.output += '<%s %s>' % (tag, encoded_attrs)
+        attr_pairs.append(' %s="%s"' % (attr[0], attr[1]))
+    encoded_attrs = ''.join(attr_pairs)
+    self.output += '<%s%s>' % (tag, encoded_attrs)
     self.to_skip = tag.upper() in SKIP_NODES
 
   def handle_endtag(self, tag: str) -> None:

@@ -17,8 +17,6 @@ import os
 import sys
 import unittest
 
-from utils import compare_html_string
-
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
@@ -66,8 +64,8 @@ class TestParser(unittest.TestCase):
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<wbr>abcd</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
+    self.assertEqual(
+        output_html, expected_html,
         'Should output a html string with a SPAN parent with proper style attributes.'
     )
 
@@ -76,36 +74,31 @@ class TestParser(unittest.TestCase):
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<script>alert(1);</script>xyz<wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'Should pass script tags as is.')
+    self.assertEqual(output_html, expected_html,
+                     'Should pass script tags as is.')
 
     input_html = 'xyz<code>abc</code>abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<code>abc</code><wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'Should skip some specific tags.')
+    self.assertEqual(output_html, expected_html,
+                     'Should skip some specific tags.')
 
     input_html = 'xyza<a href="#" hidden>bc</a>abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<wbr>a<a href="#" hidden>bc</a><wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'Should not ruin attributes of child elements.')
+    self.assertEqual(output_html, expected_html,
+                     'Should not ruin attributes of child elements.')
 
     input_html = 'xyza🇯🇵🇵🇹abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: break-word;">'
         'xyz<wbr>a🇯🇵🇵🇹<wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
-    self.assertTrue(
-        compare_html_string(output_html, expected_html),
-        'Should work with emojis.')
+    self.assertEqual(output_html, expected_html, 'Should work with emojis.')
 
 
 class TestDefaultParser(unittest.TestCase):
