@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC
+ * Copyright 2023 Google LLC
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-/**
- * Parses an html string and returns a parsed html document.
- * @param html An HTML string.
- * @returns A Document.
- */
-export const parseFromString = (html: string) => {
-  const domparser = new DOMParser();
-  const document = domparser.parseFromString(html, 'text/html');
-  return document;
+module.exports = function (config) {
+  config.set({
+    basePath: '',
+    frameworks: ['jasmine'],
+    files: ['bundle/tests/*.js'],
+    reporters: ['progress'],
+    port: 9876,
+    colors: true,
+    logLevel: config.LOG_INFO,
+    autoWatch: false,
+    browsers: ['ChromeHeadless'],
+    singleRun: true,
+    concurrency: Infinity,
+  });
 };

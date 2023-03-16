@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import {applyWrapStyle} from './dom.js';
 import {Parser} from './parser.js';
+import {win} from './win.js';
 
 const assert = console.assert;
 
@@ -156,8 +158,8 @@ function actionForElement(element: Element): DomAction {
   const action = domActions[nodeName];
   if (action !== undefined) return action;
 
-  if (typeof getComputedStyle === 'function') {
-    const style = getComputedStyle(element);
+  if (typeof win.getComputedStyle === 'function') {
+    const style = win.getComputedStyle(element);
     switch (style.whiteSpace) {
       case 'nowrap':
       case 'pre':
@@ -452,9 +454,6 @@ export class HTMLProcessor {
       element.classList.add(this.className);
       return;
     }
-
-    const style = element.style;
-    style.wordBreak = 'keep-all';
-    style.overflowWrap = 'break-word';
+    applyWrapStyle(element);
   }
 }

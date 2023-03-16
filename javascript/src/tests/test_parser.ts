@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import 'jasmine';
-import {JSDOM} from 'jsdom';
+import {parseFromString} from '../dom.js';
 import {Parser} from '../parser.js';
 
 describe('Parser.parse', () => {
@@ -52,17 +51,13 @@ describe('Parser.applyElement', () => {
     inputHTML: string,
     expectedHTML: string
   ) => {
-    const inputDOM = new JSDOM(inputHTML);
-    const inputElement = inputDOM.window.document.querySelector(
-      'p'
-    ) as HTMLElement;
+    const inputDOM = parseFromString(inputHTML);
+    const inputDocument = inputDOM.querySelector('p') as HTMLElement;
     const parser = new Parser(model);
-    parser.applyElement(inputElement);
-    const expectedDOM = new JSDOM(expectedHTML);
-    const expectedElement = expectedDOM.window.document.querySelector(
-      'p'
-    ) as HTMLElement;
-    expect(inputElement.isEqualNode(expectedElement)).toBeTrue();
+    parser.applyElement(inputDocument);
+    const expectedDocument = parseFromString(expectedHTML);
+    const expectedElement = expectedDocument.querySelector('p') as HTMLElement;
+    expect(inputDocument.isEqualNode(expectedElement)).toBeTrue();
   };
 
   it('should insert WBR tags where the sentence should break.', () => {
@@ -98,11 +93,9 @@ describe('Parser.translateHTMLString', () => {
   ) => {
     const parser = new Parser(model);
     const result = parser.translateHTMLString(inputHTML);
-    const resultDOM = new JSDOM(result);
-    const expectedDOM = new JSDOM(expectedHTML);
-    expect(
-      resultDOM.window.document.isEqualNode(expectedDOM.window.document)
-    ).toBeTrue();
+    const resultDocument = parseFromString(result);
+    const expectedDocument = parseFromString(expectedHTML);
+    expect(resultDocument.isEqualNode(expectedDocument)).toBeTrue();
   };
 
   it('should output a html string with a SPAN parent with proper style attributes.', () => {

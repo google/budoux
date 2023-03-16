@@ -15,26 +15,30 @@
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
     "build:cjs": "tsc && cp -r src/tests/models/ dist/tests/models/",
-    "build:es": "tsc --outDir module --module ES2020 && cp module/dom-browser.js module/dom.js && cp -r src/tests/models/ module/tests/models/",
-    "bundle": "npm run bundle:webcomponent:ja && npm run bundle:webcomponent:zh-hans && npm run bundle:webcomponent:zh-hant",
-    "bundle:webcomponent:ja": "esbuild module/webcomponents/budoux-ja.js --bundle --minify --sourcemap --outfile=bundle/budoux-ja.min.js",
-    "bundle:webcomponent:zh-hans": "esbuild module/webcomponents/budoux-zh-hans.js --bundle --minify --sourcemap --outfile=bundle/budoux-zh-hans.min.js",
-    "bundle:webcomponent:zh-hant": "esbuild module/webcomponents/budoux-zh-hant.js --bundle --minify --sourcemap --outfile=bundle/budoux-zh-hant.min.js",
+    "build:es": "tsc --outDir module --module ES2020 && cp module/win-browser.js module/win.js && cp -r src/tests/models/ module/tests/models/",
+    "bundle": "npm run bundle:webcomponents && npm run bundle:test",
+    "bundle:test": "esbuild module/tests/index.browser.js --bundle --sourcemap --outfile=bundle/tests/index.browser.js",
+    "bundle:webcomponents": "npm run bundle:webcomponents:ja && npm run bundle:webcomponents:zh-hans && npm run bundle:webcomponents:zh-hant",
+    "bundle:webcomponents:ja": "esbuild module/webcomponents/budoux-ja.js --bundle --minify --sourcemap --outfile=bundle/budoux-ja.min.js",
+    "bundle:webcomponents:zh-hans": "esbuild module/webcomponents/budoux-zh-hans.js --bundle --minify --sourcemap --outfile=bundle/budoux-zh-hans.min.js",
+    "bundle:webcomponents:zh-hant": "esbuild module/webcomponents/budoux-zh-hant.js --bundle --minify --sourcemap --outfile=bundle/budoux-zh-hant.min.js",
+    "clean": "rm -rf dist module src/data",
     "copy": "node ./scripts/copy-data.js",
+    "prebuild": "npm run clean && npm run copy",
     "prepare": "npm run clean && npm run copy && npm run build && npm run bundle",
-    "pretest": "npm run build:cjs",
-    "test": "npm run test:jasmine && npm run test:cli-version",
-    "test:jasmine": "jasmine dist/tests/test_*.js",
+    "pretest": "npm run build && npm run bundle:test",
+    "test": "npm run test:jasmine && npm run test:karma && npm run test:cli-version",
     "test:cli-version": "node ./scripts/check-cli-version.js",
+    "test:jasmine": "jasmine dist/tests/index.node.js",
+    "test:karma": "karma start",
     "lint": "gts lint",
-    "fix": "gts fix",
-    "clean": "rm -rf dist module src/data"
+    "fix": "gts fix"
   },
   "author": "Shuhei Iitsuka",
   "license": "Apache-2.0",
   "browser": {
-    "./dist/dom.js": "./dist/dom-browser.js",
-    "./module/dom.js": "./module/dom-browser.js"
+    "./dist/win.js": "./dist/win-browser.js",
+    "./module/win.js": "./module/win-browser.js"
   },
   "devDependencies": {
     "@types/jasmine": "^4.0.3",
@@ -43,6 +47,10 @@
     "esbuild": "^0.14.49",
     "gts": "^4.0.0",
     "jasmine": "^4.2.1",
+    "jasmine-core": "^4.5.0",
+    "karma": "^6.4.1",
+    "karma-chrome-launcher": "^3.1.1",
+    "karma-jasmine": "^5.1.0",
     "typescript": "^4.7.4"
   },
   "dependencies": {

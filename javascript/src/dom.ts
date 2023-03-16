@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import {JSDOM} from 'jsdom';
+/**
+ * This file is a collection of risky functions that interact with elements.
+ * BudouX does not apply any HTML sanitization by default, but this is the place
+ * to install a sanitizer if needed.
+ */
+import {win} from './win.js';
 
 /**
  * Parses an html string and returns a parsed html document.
@@ -22,6 +27,23 @@ import {JSDOM} from 'jsdom';
  * @returns A Document.
  */
 export const parseFromString = (html: string) => {
-  const dom = new JSDOM(html);
-  return dom.window.document;
+  return new win.DOMParser().parseFromString(html, 'text/html');
+};
+
+/**
+ * Sets an innerHTML on a given Element or ShadowRoot.
+ * @param element An Element or ShadowRoot.
+ * @param html An HTML string to set.
+ */
+export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
+  element.innerHTML = html;
+};
+
+/**
+ * Applies wrapping styles to make linebreak controls work in children.
+ * @param element A parent element to apply the styles.
+ */
+export const applyWrapStyle = (element: HTMLElement) => {
+  element.style.wordBreak = 'keep-all';
+  element.style.overflowWrap = 'break-word';
 };

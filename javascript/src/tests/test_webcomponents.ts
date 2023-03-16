@@ -14,32 +14,24 @@
  * limitations under the License.
  */
 
-import 'jasmine';
-import {JSDOM} from 'jsdom';
 import {loadDefaultJapaneseParser} from '../parser.js';
+import '../webcomponents/budoux-ja.js';
 
 const parser = loadDefaultJapaneseParser();
 
 describe('Web Components', () => {
-  let dom: JSDOM;
-
   beforeAll(async () => {
-    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
-    global.customElements = dom.window.customElements;
-    global.HTMLElement = dom.window.HTMLElement;
-    global.MutationObserver = dom.window.MutationObserver;
-    await import('../webcomponents/budoux-ja.js');
-    await dom.window.customElements.whenDefined('budoux-ja');
+    await window.customElements.whenDefined('budoux-ja');
   });
 
   it('should process the provided text.', () => {
     const inputText = '今日は良い天気です。';
 
-    const budouxElement = dom.window.document.createElement('budoux-ja');
+    const budouxElement = window.document.createElement('budoux-ja');
     budouxElement.textContent = inputText;
-    dom.window.document.body.appendChild(budouxElement);
+    window.document.body.appendChild(budouxElement);
 
-    const mirroredElement = dom.window.document.createElement('span');
+    const mirroredElement = window.document.createElement('span');
     mirroredElement.textContent = inputText;
     parser.applyElement(mirroredElement);
 
@@ -47,17 +39,17 @@ describe('Web Components', () => {
   });
 
   it('should react to the text content change after attached.', resolve => {
-    const budouxElement = dom.window.document.createElement('budoux-ja');
+    const budouxElement = window.document.createElement('budoux-ja');
     budouxElement.textContent = '今日は良い天気です。';
-    dom.window.document.body.appendChild(budouxElement);
+    window.document.body.appendChild(budouxElement);
 
     const inputText = '明日はどうなるかな。';
-    const mirroredElement = dom.window.document.createElement('span');
+    const mirroredElement = window.document.createElement('span');
     mirroredElement.textContent = inputText;
     parser.applyElement(mirroredElement);
     const budouxShadowRoot = budouxElement.shadowRoot!;
 
-    const observer = new dom.window.MutationObserver(() => {
+    const observer = new window.MutationObserver(() => {
       expect(budouxShadowRoot.innerHTML).toBe(mirroredElement.outerHTML);
       resolve();
     });
