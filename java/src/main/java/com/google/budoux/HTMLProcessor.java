@@ -51,7 +51,7 @@ final class HTMLProcessor {
       String[] skipNodesStrings = gson.fromJson(reader, String[].class);
       skipNodes = new HashSet<>(Arrays.asList(skipNodesStrings));
     } catch (JsonSyntaxException | JsonIOException | IOException e) {
-      throw new RuntimeException(e);
+      throw new AssertionError(e);
     }
   }
 
