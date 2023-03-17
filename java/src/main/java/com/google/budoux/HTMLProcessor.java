@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +36,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeVisitor;
-import java.nio.charset.StandardCharsets;
 
 /** Processes phrases into an HTML string wrapping them in no-breaking markup. */
 final class HTMLProcessor {
@@ -72,20 +72,26 @@ final class HTMLProcessor {
 
     @Override
     public void head(Node node, int depth) {
-      if (node.nodeName().equals("body")) return;
+      if (node.nodeName().equals("body")) {
+        return;
+      }
       if (node instanceof Element) {
         String attributesEncoded =
             node.attributes().asList().stream()
                 .map(attribute -> " " + attribute)
                 .collect(Collectors.joining(""));
         output.append(String.format("<%s%s>", node.nodeName(), attributesEncoded));
-        if (skipNodes.contains(node.nodeName().toUpperCase(Locale.ENGLISH))) toSkip = true;
+        if (skipNodes.contains(node.nodeName().toUpperCase(Locale.ENGLISH))) {
+          toSkip = true;
+        }
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
         for (int i = 0; i < data.length(); i++) {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
-            if (!toSkip) output.append("<wbr>");
+            if (!toSkip) {
+              output.append("<wbr>");
+            }
             scanIndex++;
           }
           scanIndex++;
@@ -96,8 +102,9 @@ final class HTMLProcessor {
 
     @Override
     public void tail(Node node, int depth) {
-      if (node.nodeName() == "body") return;
-      if (node instanceof TextNode) return;
+      if (node.nodeName().equals("body") || node instanceof TextNode) {
+        return;
+      }
       output.append(String.format("</%s>", node.nodeName()));
     }
   }
@@ -113,8 +120,7 @@ final class HTMLProcessor {
     Document doc = Jsoup.parseBodyFragment(html);
     PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases);
     doc.body().traverse(nodeVisitor);
-    String result = String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
-    return result;
+    return String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
   }
 
   /**
