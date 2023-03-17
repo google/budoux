@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -93,7 +94,7 @@ public class Parser {
     Gson gson = new Gson();
     Type type = new TypeToken<Map<String, Map<String, Integer>>>() {}.getType();
     InputStream inputStream = Parser.class.getResourceAsStream(modelFileName);
-    try (Reader reader = new InputStreamReader(inputStream, "UTF-8")) {
+    try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
       Map<String, Map<String, Integer>> model = gson.fromJson(reader, type);
       Parser parser = new Parser(model);
       return parser;

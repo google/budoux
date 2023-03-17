@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
@@ -34,6 +35,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeVisitor;
+import java.nio.charset.StandardCharsets;
 
 /** Processes phrases into an HTML string wrapping them in no-breaking markup. */
 final class HTMLProcessor {
@@ -45,7 +47,7 @@ final class HTMLProcessor {
   static {
     Gson gson = new Gson();
     InputStream inputStream = HTMLProcessor.class.getResourceAsStream("/skip_nodes.json");
-    try (Reader reader = new InputStreamReader(inputStream, "UTF-8")) {
+    try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
       String[] skipNodesStrings = gson.fromJson(reader, String[].class);
       skipNodes = new HashSet<>(Arrays.asList(skipNodesStrings));
     } catch (JsonSyntaxException | JsonIOException | IOException e) {
@@ -70,14 +72,14 @@ final class HTMLProcessor {
 
     @Override
     public void head(Node node, int depth) {
-      if (node.nodeName() == "body") return;
+      if (node.nodeName().equals("body")) return;
       if (node instanceof Element) {
         String attributesEncoded =
             node.attributes().asList().stream()
-                .map(attribute -> " " + attribute.toString())
+                .map(attribute -> " " + attribute)
                 .collect(Collectors.joining(""));
         output.append(String.format("<%s%s>", node.nodeName(), attributesEncoded));
-        if (skipNodes.contains(node.nodeName().toUpperCase())) toSkip = true;
+        if (skipNodes.contains(node.nodeName().toUpperCase(Locale.ENGLISH))) toSkip = true;
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
         for (int i = 0; i < data.length(); i++) {
