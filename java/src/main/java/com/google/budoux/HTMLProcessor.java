@@ -17,6 +17,9 @@
 package com.google.budoux;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -40,9 +43,12 @@ final class HTMLProcessor {
   static {
     Gson gson = new Gson();
     InputStream inputStream = HTMLProcessor.class.getResourceAsStream("/skip_nodes.json");
-    Reader reader = new InputStreamReader(inputStream);
-    String[] skipNodesStrings = gson.fromJson(reader, String[].class);
-    skipNodes = new HashSet<>(Arrays.asList(skipNodesStrings));
+    try (Reader reader = new InputStreamReader(inputStream, "UTF-8")) {
+      String[] skipNodesStrings = gson.fromJson(reader, String[].class);
+      skipNodes = new HashSet<>(Arrays.asList(skipNodesStrings));
+    } catch (JsonSyntaxException | JsonIOException | IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
