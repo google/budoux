@@ -40,6 +40,8 @@ final class HTMLProcessor {
   private static final Set<String> skipNodes;
   private static final String STYLE = "word-break: keep-all; overflow-wrap: break-word;";
 
+  private HTMLProcessor() {}
+
   static {
     Gson gson = new Gson();
     InputStream inputStream = HTMLProcessor.class.getResourceAsStream("/skip_nodes.json");
