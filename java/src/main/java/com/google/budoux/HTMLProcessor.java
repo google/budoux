@@ -17,12 +17,17 @@
 package com.google.budoux;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
@@ -37,45 +42,56 @@ final class HTMLProcessor {
   private static final Set<String> skipNodes;
   private static final String STYLE = "word-break: keep-all; overflow-wrap: break-word;";
 
+  private HTMLProcessor() {}
+
   static {
     Gson gson = new Gson();
     InputStream inputStream = HTMLProcessor.class.getResourceAsStream("/skip_nodes.json");
-    Reader reader = new InputStreamReader(inputStream);
-    String[] skipNodesStrings = gson.fromJson(reader, String[].class);
-    skipNodes = new HashSet<>(Arrays.asList(skipNodesStrings));
+    try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+      String[] skipNodesStrings = gson.fromJson(reader, String[].class);
+      skipNodes = new HashSet<>(Arrays.asList(skipNodesStrings));
+    } catch (JsonSyntaxException | JsonIOException | IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
     private static final char SEP = '\uFFFF';
     private final String phrasesJoined;
+    private final StringBuilder output = new StringBuilder();
     private Integer scanIndex = 0;
-    private StringBuffer output = new StringBuffer();
     private boolean toSkip = false;
 
     PhraseResolvingNodeVisitor(List<String> phrases) {
       this.phrasesJoined = String.join(Character.toString(SEP), phrases);
     }
 
-    public StringBuffer getOutput() {
+    public StringBuilder getOutput() {
       return output;
     }
 
     @Override
     public void head(Node node, int depth) {
-      if (node.nodeName() == "body") return;
+      if (node.nodeName().equals("body")) {
+        return;
+      }
       if (node instanceof Element) {
         String attributesEncoded =
             node.attributes().asList().stream()
-                .map(attribute -> " " + attribute.toString())
+                .map(attribute -> " " + attribute)
                 .collect(Collectors.joining(""));
         output.append(String.format("<%s%s>", node.nodeName(), attributesEncoded));
-        if (skipNodes.contains(node.nodeName().toUpperCase())) toSkip = true;
+        if (skipNodes.contains(node.nodeName().toUpperCase(Locale.ENGLISH))) {
+          toSkip = true;
+        }
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
         for (int i = 0; i < data.length(); i++) {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
-            if (!toSkip) output.append("<wbr>");
+            if (!toSkip) {
+              output.append("<wbr>");
+            }
             scanIndex++;
           }
           scanIndex++;
@@ -86,8 +102,9 @@ final class HTMLProcessor {
 
     @Override
     public void tail(Node node, int depth) {
-      if (node.nodeName() == "body") return;
-      if (node instanceof TextNode) return;
+      if (node.nodeName().equals("body") || node instanceof TextNode) {
+        return;
+      }
       output.append(String.format("</%s>", node.nodeName()));
     }
   }
@@ -103,8 +120,7 @@ final class HTMLProcessor {
     Document doc = Jsoup.parseBodyFragment(html);
     PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases);
     doc.body().traverse(nodeVisitor);
-    String result = String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
-    return result;
+    return String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
   }
 
   /**

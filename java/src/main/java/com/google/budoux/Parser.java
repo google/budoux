@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -93,14 +94,12 @@ public class Parser {
     Gson gson = new Gson();
     Type type = new TypeToken<Map<String, Map<String, Integer>>>() {}.getType();
     InputStream inputStream = Parser.class.getResourceAsStream(modelFileName);
-    try (Reader reader = new InputStreamReader(inputStream, "UTF-8")) {
+    try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
       Map<String, Map<String, Integer>> model = gson.fromJson(reader, type);
-      Parser parser = new Parser(model);
-      return parser;
+      return new Parser(model);
     } catch (JsonIOException | JsonSyntaxException | IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
-    return null;
   }
 
   /**
@@ -123,7 +122,9 @@ public class Parser {
    * @return a list of phrases.
    */
   public List<String> parse(String sentence) {
-    if (sentence.equals("")) return new ArrayList<>();
+    if (sentence.isEmpty()) {
+      return new ArrayList<>();
+    }
     List<String> result = new ArrayList<>();
     result.add(String.valueOf(sentence.charAt(0)));
     int totalScore =
@@ -132,25 +133,42 @@ public class Parser {
             .sum();
     for (int i = 1; i < sentence.length(); i++) {
       int score = -totalScore;
-      if (i - 2 > 0) score += 2 * this.getScore("UW1", sentence.substring(i - 3, i - 2));
-      if (i - 1 > 0) score += 2 * this.getScore("UW2", sentence.substring(i - 2, i - 1));
+      if (i - 2 > 0) {
+        score += 2 * this.getScore("UW1", sentence.substring(i - 3, i - 2));
+      }
+      if (i - 1 > 0) {
+        score += 2 * this.getScore("UW2", sentence.substring(i - 2, i - 1));
+      }
       score += 2 * this.getScore("UW3", sentence.substring(i - 1, i));
       score += 2 * this.getScore("UW4", sentence.substring(i, i + 1));
-      if (i + 1 < sentence.length())
+      if (i + 1 < sentence.length()) {
         score += 2 * this.getScore("UW5", sentence.substring(i + 1, i + 2));
-      if (i + 2 < sentence.length())
+      }
+      if (i + 2 < sentence.length()) {
         score += 2 * this.getScore("UW6", sentence.substring(i + 2, i + 3));
-      if (i > 1) score += 2 * this.getScore("BW1", sentence.substring(i - 2, i));
+      }
+      if (i > 1) {
+        score += 2 * this.getScore("BW1", sentence.substring(i - 2, i));
+      }
       score += 2 * this.getScore("BW2", sentence.substring(i - 1, i + 1));
-      if (i + 1 < sentence.length())
+      if (i + 1 < sentence.length()) {
         score += 2 * this.getScore("BW3", sentence.substring(i, i + 2));
-      if (i - 2 > 0) score += 2 * this.getScore("TW1", sentence.substring(i - 3, i));
-      if (i - 1 > 0) score += 2 * this.getScore("TW2", sentence.substring(i - 2, i + 1));
-      if (i + 1 < sentence.length())
+      }
+      if (i - 2 > 0) {
+        score += 2 * this.getScore("TW1", sentence.substring(i - 3, i));
+      }
+      if (i - 1 > 0) {
+        score += 2 * this.getScore("TW2", sentence.substring(i - 2, i + 1));
+      }
+      if (i + 1 < sentence.length()) {
         score += 2 * this.getScore("TW3", sentence.substring(i - 1, i + 2));
-      if (i + 2 < sentence.length())
+      }
+      if (i + 2 < sentence.length()) {
         score += 2 * this.getScore("TW4", sentence.substring(i, i + 3));
-      if (score > 0) result.add("");
+      }
+      if (score > 0) {
+        result.add("");
+      }
       result.set(result.size() - 1, result.get(result.size() - 1) + sentence.charAt(i));
     }
     return result;
