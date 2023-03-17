@@ -56,15 +56,15 @@ final class HTMLProcessor {
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
     private static final char SEP = '\uFFFF';
     private final String phrasesJoined;
+    private final StringBuilder output = new StringBuilder();
     private Integer scanIndex = 0;
-    private StringBuffer output = new StringBuffer();
     private boolean toSkip = false;
 
     PhraseResolvingNodeVisitor(List<String> phrases) {
       this.phrasesJoined = String.join(Character.toString(SEP), phrases);
     }
 
-    public StringBuffer getOutput() {
+    public StringBuilder getOutput() {
       return output;
     }
 
