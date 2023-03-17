@@ -98,7 +98,7 @@ public class Parser {
       Map<String, Map<String, Integer>> model = gson.fromJson(reader, type);
       return new Parser(model);
     } catch (JsonIOException | JsonSyntaxException | IOException e) {
-      throw new RuntimeException(e);
+      throw new AssertionError(e);
     }
   }
 
