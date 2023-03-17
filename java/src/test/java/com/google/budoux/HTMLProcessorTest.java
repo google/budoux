@@ -21,8 +21,11 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link HTMLProcessor}. */
+@RunWith(JUnit4.class)
 public class HTMLProcessorTest {
 
   @Test
