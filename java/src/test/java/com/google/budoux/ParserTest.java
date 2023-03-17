@@ -32,10 +32,10 @@ public class ParserTest {
 
   @Test
   public void testParse() {
-    Map<String, Map<String, Integer>> model = new HashMap<String, Map<String, Integer>>();
-    Map<String, Integer> UW4group = new HashMap<String, Integer>();
-    UW4group.put("a", 100);
-    model.put("UW4", UW4group);
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw4 = new HashMap<>();
+    uw4.put("a", 100);
+    model.put("UW4", uw4);
     Parser parser = new Parser(model);
     List<String> result = parser.parse("xyzabc");
     List<String> expected = Arrays.asList("xyz", "abc");
@@ -52,10 +52,10 @@ public class ParserTest {
 
   @Test
   public void testTranslateHTMLString() {
-    Map<String, Map<String, Integer>> model = new HashMap<String, Map<String, Integer>>();
-    Map<String, Integer> UW4group = new HashMap<String, Integer>();
-    UW4group.put("a", 100);
-    model.put("UW4", UW4group);
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw4 = new HashMap<>();
+    uw4.put("a", 100);
+    model.put("UW4", uw4);
     Parser parser = new Parser(model);
     String html = "<a href=\"http://example.com\">xyza</a>bc";
     String result = parser.translateHTMLString(html);
