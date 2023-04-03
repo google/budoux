@@ -21,7 +21,7 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from scripts import prepare_knbc  # type: ignore # noqa (module hack)
+from scripts import prepare_knbc  # noqa (module hack)
 
 
 class TestBreakBeforeSequence(unittest.TestCase):

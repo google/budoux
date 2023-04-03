@@ -21,7 +21,7 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from scripts import build_model  # type: ignore # noqa (module hack)
+from scripts import build_model  # noqa (module hack)
 
 
 class TestAggregateScores(unittest.TestCase):
