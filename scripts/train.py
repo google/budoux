@@ -157,10 +157,10 @@ def get_metrics(pred: npt.NDArray[np.bool_],
   Returns:
     result (Result): A result.
   """
-  tp = jnp.sum(jnp.logical_and(pred == 1, actual == 1))
-  tn = jnp.sum(jnp.logical_and(pred == 0, actual == 0))
-  fp = jnp.sum(jnp.logical_and(pred == 1, actual == 0))
-  fn = jnp.sum(jnp.logical_and(pred == 0, actual == 1))
+  tp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 1))  # type: ignore
+  tn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 0))  # type: ignore
+  fp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 0))  # type: ignore
+  fn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 1))  # type: ignore
   accuracy = (tp + tn) / (tp + tn + fp + fn)
   precision = tp / (tp + fp)
   recall = tp / (tp + fn)
@@ -208,7 +208,7 @@ def update(
   best_feature_index: int = err.argmin()
   positivity: bool = res.at[best_feature_index].get() < 0.5
   err_min = err.at[best_feature_index].get()
-  amount: float = jnp.log((1 - err_min) / (err_min + EPS))
+  amount: float = jnp.log((1 - err_min) / (err_min + EPS))  # type: ignore
 
   # This is equivalent to X_best = X[:, best_feature_index]
   X_best = jnp.zeros(

@@ -27,7 +27,7 @@ from jax import numpy as jnp
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from scripts import train  # type: ignore # noqa (module hack)
+from scripts import train  # noqa (module hack)
 
 
 class TestArgParse(unittest.TestCase):
