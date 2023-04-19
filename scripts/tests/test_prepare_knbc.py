@@ -43,8 +43,6 @@ class TestBreakBeforeSequence(unittest.TestCase):
 
 
 class TestKNBCHTMLParser(unittest.TestCase):
-
-  # extracted from KN001_Keitai_1-1-1-01-morph.html
   example_html = '''
   <html>
     <body>
