@@ -57,7 +57,7 @@ class KNBCHTMLParser(HTMLParser):
     self.chunks = ['']
     self.row = 0
     self.col = 0
-    self.current_word: typing.Optional[str] = None
+    self.current_word = ''
     self.on_split_row = False
     self.split_tab = split_tab
 
@@ -67,7 +67,7 @@ class KNBCHTMLParser(HTMLParser):
     if tag == 'tr':
       self.row += 1
       self.col = 0
-      self.current_word = None
+      self.current_word = ''
       self.on_split_row = False
 
     if tag == 'td':
@@ -84,7 +84,7 @@ class KNBCHTMLParser(HTMLParser):
       return None
     if self.on_split_row:
       return self.chunks.append('')
-    if self.col == 5 and self.current_word:
+    if self.col == 5:
       self.chunks[-1] += self.current_word
 
   def handle_data(self, data: str) -> None:
