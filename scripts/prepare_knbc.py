@@ -33,36 +33,62 @@ from budoux import utils
 
 
 class KNBCHTMLParser(HTMLParser):
-  """Parses the HTML files in the KNBC corpus and outputs the chunks."""
+  """Parses the HTML files in the KNBC corpus to collect chunks.
 
-  def __init__(self, split_tab: bool = True) -> None:
+  Attributes:
+    chunks: The collected chunks.
+    row: The current row index.
+    col: The current column index.
+    current_word: The current word to process.
+    on_split_row: Whether the scan is on the splitting row.
+    split_tab: Whether to split by tags in addition to Bunsetsu.
+  """
+
+  BUNSETSU_SPLIT_ID = 'bnst-kugiri'
+  TAG_SPLIT_ID = 'tag-kugiri'
+
+  def __init__(self, split_tab: bool = False) -> None:
+    """Initializes the HTML parser for the KNBC corpus.
+
+    Args:
+      split_tab: Split by tags in addition to Bunsetsu. (default: False)
+    """
     super().__init__()
     self.chunks = ['']
-    self.n_rows = 0
-    self.n_cols = 0
+    self.row = 0
+    self.col = 0
     self.current_word: typing.Optional[str] = None
+    self.on_split_row = False
     self.split_tab = split_tab
 
-  def handle_starttag(self, tag: str, _: typing.Any) -> None:
+  def handle_starttag(
+      self, tag: str,
+      attributes: typing.List[typing.Tuple[str, typing.Optional[str]]]) -> None:
     if tag == 'tr':
-      self.n_rows += 1
-      self.n_cols = 0
+      self.row += 1
+      self.col = 0
       self.current_word = None
+      self.on_split_row = False
+
     if tag == 'td':
-      self.n_cols += 1
+      self.col += 1
+      for name, value in attributes:
+        if (name == 'id' and value == self.BUNSETSU_SPLIT_ID) or (
+            self.split_tab and name == 'id' and value == self.TAG_SPLIT_ID):
+          self.on_split_row = True
 
   def handle_endtag(self, tag: str) -> None:
-    if tag != 'tr':
+    if tag != 'tr':  # Skip all tags but TR.
       return None
-    flag1 = self.n_rows > 2 and self.n_cols == 1
-    flag2 = self.split_tab or self.current_word == '文節区切り'
-    if flag1 and flag2:
-      self.chunks.append('')
-    if self.n_cols == 5 and type(self.current_word) is str:
+    if self.row < 3:  # Skip the first two rows.
+      return None
+    if self.on_split_row:
+      return self.chunks.append('')
+    if self.col == 5 and self.current_word:
       self.chunks[-1] += self.current_word
 
   def handle_data(self, data: str) -> None:
-    if self.n_cols == 1:
+    if self.col == 1:
       self.current_word = data
 
 

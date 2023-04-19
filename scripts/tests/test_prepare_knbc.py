@@ -40,3 +40,35 @@ class TestBreakBeforeSequence(unittest.TestCase):
     chunks = ['abcabc', 'def']
     result = prepare_knbc.break_before_sequence(chunks, 'bc')
     self.assertListEqual(result, ['a', 'bca', 'bc', 'def'])
+
+
+class TestKNBCHTMLParser(unittest.TestCase):
+
+  # extracted from KN001_Keitai_1-1-1-01-morph.html
+  example_html = '''
+  <html>
+    <body>
+      <table>
+        <tr><th>HA</th><th>HB</th><th>HC</th><th>HD</th><th>HE</th></tr>
+        <tr><td colspan="5" id="bnst-kugiri"><a>文節区切り</a></td></tr>
+        <tr><td>abc</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>de</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td colspan="5" id="tag-kugiri"><a>タグ区切り</a></td></tr>
+        <tr><td>fgh</td><td></td><td></td><td></td><td> </td></tr>
+        <tr><td>ijkl</td><td></td><td></td><td></td><td> </td></tr>
+        <tr><td colspan="5" id="bnst-kugiri"><a>文節区切り</a></td></tr>
+        <tr><td>mn</td><td></td><td></td><td></td><td> </td></tr>
+      </table>
+    </body>
+  </html>
+  '''
+
+  def test_parse(self) -> None:
+    parser = prepare_knbc.KNBCHTMLParser(False)
+    parser.feed(self.example_html)
+    self.assertListEqual(parser.chunks, ['abcdefghijkl', 'mn'])
+
+  def test_parse_split_tags(self) -> None:
+    parser = prepare_knbc.KNBCHTMLParser(True)
+    parser.feed(self.example_html)
+    self.assertListEqual(parser.chunks, ['abcde', 'fghijkl', 'mn'])
