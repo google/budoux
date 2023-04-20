@@ -145,7 +145,7 @@ def main() -> None:
     for file in sorted(os.listdir(html_dir)):
       if file[-11:] != '-morph.html':
         continue
-      parser = KNBCHTMLParser(split_tab=False)
+      parser = KNBCHTMLParser(split_tab=True)
       data = open(os.path.join(html_dir, file)).read()
       parser.feed(data)
       chunks = parser.chunks
