@@ -29,7 +29,7 @@ Last but not least, BudouX supports HTML inputs.
 
 ## Supported Programming languages
 
-- Python
+- [Python](https://github.com/google/budoux/tree/main/python/)
 - [JavaScript](https://github.com/google/budoux/tree/main/javascript/)
 - [Java](https://github.com/google/budoux/tree/main/java/)
 
