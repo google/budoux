@@ -129,8 +129,7 @@ class TestTextArguments(unittest.TestCase):
     output = main._main(cmdargs)
 
     self.assertEqual(
-        output,
-        '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+        output, '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
         '今日は<b><wbr>とても<wbr>天気</b>です。</span>')
 
   def test_cmdargs_multi_html(self) -> None:
@@ -172,8 +171,7 @@ class TestStdin(unittest.TestCase):
       output = main._main(["-H"])
 
     self.assertEqual(
-        output,
-        '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+        output, '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
         'これは<b><wbr>テスト</b>です。<wbr>\n'
         '</span>')
 
