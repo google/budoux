@@ -48,7 +48,7 @@ describe('cli', () => {
     const inputText = '今日は天気です。';
     const argv = ['node', 'budoux', '--html', inputText];
     const expectedStdOut =
-      '<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>';
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<wbr>天気です。</span>';
     cli(argv);
     expect(console.log).toHaveBeenCalledWith(expectedStdOut);
   });
@@ -57,7 +57,7 @@ describe('cli', () => {
     const inputText = '今日は天気です。';
     const argv = ['node', 'budoux', '-H', inputText];
     const expectedStdOut =
-      '<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<wbr>天気です。</span>';
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<wbr>天気です。</span>';
     cli(argv);
     expect(console.log).toHaveBeenCalledWith(expectedStdOut);
   });

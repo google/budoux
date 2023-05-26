@@ -43,7 +43,7 @@ method to get an HTML string with non-breaking markup to wrap phrases.
 
 ```java
 System.out.println(parser.translateHTMLString("今日は<strong>良い天気</strong>ですね。"));
-//<span style="word-break: keep-all; overflow-wrap: break-word;">今日は<strong><wbr>良い<wbr>天気</strong>ですね。</span>
+//<span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<strong><wbr>良い<wbr>天気</strong>ですね。</span>
 ```
 
 ## Caveat

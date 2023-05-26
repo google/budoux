@@ -45,5 +45,5 @@ export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
  */
 export const applyWrapStyle = (element: HTMLElement) => {
   element.style.wordBreak = 'keep-all';
-  element.style.overflowWrap = 'break-word';
+  element.style.overflowWrap = 'anywhere';
 };

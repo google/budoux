@@ -40,7 +40,7 @@ import org.jsoup.select.NodeVisitor;
 /** Processes phrases into an HTML string wrapping them in no-breaking markup. */
 final class HTMLProcessor {
   private static final Set<String> skipNodes;
-  private static final String STYLE = "word-break: keep-all; overflow-wrap: break-word;";
+  private static final String STYLE = "word-break: keep-all; overflow-wrap: anywhere;";
 
   private HTMLProcessor() {}
 

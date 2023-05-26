@@ -53,26 +53,26 @@ class TestResolve(unittest.TestCase):
     chunks = ['abc', 'def']
     html = 'abcdef'
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: break-word;">abc<wbr>def</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<wbr>def</span>'
     self.assertEqual(result, expected)
 
   def test_with_standard_html_input(self) -> None:
     chunks = ['abc', 'def']
     html = 'ab<a href="http://example.com">cd</a>ef'
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: break-word;">ab<a href="http://example.com">c<wbr>d</a>ef</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">ab<a href="http://example.com">c<wbr>d</a>ef</span>'
     self.assertEqual(result, expected)
 
   def test_with_nodes_to_skip(self) -> None:
     chunks = ['abc', 'def']
     html = "a<button>bcde</button>f"
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: break-word;">a<button>bcde</button>f</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f</span>'
     self.assertEqual(result, expected)
 
   def test_with_nothing_to_split(self) -> None:
     chunks = ['abcdef']
     html = 'abcdef'
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: break-word;">abcdef</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abcdef</span>'
     self.assertEqual(result, expected)

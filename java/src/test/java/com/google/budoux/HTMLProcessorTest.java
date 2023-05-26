@@ -34,7 +34,7 @@ public class HTMLProcessorTest {
     String html = "abcdef";
     String result = HTMLProcessor.resolve(phrases, html);
     assertEquals(
-        "<span style=\"word-break: keep-all; overflow-wrap: break-word;\">abc<wbr>def</span>",
+        "<span style=\"word-break: keep-all; overflow-wrap: anywhere;\">abc<wbr>def</span>",
         result);
   }
 
@@ -44,7 +44,7 @@ public class HTMLProcessorTest {
     String html = "ab<a href=\"http://example.com\">cd</a>ef";
     String result = HTMLProcessor.resolve(phrases, html);
     assertEquals(
-        "<span style=\"word-break: keep-all; overflow-wrap: break-word;\">ab<a"
+        "<span style=\"word-break: keep-all; overflow-wrap: anywhere;\">ab<a"
             + " href=\"http://example.com\">c<wbr>d</a>ef</span>",
         result);
   }
@@ -56,7 +56,7 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html);
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap:"
-            + " break-word;\">a<button>bcde</button>f</span>",
+            + " anywhere;\">a<button>bcde</button>f</span>",
         result);
   }
 
@@ -66,7 +66,7 @@ public class HTMLProcessorTest {
     String html = "abcdef";
     String result = HTMLProcessor.resolve(phrases, html);
     assertEquals(
-        "<span style=\"word-break: keep-all; overflow-wrap: break-word;\">abcdef</span>", result);
+        "<span style=\"word-break: keep-all; overflow-wrap: anywhere;\">abcdef</span>", result);
   }
 
   @Test
