@@ -21,7 +21,7 @@ from html.parser import HTMLParser
 from .utils import SEP
 
 HTMLAttr = typing.List[typing.Tuple[str, typing.Union[str, None]]]
-PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: break-word;'
+PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: anywhere;'
 with open(
     os.path.join(os.path.dirname(__file__), 'skip_nodes.json'),
     encoding='utf-8') as f:

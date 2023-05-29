@@ -56,7 +56,7 @@ You can also translate an HTML string to wrap phrases with non-breaking markup.
 
 ```javascript
 console.log(parser.translateHTMLString('今日は<b>とても天気</b>です。'));
-// <span style="word-break: keep-all; overflow-wrap: break-word;">今日は<b><wbr>とても<wbr>天気</b>です。</span>
+// <span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b><wbr>とても<wbr>天気</b>です。</span>
 ```
 
 ### Applying to an HTML element
@@ -69,7 +69,7 @@ console.log(ele.outerHTML);
 // <p class="budou-this">今日は<b>とても天気</b>です。</p>
 parser.applyElement(ele);
 console.log(ele.outerHTML);
-// <p class="budou-this" style="word-break: keep-all; overflow-wrap: break-word;">今日は<b><wbr>とても<wbr>天気</b>です。</p>
+// <p class="budou-this" style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b><wbr>とても<wbr>天気</b>です。</p>
 ```
 
 Internally, the `applyElement` calls the [`HTMLProcessor`] class
@@ -162,7 +162,7 @@ $ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
 
 ```shellsession
 $ budoux 本日は晴天です。 -H
-<span style="word-break: keep-all; overflow-wrap: break-word;">本日は<wbr>晴天です。</span>
+<span style="word-break: keep-all; overflow-wrap: anywhere;">本日は<wbr>晴天です。</span>
 ```
 
 If you want to see help, run `budoux -h`.

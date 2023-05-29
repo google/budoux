@@ -79,7 +79,7 @@ You can also translate an HTML string by wrapping phrases with non-breaking mark
 
 ```python
 print(parser.translate_html_string('今日は<b>とても天気</b>です。'))
-# <span style="word-break: keep-all; overflow-wrap: break-word;">今日は<b ><wbr>とても<wbr>天気</b>です。</span>
+# <span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b ><wbr>とても<wbr>天気</b>です。</span>
 ```
 
 If you have a custom model, you can use it as follows.
@@ -130,7 +130,7 @@ $ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
 
 ```shellsession
 $ budoux 本日は晴天です。 -H
-<span style="word-break: keep-all; overflow-wrap: break-word;">本日は<wbr>晴天です。</span>
+<span style="word-break: keep-all; overflow-wrap: anywhere;">本日は<wbr>晴天です。</span>
 ```
 
 If you want to see help, run `budoux -h`.

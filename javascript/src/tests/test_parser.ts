@@ -63,7 +63,7 @@ describe('Parser.applyElement', () => {
   it('should insert WBR tags where the sentence should break.', () => {
     const inputHTML = '<p>xyzabcabc</p>';
     const expectedHTML = `
-    <p style="word-break: keep-all; overflow-wrap: break-word;"
+    <p style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<wbr>abc<wbr>abc</p>`;
     const model = {
       UW4: {a: 1001}, // means "should separate right before 'a'".
@@ -73,7 +73,7 @@ describe('Parser.applyElement', () => {
 
   it('should insert WBR tags even it overlaps with other HTML tags.', () => {
     const inputHTML = '<p>xy<a href="#">zabca</a>bc</p>';
-    const expectedHTML = `<p style="word-break: keep-all; overflow-wrap: break-word;"
+    const expectedHTML = `<p style="word-break: keep-all; overflow-wrap: anywhere;"
     >xy<a href="#">z<wbr>abc<wbr>a</a>bc</p>`;
     const model = {
       UW4: {a: 1001}, // means "should separate right before 'a'".
@@ -101,7 +101,7 @@ describe('Parser.translateHTMLString', () => {
   it('should output a html string with a SPAN parent with proper style attributes.', () => {
     const inputHTML = 'xyzabcd';
     const expectedHTML = `
-    <span style="word-break: keep-all; overflow-wrap: break-word;">xyz<wbr>abcd</span>`;
+    <span style="word-break: keep-all; overflow-wrap: anywhere;">xyz<wbr>abcd</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
 
@@ -109,7 +109,7 @@ describe('Parser.translateHTMLString', () => {
     const inputHTML = '<p class="foo" style="color: red">xyzabcd</p>';
     const expectedHTML = `
     <p class="foo"
-       style="color: red; word-break: keep-all; overflow-wrap: break-word;"
+       style="color: red; word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<wbr>abcd</p>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
@@ -123,7 +123,7 @@ describe('Parser.translateHTMLString', () => {
   it('should pass script tags as-is.', () => {
     const inputHTML = 'xyz<script>alert(1);</script>xyzabc';
     const expectedHTML = `<span
-    style="word-break: keep-all; overflow-wrap: break-word;"
+    style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<script>alert(1);</script>xyz<wbr>abc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
@@ -131,7 +131,7 @@ describe('Parser.translateHTMLString', () => {
   it('script tags on top should be discarded by the DOMParser.', () => {
     const inputHTML = '<script>alert(1);</script>xyzabc';
     const expectedHTML = `<span
-    style="word-break: keep-all; overflow-wrap: break-word;"
+    style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<wbr>abc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
@@ -139,7 +139,7 @@ describe('Parser.translateHTMLString', () => {
   it('should skip some specific tags.', () => {
     const inputHTML = 'xyz<code>abc</code>abc';
     const expectedHTML = `<span
-    style="word-break: keep-all; overflow-wrap: break-word;"
+    style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<code>abc</code><wbr>abc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
@@ -147,7 +147,7 @@ describe('Parser.translateHTMLString', () => {
   it('should not ruin attributes of child elements.', () => {
     const inputHTML = 'xyza<a href="#" hidden>bc</a>abc';
     const expectedHTML = `<span
-    style="word-break: keep-all; overflow-wrap: break-word;"
+    style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<wbr>a<a href="#" hidden>bc</a><wbr>abc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
@@ -155,7 +155,7 @@ describe('Parser.translateHTMLString', () => {
   it('should work with emojis.', () => {
     const inputHTML = 'xyza🇯🇵🇵🇹abc';
     const expectedHTML = `<span
-    style="word-break: keep-all; overflow-wrap: break-word;"
+    style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<wbr>a🇯🇵🇵🇹<wbr>abc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });

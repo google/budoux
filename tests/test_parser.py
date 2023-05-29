@@ -61,7 +61,7 @@ class TestParser(unittest.TestCase):
 
     input_html = 'xyzabcd'
     expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
+        '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
         'xyz<wbr>abcd</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(
@@ -71,7 +71,7 @@ class TestParser(unittest.TestCase):
 
     input_html = 'xyz<script>alert(1);</script>xyzabc'
     expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
+        '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
         'xyz<script>alert(1);</script>xyz<wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
@@ -79,7 +79,7 @@ class TestParser(unittest.TestCase):
 
     input_html = 'xyz<code>abc</code>abc'
     expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
+        '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
         'xyz<code>abc</code><wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
@@ -87,7 +87,7 @@ class TestParser(unittest.TestCase):
 
     input_html = 'xyza<a href="#" hidden>bc</a>abc'
     expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
+        '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
         'xyz<wbr>a<a href="#" hidden>bc</a><wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
@@ -95,7 +95,7 @@ class TestParser(unittest.TestCase):
 
     input_html = 'xyza🇯🇵🇵🇹abc'
     expected_html = (
-        '<span style="word-break: keep-all; overflow-wrap: break-word;">'
+        '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
         'xyz<wbr>a🇯🇵🇵🇹<wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html, 'Should work with emojis.')

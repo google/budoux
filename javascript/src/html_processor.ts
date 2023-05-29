@@ -206,7 +206,7 @@ export interface HTMLProcessorOptions {
   /**
    * This class name is added to the containing block when the BudouX is applied.
    * The containing block should have following CSS properties to make it work.
-   * `{ word-break: keep-all; overflow-wrap: break-word; }`
+   * `{ word-break: keep-all; overflow-wrap: anywhere; }`
    *
    * When falsy, an inline style is set instead.
    */
