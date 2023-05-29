@@ -31,7 +31,6 @@ DEFAULT_LOG_NAME = 'train.log'
 DEFAULT_FEATURE_THRES = 10
 DEFAULT_ITERATION = 10000
 DEFAULT_OUT_SPAN = 100
-ArgList = typing.Optional[typing.List[str]]
 
 
 class Result(NamedTuple):
@@ -305,7 +304,8 @@ def fit(rows_train: npt.NDArray[np.int32], cols_train: npt.NDArray[np.int32],
   return scores
 
 
-def parse_args(test: ArgList = None) -> argparse.Namespace:
+def parse_args(
+    test: typing.Optional[typing.List[str]] = None) -> argparse.Namespace:
   """Parses commandline arguments.
 
   Args:
