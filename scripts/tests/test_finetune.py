@@ -66,7 +66,7 @@ class TestLoadModel(unittest.TestCase):
       f.write('{"UW1": {"a": 12, "b": 23}, "TW3": {"xyz": 47}}')
 
   def test_extracted_keys(self) -> None:
-    result = finetune.load_model(self.model_file_path).keys
+    result = finetune.load_model(self.model_file_path).features
     self.assertListEqual(result, ['UW1:a', 'UW1:b', 'TW3:xyz'])
 
   def test_value_variance(self) -> None:
@@ -107,11 +107,23 @@ class TestLoadDataset(unittest.TestCase):
 
 class TestFit(unittest.TestCase):
   def test_health(self) -> None:
-    w = jnp.array([.9, .5, 0])
-    X = jnp.array([[-1, 1, 1]])
-    # The current result is x.dot(w) = -.4 < 0 => i.e. False.
-    # This tests if the method can learn a new weight that inverses the result.
-    Y = jnp.array([True])
+    w = jnp.array([.9, .5, -.3])
+    X = jnp.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]])
+    # The current result is x.dot(w) = [-0.7, 0.1, 1.1] => [False, True, True]
+    # It tests if the method can learn a new weight that inverses the result.
+    Y = jnp.array([True, False, False])
     dataset = finetune.Dataset(X, Y)
-    w = finetune.fit(w, dataset)
+    w = finetune.fit(w, dataset, iter=1000, learning_rate=.01, log_span=100)
     self.assertGreater(X.dot(w).tolist()[0], 0)  # x.dot(w) > 0 => True.
+
+
+class TestWriteWeights(unittest.TestCase):
+
+  def test_write_weights(self) -> None:
+    weights = jnp.array([0.012, 0.238, -0.1237])
+    features = ['foo', 'bar', 'baz']
+    weights_path = tempfile.NamedTemporaryFile().name
+    finetune.write_weights(weights_path, weights, features)
+    with open(weights_path) as f:
+      result = f.read()
+    self.assertEqual(result, 'foo\t0.012000\nbar\t0.238000\nbaz\t-0.123700')
