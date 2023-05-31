@@ -13,9 +13,9 @@
 # limitations under the License.
 """Quality regression test."""
 
+import os
 import sys
 import unittest
-import os
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
