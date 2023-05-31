@@ -29,7 +29,7 @@ class TestQuality(unittest.TestCase):
   def test_ja(self) -> None:
     parser = load_default_japanese_parser()
     fp = os.path.join(os.path.dirname(__file__), 'quality', 'ja.tsv')
-    with open(fp) as f:
+    with open(fp, 'r', encoding=sys.getdefaultencoding()) as f:
       data = [line.split('\t') for line in f.readlines() if line[0] != '#']
     expected_sentences = [line[1].strip() for line in data if len(line) > 1]
     for expected in expected_sentences:
