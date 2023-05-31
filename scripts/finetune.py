@@ -164,7 +164,7 @@ def fit(weights: Array,
   Args:
     weights: A weight vector.
     train_dataset: A train dataset.
-    iter: A number of iterations.
+    iters: A number of iterations.
     learning_rate: A learning rate.
     log_span: A span to log metrics.
     val_dataset: A validation dataset (optional).
@@ -206,7 +206,7 @@ def write_weights(file_path: str, weights: Array,
   """Writes learned weights and corresponsing features to a file.
 
   Args:
-    file_path: A file path for the weights file to write.
+    file_path: A file path for the weights file.
     weights: A weight vector.
     features: A list of feature identifiers.
   """
