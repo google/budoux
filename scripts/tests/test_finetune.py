@@ -17,7 +17,6 @@ import os
 import sys
 import tempfile
 import unittest
-from collections import OrderedDict
 
 from jax import numpy as jnp
 
