@@ -15,9 +15,10 @@
 
 import os
 import sys
-import unittest
 import tempfile
+import unittest
 from collections import OrderedDict
+
 from jax import numpy as jnp
 
 # module hack
@@ -56,6 +57,23 @@ class TestArgParse(unittest.TestCase):
     output = finetune.parse_args(cmdargs)
     self.assertEqual(output.train_data, 'encoded.txt')
     self.assertEqual(output.base_model, 'model.json')
+    self.assertEqual(output.iters, finetune.DEFAULT_NUM_ITERS)
+    self.assertEqual(output.log_span, finetune.DEFAULT_LOG_SPAN)
+    self.assertEqual(output.learning_rate, finetune.DEFAULT_LEARNING_RATE)
+    self.assertEqual(output.val_data, None)
+
+  def test_cmdargs_with_values(self) -> None:
+    cmdargs = [
+        'encoded.txt', 'model.json', '--iters', '50', '--log-span', '10',
+        '--learning-rate', '0.1', '--val-data', 'val.txt'
+    ]
+    output = finetune.parse_args(cmdargs)
+    self.assertEqual(output.train_data, 'encoded.txt')
+    self.assertEqual(output.base_model, 'model.json')
+    self.assertEqual(output.iters, 50)
+    self.assertEqual(output.log_span, 10)
+    self.assertEqual(output.learning_rate, 0.1)
+    self.assertEqual(output.val_data, 'val.txt')
 
 
 class TestLoadModel(unittest.TestCase):
@@ -105,7 +123,9 @@ class TestLoadDataset(unittest.TestCase):
     expected = [[1, 1], [1, -1], [1, 1], [1, 1], [-1, -1]]
     self.assertListEqual(result.X.tolist(), expected)
 
+
 class TestFit(unittest.TestCase):
+
   def test_health(self) -> None:
     w = jnp.array([.9, .5, -.3])
     X = jnp.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]])
@@ -113,7 +133,7 @@ class TestFit(unittest.TestCase):
     # It tests if the method can learn a new weight that inverses the result.
     Y = jnp.array([True, False, False])
     dataset = finetune.Dataset(X, Y)
-    w = finetune.fit(w, dataset, iter=1000, learning_rate=.01, log_span=100)
+    w = finetune.fit(w, dataset, iters=1000, learning_rate=.01, log_span=100)
     self.assertGreater(X.dot(w).tolist()[0], 0)  # x.dot(w) > 0 => True.
 
 
