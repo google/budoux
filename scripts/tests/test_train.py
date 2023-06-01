@@ -282,5 +282,20 @@ class TestExtractFeatures(unittest.TestCase):
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
+
+class TestLoadDataset(unittest.TestCase):
+  def test_with_standard_setup(self):
+    entries_file_path = tempfile.NamedTemporaryFile().name
+    with open(entries_file_path, 'w') as f:
+      f.write(('1\tfoo\tbar\n'
+               '-1\tfoo\n'
+               '1\tfoo\tbar\tbaz\n'
+               '1\tbar\tfoo\n'
+               '-1\tbaz\tqux\n'))
+    result = train.load_dataset(entries_file_path, {'foo': 0, 'bar': 1, 'baz': 2})
+    self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
+    self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
+    self.assertEqual(result.Y.tolist(), [True, False, True, True, False])
+
 if __name__ == '__main__':
   unittest.main()
