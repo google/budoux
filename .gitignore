@@ -1,6 +1,5 @@
 .DS_Store
 .venv
-/data
 /dist
 __pycache__
 *.pyc

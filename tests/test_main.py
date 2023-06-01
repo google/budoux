@@ -79,10 +79,10 @@ class TestModelOption(unittest.TestCase):
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_lang_ja(self) -> None:
-    cmdargs = ['-l', 'ja', '今日はいい天気ですね。']
+    cmdargs = ['-l', 'ja', '今日は良い天気ですね。']
     output = main._main(cmdargs)
 
-    self.assertEqual(output, '今日は\nいい\n天気ですね。')
+    self.assertEqual(output, '今日は\n良い\n天気ですね。')
 
   def test_cmdargs_lang_zh_hans(self) -> None:
     cmdargs = ['-l', 'zh-hans', '今天天气晴朗。']
