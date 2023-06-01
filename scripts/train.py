@@ -127,7 +127,7 @@ def preprocess(
     - features (List[str]): The list of features.
   """
   features = extract_features(entries_filename, feature_thres)
-  feature_index = dict([(feature, i) for i, feature in enumerate(features)])
+  feature_index = dict((feature, i) for i, feature in enumerate(features))
   dataset = load_dataset(entries_filename, feature_index)
   return dataset.X_rows, dataset.X_cols, dataset.Y, features
 
