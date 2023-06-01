@@ -58,11 +58,12 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.feature_thres, train.DEFAULT_FEATURE_THRES)
     self.assertEqual(output.iter, train.DEFAULT_ITERATION)
     self.assertEqual(output.out_span, train.DEFAULT_OUT_SPAN)
+    self.assertEqual(output.val_data, None)
 
   def test_cmdargs_full(self) -> None:
     cmdargs = [
         'encoded.txt', '-o', 'out.txt', '--log', 'foo.log', '--feature-thres',
-        '100', '--iter', '10', '--out-span', '50'
+        '100', '--iter', '10', '--out-span', '50', '--val-data', 'val_encoded.txt'
     ]
     output = train.parse_args(cmdargs)
     self.assertEqual(output.encoded_train_data, 'encoded.txt')
@@ -71,6 +72,7 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.feature_thres, 100)
     self.assertEqual(output.iter, 10)
     self.assertEqual(output.out_span, 50)
+    self.assertEqual(output.val_data, 'val_encoded.txt')
 
 
 class TestPreprocess(unittest.TestCase):

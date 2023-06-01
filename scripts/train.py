@@ -386,6 +386,10 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       help=f'Iteration span to output metrics and weights. (default: {DEFAULT_OUT_SPAN})',
       type=int,
       default=DEFAULT_OUT_SPAN)
+  parser.add_argument(
+      '--val-data',
+      help=f'File path for the encoded validation data.',
+      type=str)
   if test is None:
     return parser.parse_args()
   else:
@@ -400,6 +404,7 @@ def main() -> None:
   feature_thres = int(args.feature_thres)
   iterations = int(args.iter)
   out_span = int(args.out_span)
+  val_data: typing.Optional[str] = args.val_data
 
   X_rows, X_cols, Y, features = preprocess(data_filename, feature_thres)
   X_rows_train, X_cols_train, X_rows_test, X_cols_test, Y_train, Y_test = split_data(
