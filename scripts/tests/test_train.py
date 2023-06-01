@@ -76,43 +76,61 @@ class TestArgParse(unittest.TestCase):
 class TestPreprocess(unittest.TestCase):
 
   def test_standard_setup(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
-    with open(entries_file_path, 'w') as f:
+    train_data_path = tempfile.NamedTemporaryFile().name
+    val_data_path = tempfile.NamedTemporaryFile().name
+    with open(train_data_path, 'w') as f:
       f.write(('1\tfoo\tbar\n'
                '-1\tfoo\n'
                '1\tfoo\tbar\tbaz\n'
                '1\tbar\tfoo\n'
                '-1\tbaz\tqux\n'))
-    # The input matrix X and the target vector Y should look like below now:
+    with open(val_data_path, 'w') as f:
+      f.write(('1\tbar\tbaz\n'
+               '-1\txyz\n'
+               '1\tabc\tqux\tfoo\n'))
+    feature_thres = 1
+    train_dataset, val_dataset, features = train.preprocess(
+        train_data_path, feature_thres, val_data_path)
+
+    self.assertEqual(features, ['foo', 'bar', 'baz'])
+    # The training input X and the target Y should look like below:
     # Y    X(foo bar baz)
     # 1      1   1   0
     # -1     1   0   0
     # 1      1   1   1
     # 1      1   1   0
     # -1     0   0   1
-    rows, cols, Y, features = train.preprocess(entries_file_path, 1)
-    self.assertEqual(features, ['foo', 'bar', 'baz'])
-    self.assertEqual(Y.tolist(), [True, False, True, True, False])
-    self.assertEqual(rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
-    self.assertEqual(cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
-    os.remove(entries_file_path)
+    self.assertEqual(train_dataset.Y.tolist(), [True, False, True, True, False])
+    self.assertEqual(train_dataset.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
+    self.assertEqual(train_dataset.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
 
-  def test_skip_invalid_rows(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
-    with open(entries_file_path, 'w') as f:
-      f.write(('\n1\tfoo\tbar\n'
-               '-1\n\n'
-               '-1\tfoo\n\n'))
-    # The input matrix X and the target vector Y should look like below now:
-    # Y    X(foo bar)
-    # 1      1   1
-    # -1     1   0
-    rows, cols, Y, features = train.preprocess(entries_file_path, 0)
-    self.assertEqual(features, ['foo', 'bar'])
-    self.assertEqual(Y.tolist(), [True, False])
-    self.assertEqual(rows.tolist(), [0, 0, 1])
-    self.assertEqual(cols.tolist(), [0, 1, 0])
-    os.remove(entries_file_path)
+    # The validation input X and the target Y should look like below:
+    # Y    X(foo bar baz)
+    # 1      0   1   1
+    # -1     0   0   0
+    # 1      1   0   0
+    self.assertEqual(val_dataset.Y.tolist(), [True, False, True])
+    self.assertEqual(val_dataset.X_rows.tolist(), [0, 0, 2])
+    self.assertEqual(val_dataset.X_cols.tolist(), [1, 2, 0])
+
+  def teset_no_val(self) -> None:
+    train_data_path = tempfile.NamedTemporaryFile().name
+    with open(train_data_path, 'w') as f:
+      f.write(('1\tfoo\tbar\n'
+               '-1\tfoo\n'
+               '1\tfoo\tbar\tbaz\n'
+               '1\tbar\tfoo\n'
+               '-1\tbaz\tqux\n'))
+    features_thres = 1
+    train_dataset, val_dataset, features = train.preprocess(
+        train_data_path, feature_thres)
+    self.assertEqual(features, ['foo', 'bar', 'baz'])
+    self.assertEqual(train_dataset.Y.tolist(), [True, False, True, True, False])
+    self.assertEqual(train_dataset.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
+    self.assertEqual(train_dataset.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
+    self.assertEqual(val_dataset.Y.tolist(), [])
+    self.assertEqual(val_dataset.X_rows.tolist(), [])
+    self.assertEqual(val_dataset.X_cols.tolist(), [])
 
 
 class TestSplitData(unittest.TestCase):
@@ -259,6 +277,7 @@ class TestFit(unittest.TestCase):
 
 
 class TestExtractFeatures(unittest.TestCase):
+
   def test_with_standard_setup(self):
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
@@ -284,6 +303,7 @@ class TestExtractFeatures(unittest.TestCase):
 
 
 class TestLoadDataset(unittest.TestCase):
+
   def test_with_standard_setup(self):
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
@@ -292,10 +312,33 @@ class TestLoadDataset(unittest.TestCase):
                '1\tfoo\tbar\tbaz\n'
                '1\tbar\tfoo\n'
                '-1\tbaz\tqux\n'))
-    result = train.load_dataset(entries_file_path, {'foo': 0, 'bar': 1, 'baz': 2})
+    result = train.load_dataset(entries_file_path, {
+        'foo': 0,
+        'bar': 1,
+        'baz': 2
+    })
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [True, False, True, True, False])
+
+  def test_with_redundant_breaks(self):
+    entries_file_path = tempfile.NamedTemporaryFile().name
+    with open(entries_file_path, 'w') as f:
+      f.write(('1\tfoo\tbar\n'
+               '-1\tfoo\n'
+               '1\tfoo\tbar\tbaz\n\n'
+               '1\tbar\tfoo\n'
+               '\n'
+               '-1\tbaz\tqux\n'))
+    result = train.load_dataset(entries_file_path, {
+        'foo': 0,
+        'bar': 1,
+        'baz': 2
+    })
+    self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
+    self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
+    self.assertEqual(result.Y.tolist(), [True, False, True, True, False])
+
 
 if __name__ == '__main__':
   unittest.main()

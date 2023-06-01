@@ -77,12 +77,12 @@ def extract_features(data_path: str, thres: int) -> typing.List[str]:
   return [item[0] for item in counter.most_common() if item[1] > thres]
 
 
-def load_dataset(data_path: str, feature_index: typing.Dict[str, int]) -> Dataset:
+def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
   """Loads a dataset from the given encoded data file.
 
   Args:
     data_path (str): A file path for the encoded data file.
-    feature_index (Dict[str, int]): A dictionary that maps a feature to its index.
+    findex (Dict[str, int]): A dictionary that maps a feature to its index.
 
   Returns:
     A dataset
@@ -97,17 +97,18 @@ def load_dataset(data_path: str, feature_index: typing.Dict[str, int]) -> Datase
       if len(cols) < 2:
         continue
       Y.append(cols[0] == '1')
-      hit_indices = [
-          feature_index[feat] for feat in cols[1:] if feat in feature_index
-      ]
+      hit_indices = [findex[feat] for feat in cols[1:] if feat in findex]
       X_rows.extend(i for _ in range(len(hit_indices)))
       X_cols.extend(hit_indices)
       i += 1
-  return Dataset(jnp.asarray(X_rows), jnp.asarray(X_cols), jnp.asarray(Y, dtype=bool))
+  return Dataset(
+      jnp.asarray(X_rows), jnp.asarray(X_cols), jnp.asarray(Y, dtype=bool))
 
 
 def preprocess(
-    entries_filename: str, feature_thres: int
+    train_data_path: str,
+    feature_thres: int,
+    val_data_path: str,
 ) -> typing.Tuple[typing.Any, typing.Any, typing.Any, typing.List[str]]:
   """Loads entries and translates them into JAX arrays. The boolean matrix of
   the input data is represented by row indices and column indices of True values
@@ -126,10 +127,11 @@ def preprocess(
     - Y (JAX array): The target output data.
     - features (List[str]): The list of features.
   """
-  features = extract_features(entries_filename, feature_thres)
+  features = extract_features(train_data_path, feature_thres)
   feature_index = dict((feature, i) for i, feature in enumerate(features))
-  dataset = load_dataset(entries_filename, feature_index)
-  return dataset.X_rows, dataset.X_cols, dataset.Y, features
+  train_dataset = load_dataset(train_data_path, feature_index)
+  val_dataset = load_dataset(val_data_path, feature_index)
+  return train_dataset, val_dataset, features
 
 
 def split_data(
