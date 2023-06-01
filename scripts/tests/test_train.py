@@ -135,29 +135,6 @@ class TestPreprocess(unittest.TestCase):
     self.assertEqual(val_dataset.X_cols.tolist(), [])
 
 
-class TestSplitData(unittest.TestCase):
-
-  def test_standard_setup(self) -> None:
-    split_ratio = 0.6
-    X = np.array([
-        [0, 1, 0],
-        [1, 0, 0],
-        [1, 0, 1],
-        [0, 1, 1],
-        [0, 1, 0],
-    ])
-    Y = np.array([0, 1, 0, 1, 0], dtype=bool)
-    rows, cols = np.where(X == 1)
-    rows_train, cols_train, rows_test, cols_test, Y_train, Y_test = train.split_data(
-        rows, cols, Y, split_ratio)
-    self.assertEqual(rows_train.tolist(), [0, 1, 2, 2])
-    self.assertEqual(cols_train.tolist(), [1, 0, 0, 2])
-    self.assertEqual(rows_test.tolist(), [0, 0, 1])
-    self.assertEqual(cols_test.tolist(), [1, 2, 1])
-    self.assertEqual(Y_train.tolist(), [0, 1, 0])
-    self.assertEqual(Y_test.tolist(), [1, 0])
-
-
 class TestPred(unittest.TestCase):
 
   def test_standard_setup(self) -> None:

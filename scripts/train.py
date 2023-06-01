@@ -130,40 +130,10 @@ def preprocess(
   features = extract_features(train_data_path, feature_thres)
   feature_index = dict((feature, i) for i, feature in enumerate(features))
   train_dataset = load_dataset(train_data_path, feature_index)
-  val_dataset = load_dataset(val_data_path, feature_index)
-  return train_dataset, val_dataset, features
-
-
-def split_data(
-    rows: npt.NDArray[np.int32],
-    cols: npt.NDArray[np.int32],
-    Y: npt.NDArray[np.bool_],
-    split_ratio: float = .9
-) -> typing.Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32],
-                  npt.NDArray[np.int32], npt.NDArray[np.int32],
-                  npt.NDArray[np.bool_], npt.NDArray[np.bool_]]:
-  """Splits a dataset into a training dataset and a test dataset.
-
-  Args:
-    rows (numpy.ndarray): Row indices of True values in the input data.
-    cols (numpy.ndarray): Column indices of True values in the input data.
-    Y (numpy.ndarray): The target output.
-    split_ratio (float, optional): The split ratio for the training dataset.
-      The value should be between 0 and 1. The default value is 0.9 (=90% for
-      training).
-
-  Returns:
-    A tuple of:
-    - rows_train (numpy.ndarray): Row indices of True values in the training input data.
-    - cols_train (numpy.ndarray): Column indices of True values in the training input data.
-    - rows_test (numpy.ndarray): Row indices of True values in the test input data.
-    - cols_test (numpy.ndarray): Column indices of True values in the test input data.
-    - Y_train (numpy.ndarray): The training target output.
-    - Y_test (numpy.ndarray): The test target output.
-  """
-  thres = int(Y.shape[0] * split_ratio)
-  return (rows[rows < thres], cols[rows < thres], rows[rows >= thres] - thres,
-          cols[rows >= thres], Y[:thres], Y[thres:])
+  val_dataset = None
+  if val_data_path:
+    val_dataset = load_dataset(val_data_path, feature_index)
+  return train_dataset, features, val_dataset
 
 
 @partial(jax.jit, static_argnums=[3])
@@ -406,9 +376,7 @@ def main() -> None:
   out_span = int(args.out_span)
   val_data: typing.Optional[str] = args.val_data
 
-  X_rows, X_cols, Y, features = preprocess(data_filename, feature_thres)
-  X_rows_train, X_cols_train, X_rows_test, X_cols_test, Y_train, Y_test = split_data(
-      X_rows, X_cols, Y)
+  dataset_train, features, dataset_val = preprocess(data_filename, feature_thres, val_data)
   fit(X_rows_train, X_cols_train, X_rows_test, X_cols_test, Y_train, Y_test,
       features, iterations, weights_filename, log_filename, out_span)
   print('Training done. Export the model by passing %s to build_model.py' %
