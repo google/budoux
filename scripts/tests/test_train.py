@@ -258,5 +258,29 @@ class TestFit(unittest.TestCase):
     os.remove(log_file_path)
 
 
+class TestExtractFeatures(unittest.TestCase):
+  def test_with_standard_setup(self):
+    entries_file_path = tempfile.NamedTemporaryFile().name
+    with open(entries_file_path, 'w') as f:
+      f.write(('1\tfoo\tbar\n'
+               '-1\tfoo\n'
+               '1\tfoo\tbar\tbaz\n'
+               '1\tbar\tfoo\n'
+               '-1\tbaz\tqux\n'))
+    result = train.extract_features(entries_file_path, 1)
+    self.assertEqual(result, ['foo', 'bar', 'baz'])
+
+  def test_with_redundant_breaks(self):
+    entries_file_path = tempfile.NamedTemporaryFile().name
+    with open(entries_file_path, 'w') as f:
+      f.write(('1\tfoo\tbar\n'
+               '-1\tfoo\n'
+               '1\tfoo\tbar\tbaz\n\n'
+               '1\tbar\tfoo\n'
+               '\n'
+               '-1\tbaz\tqux\n'))
+    result = train.extract_features(entries_file_path, 1)
+    self.assertEqual(result, ['foo', 'bar', 'baz'])
+
 if __name__ == '__main__':
   unittest.main()

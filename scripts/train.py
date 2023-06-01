@@ -45,6 +45,29 @@ class Result(NamedTuple):
   fscore: float
 
 
+def extract_features(data_path: str, thres: int) -> typing.List[str]:
+  """Extracts a features list from the given encoded data file. This filters
+  out features whose number of occurrences does not exceed the threshold.
+
+  Args:
+    data_path (str): A file path for the encoded data file to extract features.
+      This is usually training data.
+    thres (int): A threshold to filter out features  whose number of
+      occurrences does not exceed the threshold.
+
+  Returns:
+    A list of features
+  """
+  counter: typing.Counter[str] = Counter()
+  with open(data_path) as f:
+    for row in f:
+      cols = row.strip().split('\t')
+      if len(cols) < 2:
+        continue
+      counter.update(cols[1:])
+  return [item[0] for item in counter.most_common() if item[1] > thres]
+
+
 def preprocess(
     entries_filename: str, feature_thres: int
 ) -> typing.Tuple[typing.Any, typing.Any, typing.Any, typing.List[str]]:
@@ -65,30 +88,25 @@ def preprocess(
     - Y (JAX array): The target output data.
     - features (List[str]): The list of features.
   """
-  features_counter: typing.Counter[str] = Counter()
-  X = []
+  features = extract_features(entries_filename, feature_thres)
+  feature_index = dict([(feature, i) for i, feature in enumerate(features)])
   Y = array.array('B')
+  X_rows = array.array('I')
+  X_cols = array.array('I')
   with open(entries_filename) as f:
+    i = 0
     for row in f:
       cols = row.strip().split('\t')
       if len(cols) < 2:
         continue
       Y.append(cols[0] == '1')
-      X.append(cols[1:])
-      features_counter.update(cols[1:])
-  features = [
-      item[0]
-      for item in features_counter.most_common()
-      if item[1] > feature_thres
-  ]
-  feature_index = dict([(feature, i) for i, feature in enumerate(features)])
-  rows = array.array('I')
-  cols = array.array('I')  # type: ignore
-  for i, x in enumerate(X):
-    hit_indices = [feature_index[feat] for feat in x if feat in feature_index]
-    rows.extend(i for _ in range(len(hit_indices)))
-    cols.extend(hit_indices)  # type: ignore
-  return jnp.asarray(rows), jnp.asarray(cols), jnp.asarray(
+      hit_indices = [
+          feature_index[feat] for feat in cols[1:] if feat in feature_index
+      ]
+      X_rows.extend(i for _ in range(len(hit_indices)))
+      X_cols.extend(hit_indices)
+      i += 1
+  return jnp.asarray(X_rows), jnp.asarray(X_cols), jnp.asarray(
       Y, dtype=bool), features
 
 
