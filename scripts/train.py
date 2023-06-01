@@ -108,8 +108,8 @@ def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
 def preprocess(
     train_data_path: str,
     feature_thres: int,
-    val_data_path: str,
-) -> typing.Tuple[typing.Any, typing.Any, typing.Any, typing.List[str]]:
+    val_data_path: typing.Optional[str],
+) -> typing.Tuple[Dataset, typing.List[str], typing.Optional[Dataset]]:
   """Loads entries and translates them into JAX arrays. The boolean matrix of
   the input data is represented by row indices and column indices of True values
   instead of the matrix itself for memory efficiency, assuming the matrix is
