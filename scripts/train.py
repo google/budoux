@@ -46,23 +46,26 @@ class Result(NamedTuple):
 
 
 class Dataset(NamedTuple):
-  # Row indices of True values in the input data.
+  """A dataset tuple.
+
+  X_rows (jax.Array): Row indices of True values in the input data.
+  X_cols (jax.Array): Column indices of True values in the input data.
+  Y (jax.Array): The target output.
+  """
   X_rows: jax.Array
-  # Column indices of True values in the input data.
   X_cols: jax.Array
-  # The target output.
   Y: jax.Array
 
 
 def extract_features(data_path: str, thres: int) -> typing.List[str]:
-  """Extracts a features list from the given encoded data file. This filters
-  out features whose number of occurrences does not exceed the threshold.
+  """Extracts a features list from the given encoded data file. This filters out
+     features whose number of occurrences does not exceed the threshold.
 
   Args:
-    data_path (str): A file path for the encoded data file to extract features.
-      This is usually training data.
-    thres (int): A threshold to filter out features  whose number of
-      occurrences does not exceed the threshold.
+    data_path (str): The path to the encoded data file that contains the
+      features to be extracted, which is typically a training data file.
+    thres (int): A threshold to filter out features  whose number of occurrences
+      does not exceed the threshold.
 
   Returns:
     A list of features
@@ -108,7 +111,7 @@ def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
 def preprocess(
     train_data_path: str,
     feature_thres: int,
-    val_data_path: typing.Optional[str],
+    val_data_path: typing.Optional[str] = None,
 ) -> typing.Tuple[Dataset, typing.List[str], typing.Optional[Dataset]]:
   """Loads entries and translates them into JAX arrays. The boolean matrix of
   the input data is represented by row indices and column indices of True values
@@ -116,23 +119,22 @@ def preprocess(
   highly sparse. Row and column indices are not guaranteed to be sorted.
 
   Args:
-    entries_filename (str): A file path to the entries file.
-    feature_thres (str): A threshold to filter out features whose frequency is
-      below the given value.
+    train_data_path (str): A file path to the training data file.
+    feature_thres (str): A threshold to filter out features whose number of
+      occurances does not exceed the value.
+    val_data_path (str, optional): A file path to the validation data file.
 
   Returns:
     A tuple of following items:
-    - rows (JAX array): Row indices of True values in the input data.
-    - cols (JAX array): Column indices of True values in the input data.
-    - Y (JAX array): The target output data.
+    - train_dataset (Dataset): The training dataset.
     - features (List[str]): The list of features.
+    - val_dataset (Optional[Dataset]): The validation dataset.
+        This becomes None if val_data_path is None.
   """
   features = extract_features(train_data_path, feature_thres)
   feature_index = dict((feature, i) for i, feature in enumerate(features))
   train_dataset = load_dataset(train_data_path, feature_index)
-  val_dataset = None
-  if val_data_path:
-    val_dataset = load_dataset(val_data_path, feature_index)
+  val_dataset = load_dataset(val_data_path, feature_index) if val_data_path else None
   return train_dataset, features, val_dataset
 
 
@@ -233,20 +235,14 @@ def update(
   return w, scores, best_feature_index, score
 
 
-def fit(rows_train: npt.NDArray[np.int32], cols_train: npt.NDArray[np.int32],
-        rows_test: npt.NDArray[np.int32], cols_test: npt.NDArray[np.int32],
-        Y_train: npt.NDArray[np.bool_], Y_test: npt.NDArray[np.bool_],
+def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
         features: typing.List[str], iters: int, weights_filename: str,
         log_filename: str, out_span: int) -> typing.Any:
   """Trains an AdaBoost binary classifier.
 
   Args:
-    row_train (numpy.ndarray): Row indices of True values in the training input data.
-    col_train (numpy.ndarray): Column indices of True values in the training input data.
-    row_test (numpy.ndarray): Row indices of True values in the test input data.
-    col_test (numpy.ndarray): Column indices of True values in the test input data.
-    Y_train (numpy.ndarray): The training target output.
-    Y_test (numpy.ndarray): The test target output.
+    dataset_train (Dataset): A training dataset.
+    dataset_val (Optional[Dataset]): A validation dataset.
     features (List[str]): Features, which correspond to the columns of entries.
     iters (int): A number of training iterations.
     weights_filename (str): A file path to write the learned weights.
@@ -260,53 +256,68 @@ def fit(rows_train: npt.NDArray[np.int32], cols_train: npt.NDArray[np.int32],
     f.write('')
   with open(log_filename, 'w') as f:
     f.write(
-        'iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore\t'
-        'test_accuracy\ttest_precision\ttest_recall\ttest_fscore\n')
+        'iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore')
+    if dataset_val:
+      f.write(
+          '\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore')
+    f.write('\n')
   print('Outputting learned weights to %s ...' % (weights_filename))
 
   M = len(features)
   scores = jnp.zeros(M)
   feature_score_buffer: typing.List[typing.Tuple[str, float]] = []
-  N_train = Y_train.shape[0]
-  N_test = Y_test.shape[0]
+  N_train = dataset_train.Y.shape[0]
+  N_test = dataset_val.Y.shape[0] if dataset_val else 0
   w = jnp.ones(N_train) / N_train
 
   def output_progress(t: int) -> None:
-    print('=== %s ===' % t)
     with open(weights_filename, 'a') as f:
       f.write('\n'.join('%s\t%.6f' % p for p in feature_score_buffer) + '\n')
     feature_score_buffer.clear()
-    pred_train = pred(scores, rows_train, cols_train, N_train)
-    pred_test = pred(scores, rows_test, cols_test, N_test)
-    metrics_train = get_metrics(pred_train, Y_train)
-    metrics_test = get_metrics(pred_test, Y_test)
+
+    print('=== %s ===' % t)
     print()
-    print('train accuracy:\t%.5f' % metrics_train.accuracy)
-    print('train prec.:\t%.5f' % metrics_train.precision)
-    print('train recall:\t%.5f' % metrics_train.recall)
-    print('train fscore:\t%.5f' % metrics_train.fscore)
-    print()
-    print('test accuracy:\t%.5f' % metrics_test.accuracy)
-    print('test prec.:\t%.5f' % metrics_test.precision)
-    print('test recall:\t%.5f' % metrics_test.recall)
-    print('test fscore:\t%.5f' % metrics_test.fscore)
-    print()
+
     with open(log_filename, 'a') as f:
-      f.write('%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n' % (
+      pred_train = pred(scores, dataset_train.X_rows, dataset_train.X_cols,
+                        N_train)
+      metrics_train = get_metrics(pred_train, dataset_train.Y)
+      print('train accuracy:\t%.5f' % metrics_train.accuracy)
+      print('train prec.:\t%.5f' % metrics_train.precision)
+      print('train recall:\t%.5f' % metrics_train.recall)
+      print('train fscore:\t%.5f' % metrics_train.fscore)
+      print()
+      f.write('%d\t%.5f\t%.5f\t%.5f\t%.5f' % (
           t,
           metrics_train.accuracy,
           metrics_train.precision,
           metrics_train.recall,
           metrics_train.fscore,
-          metrics_test.accuracy,
-          metrics_test.precision,
-          metrics_test.recall,
-          metrics_test.fscore,
       ))
 
+      if dataset_val:
+        pred_test = pred(scores, dataset_val.X_rows, dataset_val.X_cols, N_test)
+        metrics_test = get_metrics(pred_test, dataset_val.Y)
+        print('test accuracy:\t%.5f' % metrics_test.accuracy)
+        print('test prec.:\t%.5f' % metrics_test.precision)
+        print('test recall:\t%.5f' % metrics_test.recall)
+        print('test fscore:\t%.5f' % metrics_test.fscore)
+        print()
+
+        f.write('\t%.5f\t%.5f\t%.5f\t%.5f' % (
+            metrics_test.accuracy,
+            metrics_test.precision,
+            metrics_test.recall,
+            metrics_test.fscore,
+        ))
+
+      f.write('\n')
+
   for t in range(iters):
-    w, scores, best_feature_index, score = update(w, scores, rows_train,
-                                                  cols_train, Y_train)
+    w, scores, best_feature_index, score = update(w, scores,
+                                                  dataset_train.X_rows,
+                                                  dataset_train.X_cols,
+                                                  dataset_train.Y)
     w.block_until_ready()
     feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))
@@ -376,9 +387,10 @@ def main() -> None:
   out_span = int(args.out_span)
   val_data: typing.Optional[str] = args.val_data
 
-  dataset_train, features, dataset_val = preprocess(data_filename, feature_thres, val_data)
-  fit(X_rows_train, X_cols_train, X_rows_test, X_cols_test, Y_train, Y_test,
-      features, iterations, weights_filename, log_filename, out_span)
+  dataset_train, features, dataset_val = preprocess(data_filename,
+                                                    feature_thres, val_data)
+  fit(dataset_train, dataset_val, features, iterations, weights_filename,
+      log_filename, out_span)
   print('Training done. Export the model by passing %s to build_model.py' %
         (weights_filename))
 
