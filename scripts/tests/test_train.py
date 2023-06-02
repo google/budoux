@@ -127,8 +127,7 @@ class TestPreprocess(unittest.TestCase):
                '1\tfoo\tbar\tbaz\n'
                '1\tbar\tfoo\n'
                '-1\tbaz\tqux\n'))
-    train_dataset, features, val_dataset = train.preprocess(
-        train_data_path, 1)
+    train_dataset, features, val_dataset = train.preprocess(train_data_path, 1)
     self.assertEqual(features, ['foo', 'bar', 'baz'])
     self.assertEqual(train_dataset.Y.tolist(), [True, False, True, True, False])
     self.assertEqual(train_dataset.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])

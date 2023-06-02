@@ -134,7 +134,8 @@ def preprocess(
   features = extract_features(train_data_path, feature_thres)
   feature_index = dict((feature, i) for i, feature in enumerate(features))
   train_dataset = load_dataset(train_data_path, feature_index)
-  val_dataset = load_dataset(val_data_path, feature_index) if val_data_path else None
+  val_dataset = load_dataset(val_data_path,
+                             feature_index) if val_data_path else None
   return train_dataset, features, val_dataset
 
 
@@ -255,11 +256,9 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
   with open(weights_filename, 'w') as f:
     f.write('')
   with open(log_filename, 'w') as f:
-    f.write(
-        'iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore')
+    f.write('iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore')
     if dataset_val:
-      f.write(
-          '\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore')
+      f.write('\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore')
     f.write('\n')
   print('Outputting learned weights to %s ...' % (weights_filename))
 
@@ -368,9 +367,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       type=int,
       default=DEFAULT_OUT_SPAN)
   parser.add_argument(
-      '--val-data',
-      help='File path for the encoded validation data.',
-      type=str)
+      '--val-data', help='File path for the encoded validation data.', type=str)
   if test is None:
     return parser.parse_args()
   else:
