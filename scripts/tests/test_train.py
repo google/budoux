@@ -20,7 +20,6 @@ import tempfile
 import typing
 import unittest
 
-import numpy as np
 from jax import numpy as jnp
 
 # module hack
@@ -138,15 +137,15 @@ class TestPreprocess(unittest.TestCase):
 class TestPred(unittest.TestCase):
 
   def test_standard_setup(self) -> None:
-    X = np.array([
+    X = jnp.array([
         [1, 1, 0],
         [1, 0, 1],
         [0, 1, 0],
         [0, 0, 1],
     ])
-    phis = np.array([0.4, 0.2, -0.3])
+    phis = jnp.array([0.4, 0.2, -0.3])
     N = X.shape[0]
-    rows, cols = np.where(X == 1)
+    rows, cols = jnp.where(X == 1)
     res = train.pred(phis, rows, cols, N)
     expected = [
         0.4 + 0.2 - (-0.3) > 0,
@@ -160,8 +159,8 @@ class TestPred(unittest.TestCase):
 class TestGetMetrics(unittest.TestCase):
 
   def test_standard_setup(self) -> None:
-    pred = np.array([0, 0, 1, 0, 0], dtype=bool)
-    target = np.array([1, 0, 1, 1, 1], dtype=bool)
+    pred = jnp.array([0, 0, 1, 0, 0], dtype=bool)
+    target = jnp.array([1, 0, 1, 1, 1], dtype=bool)
     result = train.get_metrics(pred, target)
     self.assertEqual(result.tp, 1)
     self.assertEqual(result.tn, 1)
@@ -176,7 +175,7 @@ class TestGetMetrics(unittest.TestCase):
 
 
 class TestUpdate(unittest.TestCase):
-  X = np.array([
+  X = jnp.array([
       [1, 0, 1, 0],
       [0, 1, 0, 0],
       [0, 0, 0, 0],
@@ -185,10 +184,10 @@ class TestUpdate(unittest.TestCase):
   ])
 
   def test_standard_setup1(self) -> None:
-    rows, cols = np.where(self.X == 1)
+    rows, cols = jnp.where(self.X == 1)
     M = self.X.shape[-1]
-    Y = np.array([1, 1, 0, 0, 1], dtype=bool)
-    w = np.array([0.1, 0.3, 0.1, 0.1, 0.4])
+    Y = jnp.array([1, 1, 0, 0, 1], dtype=bool)
+    w = jnp.array([0.1, 0.3, 0.1, 0.1, 0.4])
     scores = jnp.zeros(M)
     new_w, new_scores, best_feature_index, added_score = train.update(
         w, scores, rows, cols, Y)
@@ -250,8 +249,8 @@ class TestFit(unittest.TestCase):
       model.setdefault(weight[0], 0)
       model[weight[0]] += float(weight[1])
     self.assertEqual(scores.shape[0], len(features))
-    loaded_scores = [model.get(feature, 0) for feature in features]
-    self.assertTrue(np.all(np.isclose(scores, loaded_scores)))
+    loaded_scores = jnp.array([model.get(feature, 0) for feature in features])
+    self.assertTrue(jnp.all(jnp.isclose(scores, loaded_scores)))
     os.remove(weights_file_path)
     os.remove(log_file_path)
 

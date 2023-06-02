@@ -22,10 +22,8 @@ from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
-import numpy as np
-import numpy.typing as npt
 
-EPS = np.finfo(float).eps  # type: np.floating[typing.Any]
+EPS: float = jnp.finfo(float).eps
 DEFAULT_OUTPUT_NAME = 'weights.txt'
 DEFAULT_LOG_NAME = 'train.log'
 DEFAULT_FEATURE_THRES = 10
@@ -140,34 +138,33 @@ def preprocess(
 
 
 @partial(jax.jit, static_argnums=[3])
-def pred(scores: npt.NDArray[np.float32], rows: npt.NDArray[np.int32],
-         cols: npt.NDArray[np.int32], N: int) -> npt.NDArray[np.bool_]:
+def pred(scores: jax.Array, rows: jax.Array, cols: jax.Array,
+         N: int) -> jax.Array:
   """Predicts the target output from the learned scores and input entries.
 
   Args:
-    scores (numpy.ndarray): Contribution scores of features.
-    rows (numpy.ndarray): Row indices of True values in the input.
-    cols (numpy.ndarray): Column indices of True values in the input.
+    scores (jax.Array): Contribution scores of features.
+    rows (jax.Array): Row indices of True values in the input.
+    cols (jax.Array): Column indices of True values in the input.
     N (int): The number of input entries.
 
   Returns:
-    res (numpy.ndarray): A prediction of the target.
+    res (jax.Array): A prediction of the target.
   """
   # This is equivalent to scores.dot(2X - 1) = 2 * scores.dot(X) - scores.sum()
   # but in a sparse matrix-friendly way.
-  r: npt.NDArray[np.float32] = 2 * jax.ops.segment_sum(
-      scores.take(cols), rows, N) - scores.sum()
+  r: jax.Array = 2 * jax.ops.segment_sum(scores.take(cols), rows,
+                                         N) - scores.sum()
   return r > 0
 
 
 @jax.jit
-def get_metrics(pred: npt.NDArray[np.bool_],
-                actual: npt.NDArray[np.bool_]) -> Result:
+def get_metrics(pred: jax.Array, actual: jax.Array) -> Result:
   """Gets evaluation metrics from the prediction and the actual target.
 
   Args:
-    pred (numpy.ndarray): A prediction of the target.
-    actual (numpy.ndarray): The actual target.
+    pred (jax.Array): A prediction of the target.
+    actual (jax.Array): The actual target.
 
   Returns:
     result (Result): A result.
@@ -192,23 +189,21 @@ def get_metrics(pred: npt.NDArray[np.bool_],
 
 
 @jax.jit
-def update(
-    w: npt.NDArray[np.float32], scores: typing.Any, rows: npt.NDArray[np.int32],
-    cols: npt.NDArray[np.int32], Y: npt.NDArray[np.bool_]
-) -> typing.Tuple[typing.Any, typing.Any, int, float]:
+def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
+           Y: jax.Array) -> typing.Tuple[jax.Array, jax.Array, int, float]:
   """Calculates the new weight vector and the contribution scores.
 
   Args:
-    w (numpy.ndarray): A weight vector.
+    w (jax.Array): A weight vector.
     scores (JAX array): Contribution scores of features.
-    rows (numpy.ndarray): Row indices of True values in the input data.
-    cols (numpy.ndarray): Column indices of True values in the input data.
-    Y (numpy.ndarray): The target output.
+    rows (jax.Array): Row indices of True values in the input data.
+    cols (jax.Array): Column indices of True values in the input data.
+    Y (jax.Array): The target output.
 
 
   Returns:
     A tuple of following items:
-    - w (numpy.ndarray): The new weight vector.
+    - w (jax.Array): The new weight vector.
     - scores (JAX array): The new contribution scores.
     - best_feature_index (int): The index of the best feature.
     - score (float): The newly added score for the best feature.
@@ -238,7 +233,7 @@ def update(
 
 def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
         features: typing.List[str], iters: int, weights_filename: str,
-        log_filename: str, out_span: int) -> typing.Any:
+        log_filename: str, out_span: int) -> jax.Array:
   """Trains an AdaBoost binary classifier.
 
   Args:
@@ -251,7 +246,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
     out_span (int): Iteration span to output metics and weights.
 
   Returns:
-    scores (Any): The contribution scores.
+    scores (jax.Array): The contribution scores.
   """
   with open(weights_filename, 'w') as f:
     f.write('')
