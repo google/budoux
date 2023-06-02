@@ -369,7 +369,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       default=DEFAULT_OUT_SPAN)
   parser.add_argument(
       '--val-data',
-      help=f'File path for the encoded validation data.',
+      help='File path for the encoded validation data.',
       type=str)
   if test is None:
     return parser.parse_args()
