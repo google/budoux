@@ -137,9 +137,9 @@ line should be either 1 or -1, which indicates whether the data point is a
 positive example or a negative example. This is the target output $y$ that the
 machine learning model must eventually predict. Each line may have an arbitrary
 number of following items. These following items represent the features, which
-become the input $\mathbb{x}$ for the machine learning model.
+become the input $\mathbf{x}$ for the machine learning model.
 
-Let's see the mathematical notation for an input $\mathbb{x}$ and an output $y$
+Let's see the mathematical notation for an input $\mathbf{x}$ and an output $y$
 that derives from this file.
 If we look at the example output above, there are 11 unique features in the
 second column and beyond.
@@ -157,11 +157,11 @@ second column and beyond.
 1. UW5:候
 
 This means that each input can be represented as a 11-dimensional vector of
-features i.e. $\mathbb{x} = (x_1, \cdots, x_{11}) \in \{-1, +1\}^{11}$, where
+features i.e. $\mathbf{x} = (x_1, \cdots, x_{11}) \in \{-1, +1\}^{11}$, where
 each value becomes $+1$ if the corresponding feature is present in the line or
 $-1$ otherwise.
 Following this rule, the snippet above can be read as a list of inputs
-$\mathbb{x}$ and outputs $y$ as follows:
+$\mathbf{x}$ and outputs $y$ as follows:
 
 | $y$  | $(x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8, x_9, x_{10}, x_{11})$ |
 |------|------------------------------------------------|
@@ -170,7 +170,7 @@ $\mathbb{x}$ and outputs $y$ as follows:
 | $+1$ | $(-1, +1, -1, -1, -1, +1, +1, -1, +1, -1, +1)$ |
 
 The goal of our model training is to design a good function $f$ that predicts
-the output from the input, i.e. $y = f(\mathbb{x})$ with generalization ability.
+the output from the input, i.e. $y = f(\mathbf{x})$ with generalization ability.
 
 We're intentionally keeping the extracted features as simple as possible to make
 the entire library language-neutral and easy to port to other programming
@@ -243,14 +243,14 @@ training process.
 The values need to be aggregated by features to get the final weight scores.
 
 Let's see how the weights work in BudouX.
-The learned weights should be represented as a weight vector $\mathbb{w}$, which
+The learned weights should be represented as a weight vector $\mathbf{w}$, which
 should have the same length as the input vector (i.e. the number of features).
 If we take the example weight file above, the vector should be represented as:
 
-$
-\mathbb{w} = (-0.76, 0, 0, 0, 0, (1.68 + 0.86 + 0.77), 0, -0.73, 0, 0, 0) = (
+$$
+\mathbf{w} = (-0.76, 0, 0, 0, 0, (1.68 + 0.86 + 0.77), 0, -0.73, 0, 0, 0) = (
     -0.76, 0, 0, 0, 0, 3.31, 0, -0.73, 0, 0, 0)
-$
+$$
 
 Please note that the weight scores corresponding to the features that don't
 appear in the weight file become zero.
@@ -263,18 +263,18 @@ If the dot product's sign is positive, the output $y$ becomes $+1$ (positive),
 while it becomes $-1$ (negative) otherwise.
 In other words, BudouX does the binary classification with the equation below:
 
-$y = \text{sgn}(\mathbb{w}^\top \mathbb{x})$
+$$y = \text{sgn}(\mathbf{w}^\top \mathbf{x})$$
 
 where $\text{sgn}$ is a sign function that is represented as:
 
-$
+```math
 \text{sgn}(x) = \left\{
 \begin{array}{ll}
 +1 & (x > 0) \\
 -1 & (\text{otherwise})
 \end{array}
 \right.
-$
+```
 
 Most computations in `train.py` are written in [JAX](https://github.com/google/jax)
 to take advantage of just-in-time compilation and computational accelerators
@@ -355,33 +355,35 @@ the updated weight scores to a weight file.
 
 Here's an overview of the algorithm behind the fine-tuning script.
 As mentioned earlier, BudouX is essentially a binary classification model
-represented as $y = \text{sgn}(\mathbb{w}^\top \mathbb{x})$ where $\mathbb{x}$
-is an input vector, $\mathbb{w}$ is a weight vector, and $\text{sgn}$ is a sign
+represented as $y = \text{sgn}(\mathbf{w}^\top \mathbf{x})$ where $\mathbf{x}$
+is an input vector, $\mathbf{w}$ is a weight vector, and $\text{sgn}$ is a sign
 function.
 
 To make this model differentiable, we approximate the sign function with a
 sigmoid function, which represent the model as:
 
-$y = \text{sigmoid}(\mathbb{w}^\top \mathbb{x}), \ \text{sigmoid}(x) = (1 + \exp(-x))^{-1}$
+$$y = \text{sigmoid}(\mathbf{w}^\top \mathbf{x}), \ \text{sigmoid}(x) = (1 + \exp(-x))^{-1}$$
 
 Then we can define a cross entropy loss over the model, where $t$ represents the
 actual output.
 
-$L(t, y) = -t \log y -(1 - t) \log(1 - y)$
+$$L(t, y) = -t \log y -(1 - t) \log(1 - y)$$
 
-The fine-tuning script updates the weight $\mathbb{w}$ to minimize the mean cross
+The fine-tuning script updates the weight $\mathbf{w}$ to minimize the mean cross
 entropy loss with gradient descent with a learning rate of $\alpha > 0$ (the
 `--learning-rate` arg):
 
-$\mathbb{w} \leftarrow \mathbb{w} - \alpha \frac{d}{dw}\{
-    \frac{1}{N}\sum_{t_n, \mathbb{x}_n \in D} L(
-        t_n, \text{sigmoid}(\mathbb{w}^\top \mathbb{x}_n))\}$
+```math
+\mathbf{w} \leftarrow \mathbf{w} - \alpha \frac{d}{d\mathbf{w}}\{
+    \frac{1}{N}\sum_{t_n, \mathbf{x}_n \in D} L(
+        t_n, \text{sigmoid}(\mathbf{w}^\top \mathbf{x}_n))\}
+```
 
 where:
 
 - $D$ denotes a training dataset
 - $N$ denotes the number of examples included in $D$
-- $\mathbb{x}_n$ denotes the input of the $n$-th example.
+- $`\mathbf{x}_n`$ denotes the input of the $n$-th example.
 - $t_n$ denotes the target output of the $n$-th example.
 
 Please note that the weight vector reconstructed from the base model file doesn't
