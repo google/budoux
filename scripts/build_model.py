@@ -47,7 +47,7 @@ def aggregate_scores(
 
 
 def round_model(model: typing.Dict[str, typing.Dict[str, float]],
-                scale: int = 1000) -> typing.Dict[str, typing.Dict[str, int]]:
+                scale: int) -> typing.Dict[str, typing.Dict[str, int]]:
   """Rounds the scores in the model to integer after scaling.
 
   Args:
@@ -67,22 +67,47 @@ def round_model(model: typing.Dict[str, typing.Dict[str, float]],
   return model_rounded
 
 
-def main() -> None:
-  parser = argparse.ArgumentParser(description=__doc__)
+def parse_args(
+    test: typing.Optional[typing.List[str]] = None) -> argparse.Namespace:
+  """Parses commandline arguments.
+
+  Args:
+    test (typing.Optional[typing.List[str]], optional): Commandline args for
+      testing. Defaults to None.
+
+  Returns:
+    Parsed arguments (argparse.Namespace).
+  """
+  parser = argparse.ArgumentParser(
+      description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument(
       'weight_file', help='A file path for the learned weights.')
   parser.add_argument(
       '-o',
       '--outfile',
       help='A file path to export a model file. (default: model.json)',
-      default='model.json')
-  args = parser.parse_args()
+      default='model.json',
+      type=str)
+  parser.add_argument(
+      '--scale',
+      help='A scale factor for the output scores',
+      default=1000,
+      type=int)
+  if test is None:
+    return parser.parse_args()
+  else:
+    return parser.parse_args(test)
+
+
+def main() -> None:
+  args = parse_args()
   weights_filename = args.weight_file
   model_filename = args.outfile
+  scale = args.scale
   with open(weights_filename) as f:
     weights = f.readlines()
   model = aggregate_scores(weights)
-  model_rounded = round_model(model)
+  model_rounded = round_model(model, scale)
   with open(model_filename, 'w', encoding='utf-8') as f:
     json.dump(model_rounded, f, ensure_ascii=False, separators=(',', ':'))
   print('Model file is exported as', model_filename)
