@@ -100,3 +100,36 @@ class TestRoundModel(unittest.TestCase):
             'z': 2111
         }
     }, 'should remove insignificant scores lower than 1.')
+
+
+class TestArgParse(unittest.TestCase):
+
+  def test_cmdargs_invalid_option(self) -> None:
+    cmdargs = ['-v']
+    with self.assertRaises(SystemExit) as cm:
+      build_model.parse_args(cmdargs)
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_help(self) -> None:
+    cmdargs = ['-h']
+    with self.assertRaises(SystemExit) as cm:
+      build_model.parse_args(cmdargs)
+    self.assertEqual(cm.exception.code, 0)
+
+  def test_cmdargs_no_input(self) -> None:
+    with self.assertRaises(SystemExit) as cm:
+      build_model.parse_args([])
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_default(self) -> None:
+    output = build_model.parse_args(['weight.txt'])
+    self.assertEqual(output.weight_file, 'weight.txt')
+    self.assertEqual(output.outfile, 'model.json')
+    self.assertEqual(output.scale, 1000)
+
+  def test_cmdargs_with_scale(self) -> None:
+    output = build_model.parse_args(
+        ['weight.txt', '-o', 'foo.json', '--scale', '200'])
+    self.assertEqual(output.weight_file, 'weight.txt')
+    self.assertEqual(output.outfile, 'foo.json')
+    self.assertEqual(output.scale, 200)
