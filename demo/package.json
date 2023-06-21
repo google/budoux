@@ -4,8 +4,12 @@
   "description": "A demo app for BudouX",
   "main": "static/app.js",
   "scripts": {
-    "build": "esbuild src/app.ts --bundle --minify --outfile=static/app.js",
-    "watch": "esbuild src/app.ts --watch --bundle --minify --outfile=static/app.js",
+    "build:app": "esbuild src/app.ts --bundle --minify --outfile=static/app.js",
+    "build:worker": "esbuild src/worker.ts --bundle --minify --outfile=static/worker.js",
+    "build": "npm run build:app && npm run build:worker",
+    "watch:app": "esbuild src/app.ts --watch --bundle --minify --outfile=static/app.js",
+    "watch:worker": "esbuild src/worker.ts --watch --bundle --minify --outfile=static/worker.js",
+    "watch": "concurrently \"npm run watch:app\" \"npm run watch:worker\"",
     "serve": "http-server static",
     "dev": "concurrently \"npm run serve\" \"npm run watch\"",
     "start": "npm run dev"

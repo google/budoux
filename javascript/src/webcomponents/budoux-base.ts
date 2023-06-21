@@ -15,14 +15,14 @@
  */
 
 import {setInnerHtml} from '../dom.js';
-import {Parser} from '../parser.js';
+import {HTMLProcessingParser} from '../html_processor.js';
 
 /**
  * Base BudouX Web component.
  */
 export abstract class BudouXBaseElement extends HTMLElement {
   shadow: ShadowRoot;
-  parser: Parser;
+  parser: HTMLProcessingParser;
 
   /**
    * Base BudouX Web component constructor.
@@ -30,7 +30,7 @@ export abstract class BudouXBaseElement extends HTMLElement {
   constructor() {
     super();
 
-    this.parser = new Parser({});
+    this.parser = new HTMLProcessingParser({});
     this.shadow = this.attachShadow({mode: 'open'});
     const observer = new MutationObserver(this.sync.bind(this));
     observer.observe(this, {

@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-import {model as jaModel} from './data/models/ja.js';
-import {model as zhHansModel} from './data/models/zh-hans.js';
-import {model as zhHantModel} from './data/models/zh-hant.js';
-import {parseFromString} from './dom.js';
-import {HTMLProcessor} from './html_processor.js';
 import {sum} from './utils.js';
 
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
@@ -28,9 +23,17 @@ const NODETYPE = {
   TEXT: 3,
 };
 
+/**
+ * Base BudouX parser.
+ */
 export class Parser {
+  /** BudouX model data */
   model;
 
+  /**
+   * Constructs a BudouX parser.
+   * @param model A model data.
+   */
   constructor(model: {[key: string]: {[key: string]: number}}) {
     this.model = new Map(
       Object.entries(model).map(([k, v]) => [k, new Map(Object.entries(v))])
@@ -83,69 +86,4 @@ export class Parser {
     }
     return result;
   }
-
-  /**
-   * Applies markups for semantic line breaks to the given HTML element.
-   * @param parentElement The input element.
-   */
-  applyElement(parentElement: HTMLElement) {
-    const htmlProcessor = new HTMLProcessor(this, {
-      separator: parentElement.ownerDocument.createElement('wbr'),
-    });
-    htmlProcessor.applyToElement(parentElement);
-  }
-
-  /**
-   * Translates the given HTML string to another HTML string with markups
-   * for semantic line breaks.
-   * @param html An input html string.
-   * @returns The translated HTML string.
-   */
-  translateHTMLString(html: string) {
-    if (html === '') return html;
-    const doc = parseFromString(html);
-    if (Parser.hasChildTextNode(doc.body)) {
-      const wrapper = doc.createElement('span');
-      wrapper.append(...doc.body.childNodes);
-      doc.body.append(wrapper);
-    }
-    this.applyElement(doc.body.childNodes[0] as HTMLElement);
-    return doc.body.innerHTML;
-  }
 }
-
-/**
- * Loads a parser equipped with the default Japanese model.
- * @returns A parser with the default Japanese model.
- */
-export const loadDefaultJapaneseParser = () => {
-  return new Parser(jaModel);
-};
-
-/**
- * Loads a parser equipped with the default Simplified Chinese model.
- * @returns A parser with the default Simplified Chinese model.
- */
-export const loadDefaultSimplifiedChineseParser = () => {
-  return new Parser(zhHansModel);
-};
-
-/**
- * Loads a parser equipped with the default Traditional Chinese model.
- * @returns A parser with the default Traditional Chinese model.
- */
-export const loadDefaultTraditionalChineseParser = () => {
-  return new Parser(zhHantModel);
-};
-
-/**
- * Loads available default parsers.
- * @returns A map between available lang codes and their default parsers.
- */
-export const loadDefaultParsers = () => {
-  return new Map([
-    ['ja', loadDefaultJapaneseParser()],
-    ['zh-hans', loadDefaultSimplifiedChineseParser()],
-    ['zh-hant', loadDefaultTraditionalChineseParser()],
-  ]);
-};

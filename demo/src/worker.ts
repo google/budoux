@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2022 Google LLC
+ * Copyright 2023 Google LLC
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-import {loadDefaultTraditionalChineseParser} from '../index.js';
-import {BudouXBaseElement} from './budoux-base.js';
+import { Parser, jaModel, zhHansModel, zhHantModel } from 'budoux';
 
-/**
- * BudouX Traditional Chinese Web component.
- */
-export class BudouXTraditionalChineseElement extends BudouXBaseElement {
-  /**
-   * BudouX Traditional Chinese Web component constructor.
-   */
-  constructor() {
-    super();
-    this.parser = loadDefaultTraditionalChineseParser();
-  }
-}
+const parsers: { [key: string]: Parser } = {
+  'ja': new Parser(jaModel),
+  'zh-hans': new Parser(zhHansModel),
+  'zh-hant': new Parser(zhHantModel),
+};
 
-customElements.define('budoux-zh-hant', BudouXTraditionalChineseElement);
+onmessage = (e: MessageEvent) => {
+  const model: string = e.data['model'];
+  if (!Object.keys(parsers).includes(model)) return;
+  const parser = parsers[model];
+  const result = parser.parse(e.data['sentence']);
+  console.log('It works in Web Worker, too!', result);
+  postMessage(result);
+};

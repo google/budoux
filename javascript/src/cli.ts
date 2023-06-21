@@ -19,10 +19,10 @@ import * as path from 'path';
 import * as readline from 'readline';
 import {Command} from 'commander';
 import {
-  Parser,
+  HTMLProcessingParser,
   loadDefaultParsers,
   loadDefaultJapaneseParser,
-} from './parser.js';
+} from './index.js';
 
 const CLI_VERSION = '0.5.1';
 const defaultParsers = loadDefaultParsers();
@@ -104,7 +104,7 @@ export const cli = (argv: string[]) => {
  * @param args string array to parse. Array should have only one element.
  */
 const outputParsedTexts = (
-  parser: Parser,
+  parser: HTMLProcessingParser,
   html: boolean,
   delim: string,
   args: string[]
@@ -134,5 +134,5 @@ const outputParsedTexts = (
 const loadCustomParser = (modelPath: string) => {
   const file = readFileSync(path.resolve(modelPath)).toString();
   const model = JSON.parse(file);
-  return new Parser(model);
+  return new HTMLProcessingParser(model);
 };

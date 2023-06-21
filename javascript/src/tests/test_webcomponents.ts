@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {loadDefaultJapaneseParser} from '../parser.js';
+import {loadDefaultJapaneseParser} from '../index.js';
 import '../webcomponents/budoux-ja.js';
 
 const parser = loadDefaultJapaneseParser();

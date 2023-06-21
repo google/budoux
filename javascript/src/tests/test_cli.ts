@@ -18,7 +18,7 @@ import {cli} from '../cli.js';
 import {execFile, ExecFileException} from 'child_process';
 import * as path from 'path';
 import stream from 'stream';
-import {loadDefaultParsers} from '../parser.js';
+import {loadDefaultParsers} from '../index.js';
 
 type execFileCallBack = {
   error: ExecFileException | null;

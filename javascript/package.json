@@ -12,6 +12,10 @@
   "bin": {
     "budoux": "./bin/budoux.js"
   },
+  "sideEffects": [
+    "./module/webcomponents/*",
+    "./module/tests/*"
+  ],
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
     "build:cjs": "tsc && cp -r src/tests/models/ dist/tests/models/",
