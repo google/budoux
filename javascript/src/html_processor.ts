@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {applyWrapStyle} from './dom.js';
+import {applyWrapStyle, parseFromString} from './dom.js';
 import {Parser} from './parser.js';
 import {win} from './win.js';
 
@@ -222,16 +222,7 @@ export interface HTMLProcessorOptions {
 }
 
 /**
- * Applies the BudouX to the given DOM.
- *
- * This class has following advantages over
- * {@link Parser.applyElement}.
- * * It recognizes paragraphs and applies the BudouX for each
- *   paragraph separately.
- * * It can customize how to insert break opportunities.
- *   See {@link separator} for more details.
- * * It is generally faster and more memory efficient, but the
- *   code size is larger.
+ * Adds HTML processing support to a BudouX {@link Parser}.
  */
 export class HTMLProcessor {
   private parser_: Parser;
@@ -457,3 +448,49 @@ export class HTMLProcessor {
     applyWrapStyle(element);
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T = {}> = new (...args: any[]) => T;
+
+/**
+ * Mixin to add HTML processing support to {@link Parser}.
+ * @param Base A base {@link Parser} class
+ * @returns An extended {@link Parser} class with {@link HTMLProcessor}.
+ */
+function HTMLProcessing<TBase extends Constructor<Parser>>(Base: TBase) {
+  return class _HTMLProcessable extends Base {
+    /**
+     * Applies markups for semantic line breaks to the given HTML element.
+     * @param parentElement The input element.
+     */
+    applyElement(parentElement: HTMLElement) {
+      const htmlProcessor = new HTMLProcessor(this, {
+        separator: parentElement.ownerDocument.createElement('wbr'),
+      });
+      htmlProcessor.applyToElement(parentElement);
+    }
+
+    /**
+     * Translates the given HTML string to another HTML string with markups
+     * for semantic line breaks.
+     * @param html An input html string.
+     * @returns The translated HTML string.
+     */
+    translateHTMLString(html: string) {
+      if (html === '') return html;
+      const doc = parseFromString(html);
+      if (Parser.hasChildTextNode(doc.body)) {
+        const wrapper = doc.createElement('span');
+        wrapper.append(...doc.body.childNodes);
+        doc.body.append(wrapper);
+      }
+      this.applyElement(doc.body.childNodes[0] as HTMLElement);
+      return doc.body.innerHTML;
+    }
+  };
+}
+
+/**
+ * BudouX {@link Parser} with HTML processing support.
+ */
+export class HTMLProcessingParser extends HTMLProcessing(Parser) {}

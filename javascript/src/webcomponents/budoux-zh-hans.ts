@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {loadDefaultSimplifiedChineseParser} from '../parser.js';
+import {loadDefaultSimplifiedChineseParser} from '../index.js';
 import {BudouXBaseElement} from './budoux-base.js';
 
 /**

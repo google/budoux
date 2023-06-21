@@ -14,5 +14,47 @@
  * limitations under the License.
  */
 
-export * from './parser.js';
-export {HTMLProcessor} from './html_processor.js';
+import {model as jaModel} from './data/models/ja.js';
+import {model as zhHansModel} from './data/models/zh-hans.js';
+import {model as zhHantModel} from './data/models/zh-hant.js';
+import {HTMLProcessingParser} from './html_processor.js';
+
+export {Parser} from './parser.js';
+export {HTMLProcessor, HTMLProcessingParser} from './html_processor.js';
+export {jaModel, zhHansModel, zhHantModel};
+
+/**
+ * Loads a parser equipped with the default Japanese model.
+ * @returns A parser with the default Japanese model.
+ */
+export const loadDefaultJapaneseParser = () => {
+  return new HTMLProcessingParser(jaModel);
+};
+
+/**
+ * Loads a parser equipped with the default Simplified Chinese model.
+ * @returns A parser with the default Simplified Chinese model.
+ */
+export const loadDefaultSimplifiedChineseParser = () => {
+  return new HTMLProcessingParser(zhHansModel);
+};
+
+/**
+ * Loads a parser equipped with the default Traditional Chinese model.
+ * @returns A parser with the default Traditional Chinese model.
+ */
+export const loadDefaultTraditionalChineseParser = () => {
+  return new HTMLProcessingParser(zhHantModel);
+};
+
+/**
+ * Loads available default parsers.
+ * @returns A map between available lang codes and their default parsers.
+ */
+export const loadDefaultParsers = () => {
+  return new Map([
+    ['ja', loadDefaultJapaneseParser()],
+    ['zh-hans', loadDefaultSimplifiedChineseParser()],
+    ['zh-hant', loadDefaultTraditionalChineseParser()],
+  ]);
+};

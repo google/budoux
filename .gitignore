@@ -14,6 +14,7 @@ build/
 # JavaScript related files
 node_modules
 demo/static/app.js
+demo/static/worker.js
 javascript/bundle
 javascript/dist
 javascript/module

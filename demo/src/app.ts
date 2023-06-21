@@ -32,7 +32,10 @@ const fontSizeElement = document.getElementById('fontsize') as HTMLInputElement;
 const brCheckElement = document.getElementById('wbr2br') as HTMLInputElement;
 const modelSelectElement = document.getElementById('model') as HTMLSelectElement;
 const url = new URL(document.location.href);
-
+const worker = new Worker('./worker.js');
+worker.onmessage = (e: MessageEvent) => {
+  console.log('response from worker:', e);
+};
 
 declare global {
   interface Window {
@@ -48,6 +51,7 @@ declare global {
 const run = () => {
   outputContainerElement.innerHTML = window.DOMPurify.sanitize(inputTextElement.value);
   const model = modelSelectElement.value;
+  worker.postMessage({'sentence': outputContainerElement.textContent, 'model': model});
   const parser = parsers.get(model);
   if (!parser) return;
   parser.applyElement(outputContainerElement);
