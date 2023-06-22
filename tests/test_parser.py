@@ -115,8 +115,7 @@ class TestDefaultParser(unittest.TestCase):
         '世界中の',
         '人が',
         'アクセスできて',
-        '使えるように',
-        'する',
+        '使えるようにする',
         'ことです。',
     ])
 
