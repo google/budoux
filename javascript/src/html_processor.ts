@@ -35,7 +35,7 @@ const DomAction = {
   Skip: 2,
   Break: 3,
 } as const;
-type DomAction = typeof DomAction[keyof typeof DomAction];
+type DomAction = (typeof DomAction)[keyof typeof DomAction];
 
 /**
  * Determines the action from an element name, as defined in
