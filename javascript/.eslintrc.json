@@ -26,10 +26,7 @@
         "object": "it",
         "property": "only"
       }
-    ],
-    "node/no-unpublished-import": ["error", {
-      "allowModules": ["jasmine"]
-    }]
+    ]
   },
   "overrides": [
     {
