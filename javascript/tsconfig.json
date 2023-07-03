@@ -1,10 +1,15 @@
 {
-  "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "lib": ["es6", "dom", "dom.iterable"],
     "target": "es2017",
     "module": "commonjs",
     "moduleResolution": "node",
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "pretty": true,
     "resolveJsonModule": true,
     "declaration": true,
     "sourceMap": true,
@@ -14,5 +19,8 @@
     "skipLibCheck": true,
     "outDir": "./dist"
   },
+  "exclude": [
+    "node_modules"
+  ],
   "include": ["src/**/*.ts"]
 }

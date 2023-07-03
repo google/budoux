@@ -35,8 +35,8 @@
     "test:cli-version": "node ./scripts/check-cli-version.js",
     "test:jasmine": "jasmine dist/tests/index.node.js",
     "test:karma": "karma start",
-    "lint": "gts lint",
-    "fix": "gts fix"
+    "lint": "eslint src/** --no-error-on-unmatched-pattern",
+    "fix": "eslint src/** --no-error-on-unmatched-pattern --fix"
   },
   "author": "Shuhei Iitsuka",
   "license": "Apache-2.0",
@@ -49,7 +49,7 @@
     "@types/jsdom": "^21.1.1",
     "@types/node": "^20.3.3",
     "esbuild": "^0.18.11",
-    "gts": "^4.0.0",
+    "eslint": "^8.44.0",
     "jasmine": "^5.0.2",
     "jasmine-core": "^5.0.1",
     "karma": "^6.4.2",
