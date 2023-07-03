@@ -5,16 +5,10 @@
 
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: "/"
-    schedule:
-      interval: "daily"
-    open-pull-requests-limit: 10
   - package-ecosystem: pip
-    directory: "/"
+    directory: /
     schedule:
-      interval: "daily"
-    open-pull-requests-limit: 10
+      interval: daily
 
   - package-ecosystem: github-actions
     directory: /
