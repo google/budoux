@@ -77,7 +77,7 @@ jobs:
 
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: markdownlint
-        uses: nosborn/github-action-markdown-cli@018fc8b964d4d364519e7cbcda29b6b9bf3f0ba3
+        uses: nosborn/github-action-markdown-cli@9b5e871c11cc0649c5ac2526af22e23525fa344d
         with:
           files: '**/*.md'
           config_file: .markdownlint.yaml
