@@ -78,7 +78,7 @@ describe('HTMLProcessor.applyToElement', () => {
 describe('HTMLProcessor.applyToElement.separator.node', () => {
   it('should clone separator element deeply', () => {
     const doc = win.document;
-    setInnerHtml(doc.body, '<div>今日は良い天気</div>');
+    setInnerHtml(doc.body, '<div>今日は良い天気です</div>');
     const separator = doc.createElement('span');
     separator.style.whiteSpace = 'normal';
     separator.textContent = '\u200B';
@@ -90,7 +90,7 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
     expect(doc.body.innerHTML).toEqual(
       '<div class="applied">今日は' +
         '<span style="white-space: normal;">\u200B</span>良い' +
-        '<span style="white-space: normal;">\u200B</span>天気</div>'
+        '<span style="white-space: normal;">\u200B</span>天気です</div>'
     );
   });
 });
