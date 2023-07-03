@@ -25,7 +25,7 @@ jobs:
       - run: npm run build
         working-directory: ./demo
       - name: Publish Demo
-        uses: peaceiris/actions-gh-pages@068dc23d9710f1ba62e86896f84735d869951305
+        uses: peaceiris/actions-gh-pages@373f7f263a76c20808c831209c920827a82a2847
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
