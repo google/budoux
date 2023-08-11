@@ -30,10 +30,11 @@ const NodeType = {
 };
 
 const DomAction = {
-  Inline: 0,
-  Block: 1,
-  Skip: 2,
-  Break: 3,
+  Inline: 0, // An inline content, becomes a part of a paragraph.
+  Block: 1, // A nested paragraph.
+  Skip: 2, // Skip the content. The content before and after are connected.
+  Break: 3, // A forced break. The content before and after become paragraphs.
+  NoBreak: 4, // The content provides context, but it's not breakable.
 } as const;
 type DomAction = (typeof DomAction)[keyof typeof DomAction];
 
@@ -90,6 +91,10 @@ const domActions: {[name: string]: DomAction} = {
   IFRAME: DomAction.Skip,
   TIME: DomAction.Skip,
   VAR: DomAction.Skip,
+
+  // Deprecated, but supported in all browsers.
+  // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/nobr
+  NOBR: DomAction.NoBreak,
 };
 
 const defaultBlockElements = new Set([
@@ -163,7 +168,7 @@ function actionForElement(element: Element): DomAction {
     switch (style.whiteSpace) {
       case 'nowrap':
       case 'pre':
-        return DomAction.Skip;
+        return DomAction.NoBreak;
     }
 
     const display = style.display;
@@ -171,11 +176,76 @@ function actionForElement(element: Element): DomAction {
       return display === 'inline' ? DomAction.Inline : DomAction.Block;
     // `display` is an empty string if the element is not connected.
   }
+
   // Use the built-in rules if the `display` property is empty, or if
   // `getComputedStyle` is missing (e.g., jsdom.)
   return defaultBlockElements.has(nodeName)
     ? DomAction.Block
     : DomAction.Inline;
+}
+
+/**
+ * Represents a node in {@link Paragraph}.
+ *
+ * It wraps a {@link Text} or a {@link string}.
+ *
+ * A {@link string} provides the context for the parser, but it can't be split.
+ */
+export class NodeOrText {
+  nodeOrText: Text | string;
+  chunks: string[] = [];
+
+  constructor(nodeOrText: Text | string) {
+    this.nodeOrText = nodeOrText;
+  }
+
+  get isString(): boolean {
+    return typeof this.nodeOrText === 'string';
+  }
+  get canSplit(): boolean {
+    return !this.isString;
+  }
+  get text(): string | null {
+    return this.isString
+      ? (this.nodeOrText as string)
+      : (this.nodeOrText as Text).nodeValue;
+  }
+  get length(): number {
+    return this.text?.length ?? 0;
+  }
+
+  /**
+   * Split the {@link Text} in the same way as the {@link chunks}.
+   * Joining all {@link chunks} must be equal to {@link text}.
+   */
+  split(separator: string | Node) {
+    const chunks = this.chunks;
+    assert(chunks.length === 0 || chunks.join('') === this.text);
+    if (chunks.length <= 1) return;
+    assert(this.canSplit);
+    const node = this.nodeOrText as Text;
+    if (typeof separator === 'string') {
+      // If the `separator` is a string, insert it at each boundary.
+      node.nodeValue = chunks.join(separator);
+      return;
+    }
+
+    // Otherwise create a `Text` node for each chunk, with the separator node
+    // between them, and replace the `node` with them.
+    const document = node.ownerDocument;
+    let nodes = [];
+    for (const chunk of chunks) {
+      if (chunk) nodes.push(document.createTextNode(chunk));
+      // Add a separator between chunks. To simplify the logic, add a separator
+      // after each chunk, then remove the last one.
+      // To avoid `cloneNode` for the temporary one that is going to be removed,
+      // add `null` as a marker, then replace them with `cloneNode` later.
+      nodes.push(null);
+    }
+    nodes.pop();
+    nodes = nodes.map(n => (n ? n : separator.cloneNode(true)));
+    node.replaceWith(...nodes);
+  }
 }
 
 /**
@@ -188,14 +258,17 @@ function actionForElement(element: Element): DomAction {
  */
 class Paragraph {
   element: HTMLElement;
-  textNodes: Text[] = [];
+  nodes: NodeOrText[] = [];
 
   constructor(element: HTMLElement) {
     this.element = element;
   }
 
-  hasText(): boolean {
-    return this.textNodes.length > 0;
+  isEmpty(): boolean {
+    return this.nodes.length === 0;
+  }
+  get text(): string {
+    return this.nodes.map(node => node.text).join('');
   }
 }
 
@@ -251,7 +324,7 @@ export class HTMLProcessor {
    */
   applyToElement(element: HTMLElement) {
     for (const block of this.getBlocks(element)) {
-      assert(block.hasText());
+      assert(!block.isEmpty());
       this.applyToParagraph(block);
     }
   }
@@ -275,9 +348,9 @@ export class HTMLProcessor {
     if (action === DomAction.Skip) return;
 
     if (action === DomAction.Break) {
-      if (parent && parent.hasText()) {
+      if (parent && !parent.isEmpty()) {
         yield parent;
-        parent.textNodes = [];
+        parent.nodes = [];
       }
       assert(!element.firstChild);
       return;
@@ -285,7 +358,11 @@ export class HTMLProcessor {
 
     // Determine if this element creates a new inline formatting context, or if
     // this element belongs to the parent inline formatting context.
-    assert(action === DomAction.Block || action === DomAction.Inline);
+    assert(
+      action === DomAction.Block ||
+        action === DomAction.Inline ||
+        action === DomAction.NoBreak
+    );
     const isNewBlock = !parent || action === DomAction.Block;
     const block = isNewBlock ? new Paragraph(element) : parent;
 
@@ -298,13 +375,20 @@ export class HTMLProcessor {
             yield childBlock;
           break;
         case NodeType.TEXT_NODE:
-          block.textNodes.push(child as Text);
+          if (action === DomAction.NoBreak) {
+            const text = child.nodeValue;
+            if (text) {
+              block.nodes.push(new NodeOrText(text));
+            }
+            break;
+          }
+          block.nodes.push(new NodeOrText(child as Text));
           break;
       }
     }
 
     // Apply if this is an inline formatting context.
-    if (isNewBlock && block.hasText()) yield block;
+    if (isNewBlock && !block.isEmpty()) yield block;
   }
 
   /**
@@ -312,10 +396,9 @@ export class HTMLProcessor {
    * @param paragraph The {@link Paragraph} to apply.
    */
   applyToParagraph(paragraph: Paragraph): void {
-    const textNodes = paragraph.textNodes;
-    assert(textNodes.length > 0);
-    const texts = textNodes.map(node => node.nodeValue);
-    const text = texts.join('');
+    assert(paragraph.nodes.length > 0);
+    if (!paragraph.nodes.some(node => node.canSplit)) return;
+    const text = paragraph.text;
     // No changes if whitespace-only.
     if (/^\s*$/.test(text)) return;
 
@@ -332,95 +415,84 @@ export class HTMLProcessor {
     // Add a sentinel to help iterating.
     boundaries.push(text.length + 1);
 
-    this.splitTextNodes(textNodes, boundaries);
+    this.splitNodes(paragraph.nodes, boundaries);
     this.applyBlockStyle(paragraph.element);
   }
 
   /**
-   * Split {@link Text} nodes at the specified boundaries.
-   * @param textNodes A list of {@link Text}.
+   * Split {@link NodeOrText} at the specified boundaries.
+   * @param nodes A list of {@link NodeOrText}.
    * @param boundaries A list of indices of the text to split at.
    */
-  splitTextNodes(textNodes: Text[], boundaries: number[]): void {
+  splitNodes(nodes: NodeOrText[], boundaries: number[]): void {
     assert(boundaries.length > 0);
-    const textLen = textNodes.reduce(
-      (sum, node) => sum + (node.nodeValue ? node.nodeValue.length : 0),
-      0
-    );
+    assert(boundaries.every((x, i) => i === 0 || x > boundaries[i - 1]));
+    const textLen = nodes.reduce((sum, node) => sum + node.length, 0);
     // The last boundary must be a sentinel.
     assert(boundaries[boundaries.length - 1] > textLen);
 
+    // Distribute `boundaries` to `node.chunks`.
     let boundary_index = 0;
     let boundary = boundaries[0];
     assert(boundary > 0);
     let nodeStart = 0; // the start index of the `nodeText` in the whole text.
-    for (const node of textNodes) {
-      const nodeText = node.nodeValue;
+    let lastNode: NodeOrText | null = null;
+    for (const node of nodes) {
+      assert(boundary >= nodeStart);
+      assert(node.chunks.length === 0);
+      const nodeText = node.text;
       if (!nodeText) continue;
+      const nodeLength = nodeText.length;
+      const nodeEnd = nodeStart + nodeLength;
+      assert(!lastNode || lastNode.canSplit);
+      if (!node.canSplit) {
+        // If there's a boundary between nodes and `lastNode.canSplit`, add a
+        // boundary to the end of the `lastNode`.
+        if (lastNode && boundary === nodeStart) {
+          if (lastNode.chunks.length === 0)
+            lastNode.chunks.push(lastNode.text ?? '');
+          lastNode.chunks.push('');
+        }
+        while (boundary < nodeEnd) {
+          boundary = boundaries[++boundary_index];
+        }
+        lastNode = null;
+        nodeStart = nodeEnd;
+        continue;
+      }
 
       // Check if the next boundary is in this `node`.
-      const nodeEnd = nodeStart + nodeText.length;
+      lastNode = node;
       if (boundary >= nodeEnd) {
         nodeStart = nodeEnd;
         continue;
       }
 
-      // Compute the boundary indices in the `nodeText`.
-      const chunks = [];
+      // Compute the boundary indices in the `node`.
+      const chunks = node.chunks;
       let chunkStartInNode = 0;
       while (boundary < nodeEnd) {
         const boundaryInNode = boundary - nodeStart;
         assert(boundaryInNode >= chunkStartInNode);
-        chunks.push(nodeText.substring(chunkStartInNode, boundaryInNode));
+        chunks.push(nodeText.slice(chunkStartInNode, boundaryInNode));
         chunkStartInNode = boundaryInNode;
-        ++boundary_index;
-        assert(boundaries[boundary_index] > boundary);
-        boundary = boundaries[boundary_index];
+        boundary = boundaries[++boundary_index];
       }
-      assert(chunks.length > 0);
-
-      // Add the rest of the `nodeText` and split the `node`.
-      if (chunkStartInNode < nodeText.length)
-        chunks.push(nodeText.substring(chunkStartInNode));
-      this.splitTextNode(node, chunks);
+      // Add the rest of the `nodeText`.
+      assert(chunkStartInNode < nodeLength);
+      chunks.push(nodeText.slice(chunkStartInNode));
 
       nodeStart = nodeEnd;
     }
-
     // Check if all nodes and boundaries are consumed.
     assert(nodeStart === textLen);
     assert(boundary_index < boundaries.length);
     assert(boundaries[boundary_index] >= textLen);
-  }
 
-  /**
-   * Split a {@link Text} node in the same way as the given chunks.
-   * @param node A {@link Text} node to split.
-   * @param chunks A list of {@link string} specifying where to split.
-   * Joining all {@link chunks} must be equal to {@link node.nodeValue}.
-   */
-  splitTextNode(node: Text, chunks: string[]): void {
-    assert(chunks.length > 1);
-    assert(node.nodeValue === chunks.join(''));
-
-    const separator = this.separator;
-    if (typeof separator === 'string') {
-      // If the `separator` is a string, insert it at each boundary.
-      node.nodeValue = chunks.join(separator);
-      return;
+    // `node.chunks` are finalized. Split them.
+    for (const node of nodes) {
+      node.split(this.separator);
     }
-
-    // Otherwise create a `Text` node for each chunk, with the separator node
-    // between them, and replace the `node` with them.
-    const document = node.ownerDocument;
-    let nodes = [];
-    for (const chunk of chunks) {
-      if (chunk) nodes.push(document.createTextNode(chunk));
-      nodes.push(null);
-    }
-    nodes.pop();
-    nodes = nodes.map(n => (n ? n : separator.cloneNode(true)));
-    node.replaceWith(...nodes);
   }
 
   /**
