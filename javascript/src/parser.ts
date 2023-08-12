@@ -59,9 +59,27 @@ export class Parser {
    * @param sentence An input sentence.
    * @returns The retrieved chunks.
    */
-  parse(sentence: string) {
+  parse(sentence: string): string[] {
     if (sentence === '') return [];
-    const result = [sentence[0]];
+    const boundaries = this.parseBoundaries(sentence);
+    const result = [];
+    let start = 0;
+    for (const boundary of boundaries) {
+      result.push(sentence.slice(start, boundary));
+      start = boundary;
+    }
+    result.push(sentence.slice(start));
+    return result;
+  }
+
+  /**
+   * Parses the input sentence and returns a list of boundaries.
+   *
+   * @param sentence An input sentence.
+   * @returns The list of boundaries.
+   */
+  parseBoundaries(sentence: string): number[] {
+    const result = [];
     const baseScore =
       -0.5 *
       sum([...this.model.values()].map(group => [...group.values()]).flat());
@@ -81,8 +99,7 @@ export class Parser {
       score += this.model.get('TW2')?.get(sentence.slice(i - 2, i + 1)) || 0;
       score += this.model.get('TW3')?.get(sentence.slice(i - 1, i + 2)) || 0;
       score += this.model.get('TW4')?.get(sentence.slice(i, i + 3)) || 0;
-      if (score > 0) result.push('');
-      result[result.length - 1] += sentence[i];
+      if (score > 0) result.push(i);
     }
     return result;
   }
