@@ -319,31 +319,18 @@ export class HTMLProcessor {
     // No changes if whitespace-only.
     if (/^\s*$/.test(text)) return;
 
-    // Split the text into a list of phrases.
-    const phrases = this.parser_.parse(text);
-    assert(phrases.length > 0);
-    assert(
-      phrases.reduce((sum, phrase) => sum + phrase.length, 0) === text.length
-    );
+    // Compute the phrase boundaries.
+    const boundaries = this.parser_.parseBoundaries(text);
     // No changes if single phrase.
-    if (phrases.length <= 1) return;
-
-    // Compute the boundary indices from the list of phrase strings.
-    const boundaries = [];
-    let char_index = 0;
-    for (const phrase of phrases) {
-      assert(phrase.length > 0);
-      char_index += phrase.length;
-      boundaries.push(char_index);
-    }
-
-    // The break opportunity at the end of a block is not needed. Instead of
-    // removing it, turn it to a sentinel for `splitTextNodesAtBoundaries` by
-    // making it larger than the text length.
+    if (boundaries.length <= 0) return;
+    // The boundaries should be between 1 and `text.length - 1` in the
+    // ascending order.
     assert(boundaries[0] > 0);
-    assert(boundaries[boundaries.length - 1] === text.length);
-    ++boundaries[boundaries.length - 1];
-    assert(boundaries.length > 1);
+    assert(boundaries.every((x, i) => i === 0 || x > boundaries[i - 1]));
+    assert(boundaries[boundaries.length - 1] < text.length);
+
+    // Add a sentinel to help iterating.
+    boundaries.push(text.length + 1);
 
     this.splitTextNodes(textNodes, boundaries);
     this.applyBlockStyle(paragraph.element);
