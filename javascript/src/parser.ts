@@ -86,19 +86,21 @@ export class Parser {
 
     for (let i = 1; i < sentence.length; i++) {
       let score = baseScore;
-      score += this.model.get('UW1')?.get(sentence.slice(i - 3, i - 2)) || 0;
-      score += this.model.get('UW2')?.get(sentence.slice(i - 2, i - 1)) || 0;
-      score += this.model.get('UW3')?.get(sentence.slice(i - 1, i)) || 0;
-      score += this.model.get('UW4')?.get(sentence.slice(i, i + 1)) || 0;
-      score += this.model.get('UW5')?.get(sentence.slice(i + 1, i + 2)) || 0;
-      score += this.model.get('UW6')?.get(sentence.slice(i + 2, i + 3)) || 0;
-      score += this.model.get('BW1')?.get(sentence.slice(i - 2, i)) || 0;
-      score += this.model.get('BW2')?.get(sentence.slice(i - 1, i + 1)) || 0;
-      score += this.model.get('BW3')?.get(sentence.slice(i, i + 2)) || 0;
-      score += this.model.get('TW1')?.get(sentence.slice(i - 3, i)) || 0;
-      score += this.model.get('TW2')?.get(sentence.slice(i - 2, i + 1)) || 0;
-      score += this.model.get('TW3')?.get(sentence.slice(i - 1, i + 2)) || 0;
-      score += this.model.get('TW4')?.get(sentence.slice(i, i + 3)) || 0;
+      /* eslint-disable */
+      score += this.model.get('UW1')?.get(sentence.substring(i - 3, i - 2)) || 0;
+      score += this.model.get('UW2')?.get(sentence.substring(i - 2, i - 1)) || 0;
+      score += this.model.get('UW3')?.get(sentence.substring(i - 1, i)) || 0;
+      score += this.model.get('UW4')?.get(sentence.substring(i, i + 1)) || 0;
+      score += this.model.get('UW5')?.get(sentence.substring(i + 1, i + 2)) || 0;
+      score += this.model.get('UW6')?.get(sentence.substring(i + 2, i + 3)) || 0;
+      score += this.model.get('BW1')?.get(sentence.substring(i - 2, i)) || 0;
+      score += this.model.get('BW2')?.get(sentence.substring(i - 1, i + 1)) || 0;
+      score += this.model.get('BW3')?.get(sentence.substring(i, i + 2)) || 0;
+      score += this.model.get('TW1')?.get(sentence.substring(i - 3, i)) || 0;
+      score += this.model.get('TW2')?.get(sentence.substring(i - 2, i + 1)) || 0;
+      score += this.model.get('TW3')?.get(sentence.substring(i - 1, i + 2)) || 0;
+      score += this.model.get('TW4')?.get(sentence.substring(i, i + 3)) || 0;
+      /* eslint-enable */
       if (score > 0) result.push(i);
     }
     return result;
