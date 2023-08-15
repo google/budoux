@@ -17,10 +17,15 @@ import argparse
 import functools
 import itertools
 import multiprocessing
+import os
 import sys
 import typing
 
-from budoux import utils
+# module hack
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(LIB_PATH))
+
+from budoux import utils  # noqa (module hack)
 
 ArgList = typing.Optional[typing.List[str]]
 DEFAULT_OUTPUT_FILENAME = 'encoded_data.txt'

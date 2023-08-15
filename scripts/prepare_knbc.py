@@ -26,10 +26,15 @@ $ python scripts/prepare_knbc.py KNBC_v1.0_090925_utf8 -o source_knbc.txt
 
 import argparse
 import os
+import sys
 import typing
 from html.parser import HTMLParser
 
-from budoux import utils
+# module hack
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(LIB_PATH))
+
+from budoux import utils  # noqa (module hack)
 
 
 class KNBCHTMLParser(HTMLParser):
