@@ -1,5 +1,7 @@
 name: Style Check
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   python-style-check:
     runs-on: ubuntu-latest
