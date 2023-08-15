@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -61,6 +62,7 @@ final class HTMLProcessor {
     private final StringBuilder output = new StringBuilder();
     private Integer scanIndex = 0;
     private boolean toSkip = false;
+    private Stack<Boolean> elementStack = new Stack<Boolean>();
 
     PhraseResolvingNodeVisitor(List<String> phrases) {
       this.phrasesJoined = String.join(Character.toString(SEP), phrases);
@@ -76,14 +78,20 @@ final class HTMLProcessor {
         return;
       }
       if (node instanceof Element) {
+        elementStack.push(toSkip);
         String attributesEncoded =
             node.attributes().asList().stream()
                 .map(attribute -> " " + attribute)
                 .collect(Collectors.joining(""));
-        output.append(String.format("<%s%s>", node.nodeName(), attributesEncoded));
-        if (skipNodes.contains(node.nodeName().toUpperCase(Locale.ENGLISH))) {
+        final String nodeName = node.nodeName();
+        if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
+          if (!toSkip && phrasesJoined.charAt(scanIndex) == SEP) {
+            output.append("<wbr>");
+            scanIndex++;
+          }
           toSkip = true;
         }
+        output.append(String.format("<%s%s>", nodeName, attributesEncoded));
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
         for (int i = 0; i < data.length(); i++) {
@@ -105,6 +113,8 @@ final class HTMLProcessor {
       if (node.nodeName().equals("body") || node instanceof TextNode) {
         return;
       }
+      assert node instanceof Element;
+      toSkip = elementStack.pop();
       output.append(String.format("</%s>", node.nodeName()));
     }
   }
