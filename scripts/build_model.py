@@ -38,7 +38,7 @@ def aggregate_scores(
     if not row:
       continue
     feature = row.split('\t')[0]
-    feature_group, _, feature_content = feature.partition(':')
+    feature_group, feature_content = feature.split(':', 1)
     score = float(row.split('\t')[1])
     decision_trees.setdefault(feature_group, {})
     decision_trees[feature_group].setdefault(feature_content, 0)
