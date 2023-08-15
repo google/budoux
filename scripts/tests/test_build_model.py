@@ -57,6 +57,14 @@ class TestAggregateScores(unittest.TestCase):
         }
     }, 'should skip blank lines.')
 
+  def test_colon(self) -> None:
+    weights = ['AB::\t8.123']
+    model = build_model.aggregate_scores(weights)
+    self.assertDictEqual(
+        model, {'AB': {
+            ':': 8.123
+        }}, 'should consider the first colon only as a delimiter.')
+
 
 class TestRoundModel(unittest.TestCase):
 
