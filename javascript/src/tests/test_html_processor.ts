@@ -19,6 +19,7 @@ import {
   HTMLProcessingParser,
   HTMLProcessor,
   HTMLProcessorOptions,
+  NodeOrText,
 } from '../html_processor.js';
 import {win} from '../win.js';
 import {parseFromString, setInnerHtml} from '../dom.js';
@@ -32,11 +33,12 @@ class MockHTMLProcessorBase extends HTMLProcessor {
 }
 
 describe('HTMLProcessor.applyToElement', () => {
-  function apply(html: string) {
-    const document = win.document;
+  const document = win.document;
+  const wbr = document.createElement('wbr');
+  function apply(html: string, separator: string | Node) {
     setInnerHtml(document.body, html);
     const processor = new MockHTMLProcessorBase({
-      separator: '/',
+      separator: separator,
       className: 'applied',
     });
     processor.applyToElement(document.body);
@@ -50,15 +52,15 @@ describe('HTMLProcessor.applyToElement', () => {
     },
     {
       in: '<div>今日は晴れです</div>',
-      out: '<div class="applied">今日は/晴れです</div>',
+      out: '<div class="applied">今日は|晴れです</div>',
     },
     {
       in: '<div><span>今日は</span>晴れです</div>',
-      out: '<div class="applied"><span>今日は</span>/晴れです</div>',
+      out: '<div class="applied"><span>今日は</span>|晴れです</div>',
     },
     {
       in: '<div><span>今日は晴れ</span>です</div>',
-      out: '<div class="applied"><span>今日は/晴れ</span>です</div>',
+      out: '<div class="applied"><span>今日は|晴れ</span>です</div>',
     },
     {
       in: '<code>今日は晴れです</code>',
@@ -66,11 +68,30 @@ describe('HTMLProcessor.applyToElement', () => {
     },
     {
       in: '<div>今日は<code>code</code>晴れです</div>',
-      out: '<div class="applied">今日は<code>code</code>/晴れです</div>',
+      out: '<div class="applied">今日は<code>code</code>|晴れです</div>',
+    },
+    {
+      in: '<div>今日は晴れ、今日は晴れ</div>',
+      out: '<div class="applied">今日は|晴れ、|今日は|晴れ</div>',
+    },
+    {
+      in: '<div>今日は<nobr>晴れ、今日は</nobr>晴れ</div>',
+      out: '<div class="applied">今日は|<nobr>晴れ、今日は</nobr>|晴れ</div>',
+    },
+    {
+      in: '<div>今日は<span style="white-space: nowrap">晴れ、今日は</span>晴れ</div>',
+      out: '<div class="applied">今日は|<span style="white-space: nowrap">晴れ、今日は</span>|晴れ</div>',
     },
   ]) {
+    // Test when the separator is an `Element`.
     it(test.in, () => {
-      expect(apply(test.in)).toEqual(test.out);
+      const out = test.out.replace(/\|/g, '<wbr>');
+      expect(apply(test.in, wbr)).toEqual(out);
+    });
+    // Test when the separator is a `string`.
+    it(test.in, () => {
+      const out = test.out.replace(/\|/g, '/');
+      expect(apply(test.in, '/')).toEqual(out);
     });
   }
 });
@@ -103,8 +124,7 @@ describe('HTMLProcessor.getBlocks', () => {
     const blocks = processor.getBlocks(document.body);
     const texts = Array.from(
       (function* (blocks) {
-        for (const block of blocks)
-          yield block.textNodes.map(node => node.nodeValue).join('');
+        for (const block of blocks) yield block.text;
       })(blocks)
     );
     return texts;
@@ -173,108 +193,93 @@ describe('HTMLProcessor.getBlocks', () => {
   });
 });
 
-describe('HTMLProcessor.splitTextNodes', () => {
-  class MockText {
-    nodeValue: string;
-
+describe('HTMLProcessor.splitNodes', () => {
+  class MockNode extends NodeOrText {
     constructor(text: string) {
-      this.nodeValue = text;
+      super(text);
     }
-  }
-  const node123 = new MockText('123') as Text;
-  const node456 = new MockText('456') as Text;
 
-  interface NodeAndChunks {
-    node: Text;
-    chunks: string[];
-  }
-
-  class MockHTMLProcessor extends MockHTMLProcessorBase {
-    nodeAndChunks: NodeAndChunks[] = [];
-
-    override splitTextNode(node: Text, chunks: string[]) {
-      this.nodeAndChunks.push({node: node, chunks: chunks});
+    clear() {
+      this.chunks = [];
     }
-  }
 
-  function split(nodes: Text[], boundaries: number[]) {
-    const processor = new MockHTMLProcessor();
-    processor.splitTextNodes(nodes, boundaries);
-    return processor.nodeAndChunks;
+    override get canSplit(): boolean {
+      return true;
+    }
+
+    override split() {}
+  }
+  const node123 = new MockNode('123');
+  const node456 = new MockNode('456');
+
+  function split(nodes: MockNode[], boundaries: number[]): string[][] {
+    for (const node of nodes) {
+      node.clear();
+    }
+    const processor = new MockHTMLProcessorBase();
+    processor.splitNodes(nodes, boundaries);
+    const result = nodes.map(node => node.chunks);
+    return result;
   }
 
   it('should not split nodes', () => {
-    expect(split([node123], [4])).toEqual([]);
+    expect(split([node123], [4])).toEqual([[]]);
   });
 
   it('should not split single node at the end', () => {
-    expect(split([node123], [3, 4])).toEqual([]);
+    expect(split([node123], [3, 4])).toEqual([[]]);
   });
 
   it('should not split two nodes at the end', () => {
-    expect(split([node123, node456], [6, 7])).toEqual([]);
+    expect(split([node123, node456], [6, 7])).toEqual([[], []]);
   });
 
   it('should split single node at the middle', () => {
-    expect(split([node123], [2, 4])).toEqual([
-      {node: node123, chunks: ['12', '3']},
-    ]);
+    expect(split([node123], [2, 4])).toEqual([['12', '3']]);
   });
 
   it('should split the first node twice', () => {
-    expect(split([node123], [1, 2, 4])).toEqual([
-      {node: node123, chunks: ['1', '2', '3']},
-    ]);
+    expect(split([node123], [1, 2, 4])).toEqual([['1', '2', '3']]);
   });
 
   it('should split the first node at the middle', () => {
-    expect(split([node123, node456], [2, 7])).toEqual([
-      {node: node123, chunks: ['12', '3']},
-    ]);
+    expect(split([node123, node456], [2, 7])).toEqual([['12', '3'], []]);
   });
 
   it('should split the first node twice', () => {
-    expect(split([node123, node456], [1, 2, 7])).toEqual([
-      {node: node123, chunks: ['1', '2', '3']},
-    ]);
+    expect(split([node123, node456], [1, 2, 7])).toEqual([['1', '2', '3'], []]);
   });
 
   it('should split the second node at the start', () => {
-    expect(split([node123, node456], [3, 7])).toEqual([
-      {node: node456, chunks: ['', '456']},
-    ]);
+    expect(split([node123, node456], [3, 7])).toEqual([[], ['', '456']]);
   });
 
   it('should split the second node at the middle', () => {
-    expect(split([node123, node456], [5, 7])).toEqual([
-      {node: node456, chunks: ['45', '6']},
-    ]);
+    expect(split([node123, node456], [5, 7])).toEqual([[], ['45', '6']]);
   });
 
   it('should split the second node twice', () => {
-    expect(split([node123, node456], [4, 5, 7])).toEqual([
-      {node: node456, chunks: ['4', '5', '6']},
-    ]);
+    expect(split([node123, node456], [4, 5, 7])).toEqual([[], ['4', '5', '6']]);
   });
 
   it('should split both nodes at the middle', () => {
     expect(split([node123, node456], [2, 5, 7])).toEqual([
-      {node: node123, chunks: ['12', '3']},
-      {node: node456, chunks: ['45', '6']},
+      ['12', '3'],
+      ['45', '6'],
     ]);
   });
 
   it('should split both nodes twice', () => {
     expect(split([node123, node456], [1, 2, 4, 5, 7])).toEqual([
-      {node: node123, chunks: ['1', '2', '3']},
-      {node: node456, chunks: ['4', '5', '6']},
+      ['1', '2', '3'],
+      ['4', '5', '6'],
     ]);
   });
 
   it('should split at every character', () => {
     expect(split([node123, node456], [1, 2, 3, 4, 5, 7])).toEqual([
-      {node: node123, chunks: ['1', '2', '3']},
-      {node: node456, chunks: ['', '4', '5', '6']},
+      ['1', '2', '3'],
+      ['', '4', '5', '6'],
     ]);
   });
 });
