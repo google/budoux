@@ -15,6 +15,7 @@
 
 import json
 import os
+import queue
 import typing
 from html.parser import HTMLParser
 
@@ -58,6 +59,7 @@ class HTMLChunkResolver(HTMLParser):
     self.chunks_joined = SEP.join(chunks)
     self.to_skip = False
     self.scan_index = 0
+    self.element_stack: queue.LifoQueue[bool] = queue.LifoQueue()
 
   def handle_starttag(self, tag: str, attrs: HTMLAttr) -> None:
     attr_pairs = []
@@ -67,12 +69,17 @@ class HTMLChunkResolver(HTMLParser):
       else:
         attr_pairs.append(' %s="%s"' % (attr[0], attr[1]))
     encoded_attrs = ''.join(attr_pairs)
+    self.element_stack.put(self.to_skip)
+    if tag.upper() in SKIP_NODES:
+      if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
+        self.scan_index += 1
+        self.output += '<wbr>'
+      self.to_skip = True
     self.output += '<%s%s>' % (tag, encoded_attrs)
-    self.to_skip = tag.upper() in SKIP_NODES
 
   def handle_endtag(self, tag: str) -> None:
     self.output += '</%s>' % (tag)
-    self.to_skip = False
+    self.to_skip = self.element_stack.get(block=False)
 
   def handle_data(self, data: str) -> None:
     for char in data:
