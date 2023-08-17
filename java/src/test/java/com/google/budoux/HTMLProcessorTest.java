@@ -51,12 +51,23 @@ public class HTMLProcessorTest {
 
   @Test
   public void testResolveWithNodesToSkip() {
-    List<String> phrases = Arrays.asList("abc", "def");
-    String html = "a<button>bcde</button>f";
+    List<String> phrases = Arrays.asList("abc", "def", "ghi");
+    String html = "a<button>bcde</button>fghi";
     String result = HTMLProcessor.resolve(phrases, html);
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap:"
-            + " anywhere;\">a<button>bcde</button>f</span>",
+            + " anywhere;\">a<button>bcde</button>f<wbr>ghi</span>",
+        result);
+  }
+
+  @Test
+  public void testResolveWithNodesBreakBeforeSkip() {
+    List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
+    String html = "abc<nobr>defghi</nobr>jkl";
+    String result = HTMLProcessor.resolve(phrases, html);
+    assertEquals(
+        "<span style=\"word-break: keep-all; overflow-wrap:"
+            + " anywhere;\">abc<wbr><nobr>defghi</nobr><wbr>jkl</span>",
         result);
   }
 
