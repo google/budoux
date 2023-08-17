@@ -70,9 +70,12 @@ class TestParser(unittest.TestCase):
     )
 
     input_html = 'xyz<script>alert(1);</script>xyzabc'
+    # TODO: Because the content for skip elements are included, this test tries
+    # to break before "alert". We may want to distinguish "skip from the
+    # content" and "skip breaking" in future.
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'xyz<script>alert(1);</script>xyz<wbr>abc</span>')
+        'xyz<wbr><script>alert(1);</script>xyz<wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
                      'Should pass script tags as is.')
@@ -80,7 +83,7 @@ class TestParser(unittest.TestCase):
     input_html = 'xyz<code>abc</code>abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'xyz<code>abc</code><wbr>abc</span>')
+        'xyz<wbr><code>abc</code><wbr>abc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
                      'Should skip some specific tags.')

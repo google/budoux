@@ -64,10 +64,17 @@ class TestResolve(unittest.TestCase):
     self.assertEqual(result, expected)
 
   def test_with_nodes_to_skip(self) -> None:
-    chunks = ['abc', 'def']
-    html = "a<button>bcde</button>f"
+    chunks = ['abc', 'def', 'ghi']
+    html = "a<button>bcde</button>fghi"
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f<wbr>ghi</span>'
+    self.assertEqual(result, expected)
+
+  def test_with_break_before_skip(self) -> None:
+    chunks = ['abc', 'def', 'ghi', 'jkl']
+    html = "abc<button>defghi</button>jkl"
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<wbr><button>defghi</button><wbr>jkl</span>'
     self.assertEqual(result, expected)
 
   def test_with_nothing_to_split(self) -> None:
