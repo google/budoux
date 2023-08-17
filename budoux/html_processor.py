@@ -79,7 +79,7 @@ class HTMLChunkResolver(HTMLParser):
 
   def handle_endtag(self, tag: str) -> None:
     self.output += '</%s>' % (tag)
-    self.to_skip = self.element_stack.get(block=False)
+    self.to_skip = self.element_stack.get_nowait()
 
   def handle_data(self, data: str) -> None:
     for char in data:
