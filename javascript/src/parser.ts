@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {sum} from './utils.js';
-
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
 const NODETYPE = {
@@ -82,7 +80,10 @@ export class Parser {
     const result = [];
     const baseScore =
       -0.5 *
-      sum([...this.model.values()].map(group => [...group.values()]).flat());
+      [...this.model.values()]
+        .map(group => [...group.values()])
+        .flat()
+        .reduce((prev, curr) => prev + curr, 0);
 
     for (let i = 1; i < sentence.length; i++) {
       let score = baseScore;
