@@ -153,6 +153,13 @@ const defaultBlockElements = new Set([
   'MARQUEE',
 ]);
 
+// We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
+// but we define the same here for Node.js environments.
+const NODETYPE = {
+  ELEMENT: 1,
+  TEXT: 3,
+};
+
 /**
  * Determine the action for an element.
  * @param element An element to determine the action for.
@@ -313,6 +320,19 @@ export class HTMLProcessor {
       if (options.className !== undefined) this.className = options.className;
       if (options.separator !== undefined) this.separator = options.separator;
     }
+  }
+
+  /**
+   * Checks if the given element has a text node in its children.
+   *
+   * @param ele An element to be checked.
+   * @returns Whether the element has a child text node.
+   */
+  static hasChildTextNode(ele: HTMLElement) {
+    for (const child of ele.childNodes) {
+      if (child.nodeType === NODETYPE.TEXT) return true;
+    }
+    return false;
   }
 
   /**
@@ -538,7 +558,7 @@ function HTMLProcessing<TBase extends Constructor<Parser>>(Base: TBase) {
     translateHTMLString(html: string) {
       if (html === '') return html;
       const doc = parseFromString(html);
-      if (Parser.hasChildTextNode(doc.body)) {
+      if (HTMLProcessor.hasChildTextNode(doc.body)) {
         const wrapper = doc.createElement('span');
         wrapper.append(...doc.body.childNodes);
         doc.body.append(wrapper);

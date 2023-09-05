@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-// We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
-// but we define the same here for Node.js environments.
-const NODETYPE = {
-  ELEMENT: 1,
-  TEXT: 3,
-};
-
 /**
  * Base BudouX parser.
  */
@@ -36,19 +29,6 @@ export class Parser {
     this.model = new Map(
       Object.entries(model).map(([k, v]) => [k, new Map(Object.entries(v))])
     );
-  }
-
-  /**
-   * Checks if the given element has a text node in its children.
-   *
-   * @param ele An element to be checked.
-   * @returns Whether the element has a child text node.
-   */
-  static hasChildTextNode(ele: HTMLElement) {
-    for (const child of ele.childNodes) {
-      if (child.nodeType === NODETYPE.TEXT) return true;
-    }
-    return false;
   }
 
   /**
