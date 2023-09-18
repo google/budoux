@@ -35,7 +35,7 @@ describe('Web Components', () => {
     mirroredElement.textContent = inputText;
     parser.applyElement(mirroredElement);
 
-    expect(budouxElement.shadowRoot!.innerHTML).toBe(mirroredElement.outerHTML);
+    expect(budouxElement.innerHTML).toBe(mirroredElement.outerHTML);
   });
 
   it('should react to the text content change after attached.', resolve => {
@@ -47,13 +47,12 @@ describe('Web Components', () => {
     const mirroredElement = window.document.createElement('span');
     mirroredElement.textContent = inputText;
     parser.applyElement(mirroredElement);
-    const budouxShadowRoot = budouxElement.shadowRoot!;
 
     const observer = new window.MutationObserver(() => {
-      expect(budouxShadowRoot.innerHTML).toBe(mirroredElement.outerHTML);
+      expect(budouxElement.innerHTML).toBe(mirroredElement.outerHTML);
       resolve();
     });
-    observer.observe(budouxShadowRoot, {
+    observer.observe(budouxElement, {
       childList: true,
     });
 
