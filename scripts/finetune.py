@@ -115,7 +115,8 @@ def cross_entropy_loss(weights: Array, x: Array, y: Array) -> Array:
     A cross entropy loss.
   """
   pred = 1 / (1 + jnp.exp(-x.dot(weights)))
-  return -jnp.mean(y * jnp.log(pred) + (1 - y) * jnp.log(1 - pred))
+  result: Array = -jnp.mean(y * jnp.log(pred) + (1 - y) * jnp.log(1 - pred))
+  return result
 
 
 def get_metrics(weights: Array, dataset: Dataset) -> Metrics:
@@ -130,10 +131,10 @@ def get_metrics(weights: Array, dataset: Dataset) -> Metrics:
   """
   pred = dataset.X.dot(weights) > 0
   actual = dataset.Y
-  tp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 1))  # type: ignore
-  tn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 0))  # type: ignore
-  fp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 0))  # type: ignore
-  fn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 1))  # type: ignore
+  tp = jnp.sum(jnp.logical_and(pred == 1, actual == 1))
+  tn = jnp.sum(jnp.logical_and(pred == 0, actual == 0))
+  fp = jnp.sum(jnp.logical_and(pred == 1, actual == 0))
+  fn = jnp.sum(jnp.logical_and(pred == 0, actual == 1))
   loss: float = cross_entropy_loss(weights, dataset.X,
                                    dataset.Y)  # type: ignore
   accuracy = (tp + tn) / (tp + tn + fp + fn)
