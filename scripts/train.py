@@ -169,10 +169,10 @@ def get_metrics(pred: jax.Array, actual: jax.Array) -> Result:
   Returns:
     result (Result): A result.
   """
-  tp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 1))  # type: ignore
-  tn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 0))  # type: ignore
-  fp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 0))  # type: ignore
-  fn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 1))  # type: ignore
+  tp = jnp.sum(jnp.logical_and(pred == 1, actual == 1))
+  tn = jnp.sum(jnp.logical_and(pred == 0, actual == 0))
+  fp = jnp.sum(jnp.logical_and(pred == 1, actual == 0))
+  fn = jnp.sum(jnp.logical_and(pred == 0, actual == 1))
   accuracy = (tp + tn) / (tp + tn + fp + fn)
   precision = tp / (tp + fp)
   recall = tp / (tp + fn)
@@ -258,7 +258,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
   print('Outputting learned weights to %s ...' % (weights_filename))
 
   M = len(features)
-  scores = jnp.zeros(M)
+  scores: jax.Array = jnp.zeros(M)
   feature_score_buffer: typing.List[typing.Tuple[str, float]] = []
   N_train = dataset_train.Y.shape[0]
   N_test = dataset_val.Y.shape[0] if dataset_val else 0
