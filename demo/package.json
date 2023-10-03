@@ -21,7 +21,7 @@
     "budoux": "file:../javascript"
   },
   "devDependencies": {
-    "@types/dompurify": "^3.0.2",
+    "@types/dompurify": "^3.0.3",
     "concurrently": "^8.2.1",
     "esbuild": "^0.19.4",
     "http-server": "^14.1.1",
