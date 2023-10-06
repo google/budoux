@@ -38,7 +38,7 @@ jobs:
         run: pytest ./tests
       - name: Install Jax
         if: matrix.os != 'windows-latest'
-        run: pip install jax[cpu]
+        run: pip install ".[jaxcpu]"
       - name: Run unittest with Jax
         if: matrix.os != 'windows-latest'
         run: pytest ./scripts/tests
