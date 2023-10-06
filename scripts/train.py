@@ -169,10 +169,10 @@ def get_metrics(pred: jax.Array, actual: jax.Array) -> Result:
   Returns:
     result (Result): A result.
   """
-  tp = jnp.sum(jnp.logical_and(pred == 1, actual == 1))
-  tn = jnp.sum(jnp.logical_and(pred == 0, actual == 0))
-  fp = jnp.sum(jnp.logical_and(pred == 1, actual == 0))
-  fn = jnp.sum(jnp.logical_and(pred == 0, actual == 1))
+  tp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 1))  # type: ignore
+  tn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 0))  # type: ignore
+  fp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 0))  # type: ignore
+  fn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 1))  # type: ignore
   accuracy = (tp + tn) / (tp + tn + fp + fn)
   precision = tp / (tp + fp)
   recall = tp / (tp + fn)
@@ -215,8 +215,8 @@ def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
   # `segment_sum` is used to implement sparse matrix-friendly dot products.
   res = w.dot(Y) - jax.ops.segment_sum((w * (2 * Y - 1)).take(rows), cols, M)
   err = 0.5 - jnp.abs(res - 0.5)
-  best_feature_index: int = err.argmin()
-  positivity: bool = res.at[best_feature_index].get() < 0.5
+  best_feature_index: int = err.argmin()  # type: ignore
+  positivity: bool = res.at[best_feature_index].get() < 0.5  # type: ignore
   err_min = err.at[best_feature_index].get()
   amount: float = jnp.log((1 - err_min) / (err_min + EPS))  # type: ignore
 
@@ -258,7 +258,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
   print('Outputting learned weights to %s ...' % (weights_filename))
 
   M = len(features)
-  scores: jax.Array = jnp.zeros(M)
+  scores = jnp.zeros(M)
   feature_score_buffer: typing.List[typing.Tuple[str, float]] = []
   N_train = dataset_train.Y.shape[0]
   N_test = dataset_val.Y.shape[0] if dataset_val else 0
