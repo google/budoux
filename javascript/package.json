@@ -45,7 +45,7 @@
     "./module/win.js": "./module/win-browser.js"
   },
   "devDependencies": {
-    "@types/jasmine": "^4.3.5",
+    "@types/jasmine": "^5.1.0",
     "@types/jsdom": "^21.1.1",
     "@types/node": "^20.3.3",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
