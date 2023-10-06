@@ -215,8 +215,8 @@ def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
   # `segment_sum` is used to implement sparse matrix-friendly dot products.
   res = w.dot(Y) - jax.ops.segment_sum((w * (2 * Y - 1)).take(rows), cols, M)
   err = 0.5 - jnp.abs(res - 0.5)
-  best_feature_index: int = err.argmin()   # type: ignore
-  positivity: bool = res.at[best_feature_index].get() < 0.5   # type: ignore
+  best_feature_index: int = err.argmin()  # type: ignore
+  positivity: bool = res.at[best_feature_index].get() < 0.5  # type: ignore
   err_min = err.at[best_feature_index].get()
   amount: float = jnp.log((1 - err_min) / (err_min + EPS))  # type: ignore
 
