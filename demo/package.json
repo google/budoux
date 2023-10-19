@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.3",
-    "concurrently": "^8.2.1",
+    "concurrently": "^8.2.2",
     "esbuild": "^0.19.4",
     "http-server": "^14.1.1",
     "typescript": "^5.2.2"
