@@ -17,12 +17,19 @@
 import {setInnerHtml} from '../dom.js';
 import {HTMLProcessingParser} from '../html_processor.js';
 
+const MUTATION_OBSERVER_OPTIONS = {
+  attributes: false,
+  characterData: true,
+  childList: true,
+  subtree: true,
+};
+
 /**
  * Base BudouX Web component.
  */
 export abstract class BudouXBaseElement extends HTMLElement {
-  shadow: ShadowRoot;
   parser: HTMLProcessingParser;
+  observer: MutationObserver;
 
   /**
    * Base BudouX Web component constructor.
@@ -31,14 +38,8 @@ export abstract class BudouXBaseElement extends HTMLElement {
     super();
 
     this.parser = new HTMLProcessingParser({});
-    this.shadow = this.attachShadow({mode: 'open'});
-    const observer = new MutationObserver(this.sync.bind(this));
-    observer.observe(this, {
-      attributes: false,
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
+    this.observer = new MutationObserver(this.sync.bind(this));
+    this.observer.observe(this, MUTATION_OBSERVER_OPTIONS);
   }
 
   connectedCallback() {
@@ -50,6 +51,8 @@ export abstract class BudouXBaseElement extends HTMLElement {
   }
 
   sync() {
-    setInnerHtml(this.shadow, this.parser.translateHTMLString(this.innerHTML));
+    this.observer.disconnect();
+    setInnerHtml(this, this.parser.translateHTMLString(this.innerHTML));
+    this.observer.observe(this, MUTATION_OBSERVER_OPTIONS);
   }
 }
