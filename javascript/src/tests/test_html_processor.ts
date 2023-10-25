@@ -200,8 +200,8 @@ describe('HTMLProcessor.forcedOpportunities', () => {
       (function* (blocks) {
         for (const block of blocks) {
           yield {
-            indices: block.forcedOpportunities(),
-            after: block.nodes.map(block => block.has_break_opportunity_after),
+            indices: block.getForcedOpportunities(),
+            after: block.nodes.map(block => block.hasBreakOpportunityAfter),
           };
         }
       })(blocks)

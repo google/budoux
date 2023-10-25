@@ -20,8 +20,8 @@ import {win} from './win.js';
 
 const assert = console.assert;
 
-const ZWSP = 0x200b; // U+200B ZERO WIDTH SPACE
-const ZWSP_STR = String.fromCharCode(ZWSP);
+const ZWSP_CODEPOINT = 0x200b; // U+200B ZERO WIDTH SPACE
+const ZWSP = String.fromCharCode(ZWSP_CODEPOINT);
 
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
@@ -204,7 +204,7 @@ function actionForElement(element: Element): DomAction {
 class NodeOrText {
   nodeOrText: Text | string;
   chunks: string[] = [];
-  has_break_opportunity_after = false;
+  hasBreakOpportunityAfter = false;
 
   constructor(nodeOrText: Text | string) {
     this.nodeOrText = nodeOrText;
@@ -287,16 +287,15 @@ class Paragraph {
     return this.nodes.length ? this.nodes[this.nodes.length - 1] : undefined;
   }
   setHasBreakOpportunityAfter() {
-    if (this.nodes.length) {
-      this.lastNode!.has_break_opportunity_after = true;
-    }
+    const lastNode = this.lastNode;
+    if (lastNode) lastNode.hasBreakOpportunityAfter = true;
   }
 
   /**
    * @returns Indices of forced break opportunities in the source.
    * They can be created by `<wbr>` tag or `&ZeroWidthSpace;`.
    */
-  forcedOpportunities(): number[] {
+  getForcedOpportunities(): number[] {
     const opportunities: number[] = [];
     let len = 0;
     for (const node of this.nodes) {
@@ -304,22 +303,27 @@ class Paragraph {
         const text = node.text;
         if (text) {
           for (let i = 0; i < text.length; ++i) {
-            if (text.charCodeAt(i) === ZWSP) {
+            if (text.charCodeAt(i) === ZWSP_CODEPOINT) {
               opportunities.push(len + i + 1);
             }
           }
         }
       }
       len += node.length;
-      if (node.has_break_opportunity_after) {
+      if (node.hasBreakOpportunityAfter) {
         opportunities.push(len);
       }
     }
     return opportunities;
   }
 
-  removeForcedOpportunities(boundaries: number[]): number[] {
-    const forcedOpportunities = this.forcedOpportunities();
+  /**
+   * @returns Filtered {@param boundaries} by excluding
+   * {@link getForcedOpportunities} if it's not empty.
+   * Otherwise {@param boundaries}.
+   */
+  excludeForcedOpportunities(boundaries: number[]): number[] {
+    const forcedOpportunities = this.getForcedOpportunities();
     if (!forcedOpportunities.length) return boundaries;
     const set = new Set<number>(forcedOpportunities);
     return boundaries.filter(i => !set.has(i));
@@ -357,7 +361,7 @@ export class HTMLProcessor {
   /** See {@link HTMLProcessorOptions.className}. */
   className?: string;
   /** See {@link HTMLProcessorOptions.separator}. */
-  separator: string | Node = ZWSP_STR;
+  separator: string | Node = ZWSP;
 
   /**
    * @param parser A BudouX {@link Parser} to compute semantic line breaks.
@@ -484,7 +488,7 @@ export class HTMLProcessor {
     assert(boundaries.every((x, i) => i === 0 || x > boundaries[i - 1]));
     assert(boundaries[boundaries.length - 1] < text.length);
 
-    const adjustedBoundaries = paragraph.removeForcedOpportunities(boundaries);
+    const adjustedBoundaries = paragraph.excludeForcedOpportunities(boundaries);
 
     // Add a sentinel to help iterating.
     adjustedBoundaries.push(text.length + 1);
