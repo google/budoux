@@ -20,7 +20,8 @@ import {win} from './win.js';
 
 const assert = console.assert;
 
-const ZWSP = '\u200B'; // U+200B ZERO WIDTH SPACE
+const ZWSP = 0x200b; // U+200B ZERO WIDTH SPACE
+const ZWSP_STR = String.fromCharCode(ZWSP);
 
 // We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
 // but we define the same here for Node.js environments.
@@ -35,6 +36,7 @@ const DomAction = {
   Skip: 2, // Skip the content. The content before and after are connected.
   Break: 3, // A forced break. The content before and after become paragraphs.
   NoBreak: 4, // The content provides context, but it's not breakable.
+  BreakOpportunity: 5, // Force a break opportunity.
 } as const;
 type DomAction = (typeof DomAction)[keyof typeof DomAction];
 
@@ -76,6 +78,7 @@ const domActions: {[name: string]: DomAction} = {
   // https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3
   BR: DomAction.Break,
   RT: DomAction.Skip,
+  WBR: DomAction.BreakOpportunity,
 
   // Form controls
   // https://html.spec.whatwg.org/multipage/rendering.html#form-controls
@@ -198,9 +201,10 @@ function actionForElement(element: Element): DomAction {
  *
  * A {@link string} provides the context for the parser, but it can't be split.
  */
-export class NodeOrText {
+class NodeOrText {
   nodeOrText: Text | string;
   chunks: string[] = [];
+  has_break_opportunity_after = false;
 
   constructor(nodeOrText: Text | string) {
     this.nodeOrText = nodeOrText;
@@ -254,6 +258,7 @@ export class NodeOrText {
     node.replaceWith(...nodes);
   }
 }
+export class NodeOrTextForTesting extends NodeOrText {}
 
 /**
  * Represents a "paragraph", broken by block boundaries or forced breaks.
@@ -277,7 +282,50 @@ class Paragraph {
   get text(): string {
     return this.nodes.map(node => node.text).join('');
   }
+
+  get lastNode(): NodeOrText | undefined {
+    return this.nodes.length ? this.nodes[this.nodes.length - 1] : undefined;
+  }
+  setHasBreakOpportunityAfter() {
+    if (this.nodes.length) {
+      this.lastNode!.has_break_opportunity_after = true;
+    }
+  }
+
+  /**
+   * @returns Indices of forced break opportunities in the source.
+   * They can be created by `<wbr>` tag or `&ZeroWidthSpace;`.
+   */
+  forcedOpportunities(): number[] {
+    const opportunities: number[] = [];
+    let len = 0;
+    for (const node of this.nodes) {
+      if (node.canSplit) {
+        const text = node.text;
+        if (text) {
+          for (let i = 0; i < text.length; ++i) {
+            if (text.charCodeAt(i) === ZWSP) {
+              opportunities.push(len + i + 1);
+            }
+          }
+        }
+      }
+      len += node.length;
+      if (node.has_break_opportunity_after) {
+        opportunities.push(len);
+      }
+    }
+    return opportunities;
+  }
+
+  removeForcedOpportunities(boundaries: number[]): number[] {
+    const forcedOpportunities = this.forcedOpportunities();
+    if (!forcedOpportunities.length) return boundaries;
+    const set = new Set<number>(forcedOpportunities);
+    return boundaries.filter(i => !set.has(i));
+  }
 }
+export class ParagraphForTesting extends Paragraph {}
 
 /**
  * Options for {@link HTMLProcessor}.
@@ -309,7 +357,7 @@ export class HTMLProcessor {
   /** See {@link HTMLProcessorOptions.className}. */
   className?: string;
   /** See {@link HTMLProcessorOptions.separator}. */
-  separator: string | Node = ZWSP;
+  separator: string | Node = ZWSP_STR;
 
   /**
    * @param parser A BudouX {@link Parser} to compute semantic line breaks.
@@ -366,13 +414,17 @@ export class HTMLProcessor {
 
     const action = actionForElement(element);
     if (action === DomAction.Skip) return;
-
     if (action === DomAction.Break) {
       if (parent && !parent.isEmpty()) {
+        parent.setHasBreakOpportunityAfter();
         yield parent;
         parent.nodes = [];
       }
       assert(!element.firstChild);
+      return;
+    }
+    if (action === DomAction.BreakOpportunity) {
+      if (parent) parent.setHasBreakOpportunityAfter();
       return;
     }
 
@@ -432,10 +484,12 @@ export class HTMLProcessor {
     assert(boundaries.every((x, i) => i === 0 || x > boundaries[i - 1]));
     assert(boundaries[boundaries.length - 1] < text.length);
 
-    // Add a sentinel to help iterating.
-    boundaries.push(text.length + 1);
+    const adjustedBoundaries = paragraph.removeForcedOpportunities(boundaries);
 
-    this.splitNodes(paragraph.nodes, boundaries);
+    // Add a sentinel to help iterating.
+    adjustedBoundaries.push(text.length + 1);
+
+    this.splitNodes(paragraph.nodes, adjustedBoundaries);
     this.applyBlockStyle(paragraph.element);
   }
 
