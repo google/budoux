@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD014 -->
 # BudouX
 
-[![PyPI](https://img.shields.io/pypi/v/budoux?color=blue)](https://pypi.org/project/budoux/) [![npm](https://img.shields.io/npm/v/budoux?color=yellow)](https://www.npmjs.com/package/budoux)
+[![PyPI](https://img.shields.io/pypi/v/budoux?color=blue)](https://pypi.org/project/budoux/) [![npm](https://img.shields.io/npm/v/budoux?color=yellow)](https://www.npmjs.com/package/budoux) [![Maven Central](https://img.shields.io/maven-central/v/com.google.budoux/budoux)](https://mvnrepository.com/artifact/com.google.budoux/budoux)
 
 Standalone. Small. Language-neutral.
 
