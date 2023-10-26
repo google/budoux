@@ -101,7 +101,7 @@ class TestPreprocess(unittest.TestCase):
     # 1      1   1   1
     # 1      1   1   0
     # -1     0   0   1
-    self.assertEqual(train_dataset.Y.tolist(), [True, False, True, True, False])
+    self.assertEqual(train_dataset.Y.tolist(), [1, -1, 1, 1, -1])
     self.assertEqual(train_dataset.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(train_dataset.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
 
@@ -112,7 +112,7 @@ class TestPreprocess(unittest.TestCase):
     # 1      1   0   0
     self.assertIsInstance(val_dataset, train.Dataset)
     if isinstance(val_dataset, train.Dataset):
-      self.assertEqual(val_dataset.Y.tolist(), [True, False, True])
+      self.assertEqual(val_dataset.Y.tolist(), [1, -1, 1])
       self.assertEqual(val_dataset.X_rows.tolist(), [0, 0, 2])
       self.assertEqual(val_dataset.X_cols.tolist(), [1, 2, 0])
     else:
@@ -298,7 +298,7 @@ class TestLoadDataset(unittest.TestCase):
     })
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
-    self.assertEqual(result.Y.tolist(), [True, False, True, True, False])
+    self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
 
   def test_with_redundant_breaks(self) -> None:
     entries_file_path = tempfile.NamedTemporaryFile().name
@@ -316,8 +316,24 @@ class TestLoadDataset(unittest.TestCase):
     })
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
-    self.assertEqual(result.Y.tolist(), [True, False, True, True, False])
+    self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
 
+  def test_with_weighted_samples(self) -> None:
+    entries_file_path = tempfile.NamedTemporaryFile().name
+    with open(entries_file_path, 'w') as f:
+      f.write(('1\tfoo\tbar\n'
+               '-14\tfoo\n'
+               '10\tfoo\tbar\tbaz\n'
+               '-11\tbar\tfoo\n'
+               '-1\tbaz\tqux\n'))
+    result = train.load_dataset(entries_file_path, {
+        'foo': 0,
+        'bar': 1,
+        'baz': 2
+    })
+    self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
+    self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
+    self.assertEqual(result.Y.tolist(), [1, -14, 10, -11, -1])
 
 if __name__ == '__main__':
   unittest.main()
