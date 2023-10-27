@@ -586,48 +586,45 @@ export class HTMLProcessor {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Constructor<T = {}> = new (...args: any[]) => T;
-
-/**
- * Mixin to add HTML processing support to {@link Parser}.
- * @param Base A base {@link Parser} class
- * @returns An extended {@link Parser} class with {@link HTMLProcessor}.
- */
-function HTMLProcessing<TBase extends Constructor<Parser>>(Base: TBase) {
-  return class _HTMLProcessable extends Base {
-    /**
-     * Applies markups for semantic line breaks to the given HTML element.
-     * @param parentElement The input element.
-     */
-    applyElement(parentElement: HTMLElement) {
-      const htmlProcessor = new HTMLProcessor(this, {
-        separator: parentElement.ownerDocument.createElement('wbr'),
-      });
-      htmlProcessor.applyToElement(parentElement);
-    }
-
-    /**
-     * Translates the given HTML string to another HTML string with markups
-     * for semantic line breaks.
-     * @param html An input html string.
-     * @returns The translated HTML string.
-     */
-    translateHTMLString(html: string) {
-      if (html === '') return html;
-      const doc = parseFromString(html);
-      if (HTMLProcessor.hasChildTextNode(doc.body)) {
-        const wrapper = doc.createElement('span');
-        wrapper.append(...doc.body.childNodes);
-        doc.body.append(wrapper);
-      }
-      this.applyElement(doc.body.childNodes[0] as HTMLElement);
-      return doc.body.innerHTML;
-    }
-  };
-}
-
 /**
  * BudouX {@link Parser} with HTML processing support.
  */
-export class HTMLProcessingParser extends HTMLProcessing(Parser) {}
+export class HTMLProcessingParser extends Parser {
+  htmlProcessor: HTMLProcessor;
+
+  constructor(
+    model: {[key: string]: {[key: string]: number}},
+    htmlProcessorOptions: HTMLProcessorOptions = {
+      separator: ZWSP,
+    }
+  ) {
+    super(model);
+    this.htmlProcessor = new HTMLProcessor(this, htmlProcessorOptions);
+  }
+
+  /**
+   * Applies markups for semantic line breaks to the given HTML element.
+   * @param parentElement The input element.
+   */
+  applyElement(parentElement: HTMLElement) {
+    this.htmlProcessor.applyToElement(parentElement);
+  }
+
+  /**
+   * Translates the given HTML string to another HTML string with markups
+   * for semantic line breaks.
+   * @param html An input html string.
+   * @returns The translated HTML string.
+   */
+  translateHTMLString(html: string) {
+    if (html === '') return html;
+    const doc = parseFromString(html);
+    if (HTMLProcessor.hasChildTextNode(doc.body)) {
+      const wrapper = doc.createElement('span');
+      wrapper.append(...doc.body.childNodes);
+      doc.body.append(wrapper);
+    }
+    this.applyElement(doc.body.childNodes[0] as HTMLElement);
+    return doc.body.innerHTML;
+  }
+}
