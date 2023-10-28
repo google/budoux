@@ -78,6 +78,7 @@ final class HTMLProcessor {
 
     /**
      * Returns the resolved output string.
+     *
      * @return the output string.
      */
     public StringBuilder getOutput() {
