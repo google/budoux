@@ -65,11 +65,21 @@ final class HTMLProcessor {
     private boolean toSkip = false;
     private Stack<Boolean> elementStack = new Stack<Boolean>();
 
+    /**
+     * Constructs a PhraseResolvingNodeVisitor.
+     *
+     * @param phrases a list of phrase strings.
+     * @param separator the separator string.
+     */
     PhraseResolvingNodeVisitor(List<String> phrases, String separator) {
       this.separator = separator;
       this.phrasesJoined = String.join(Character.toString(SEP), phrases);
     }
 
+    /**
+     * Returns the resolved output string.
+     * @return the output string.
+     */
     public StringBuilder getOutput() {
       return output;
     }
