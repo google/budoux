@@ -61,7 +61,7 @@ public class ParserTest {
     String result = parser.translateHTMLString(html);
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap: anywhere;\"><a"
-            + " href=\"http://example.com\">xyz<wbr>a</a>bc</span>",
+            + " href=\"http://example.com\">xyz\u200ba</a>bc</span>",
         result);
   }
 }

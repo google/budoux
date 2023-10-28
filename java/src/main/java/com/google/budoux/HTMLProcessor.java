@@ -59,12 +59,14 @@ final class HTMLProcessor {
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
     private static final char SEP = '\uFFFF';
     private final String phrasesJoined;
+    private final String separator;
     private final StringBuilder output = new StringBuilder();
     private Integer scanIndex = 0;
     private boolean toSkip = false;
     private Stack<Boolean> elementStack = new Stack<Boolean>();
 
-    PhraseResolvingNodeVisitor(List<String> phrases) {
+    PhraseResolvingNodeVisitor(List<String> phrases, String separator) {
+      this.separator = separator;
       this.phrasesJoined = String.join(Character.toString(SEP), phrases);
     }
 
@@ -86,7 +88,7 @@ final class HTMLProcessor {
         final String nodeName = node.nodeName();
         if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
           if (!toSkip && phrasesJoined.charAt(scanIndex) == SEP) {
-            output.append("<wbr>");
+            output.append(separator);
             scanIndex++;
           }
           toSkip = true;
@@ -98,7 +100,7 @@ final class HTMLProcessor {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
             if (!toSkip) {
-              output.append("<wbr>");
+              output.append(separator);
             }
             scanIndex++;
           }
@@ -126,9 +128,9 @@ final class HTMLProcessor {
    * @param html the HTML string to resolve.
    * @return the HTML string of phrases wrapped in non-breaking markup.
    */
-  public static String resolve(List<String> phrases, String html) {
+  public static String resolve(List<String> phrases, String html, String separator) {
     Document doc = Jsoup.parseBodyFragment(html);
-    PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases);
+    PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases, separator);
     doc.body().traverse(nodeVisitor);
     return String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
   }
