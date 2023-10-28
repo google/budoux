@@ -41,7 +41,7 @@ class TestHTMLChunkResolver(unittest.TestCase):
   def test_output(self) -> None:
     input = '<p>ab<b>cde</b>f</p>'
     expected = '<p>ab<b>c<wbr>de</b>f</p>'
-    resolver = html_processor.HTMLChunkResolver(['abc', 'def'])
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(resolver.output, expected,
                      'WBR tags should be inserted as specified by chunks.')
@@ -53,28 +53,28 @@ class TestResolve(unittest.TestCase):
     chunks = ['abc', 'def']
     html = 'abcdef'
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<wbr>def</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200bdef</span>'
     self.assertEqual(result, expected)
 
   def test_with_standard_html_input(self) -> None:
     chunks = ['abc', 'def']
     html = 'ab<a href="http://example.com">cd</a>ef'
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">ab<a href="http://example.com">c<wbr>d</a>ef</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">ab<a href="http://example.com">c\u200bd</a>ef</span>'
     self.assertEqual(result, expected)
 
   def test_with_nodes_to_skip(self) -> None:
     chunks = ['abc', 'def', 'ghi']
     html = "a<button>bcde</button>fghi"
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f<wbr>ghi</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f\u200bghi</span>'
     self.assertEqual(result, expected)
 
   def test_with_break_before_skip(self) -> None:
     chunks = ['abc', 'def', 'ghi', 'jkl']
     html = "abc<button>defghi</button>jkl"
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<wbr><button>defghi</button><wbr>jkl</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200b<button>defghi</button>\u200bjkl</span>'
     self.assertEqual(result, expected)
 
   def test_with_nothing_to_split(self) -> None:
