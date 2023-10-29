@@ -139,6 +139,18 @@ final class HTMLProcessor {
    * @param html the HTML string to resolve.
    * @return the HTML string of phrases wrapped in non-breaking markup.
    */
+  public static String resolve(List<String> phrases, String html) {
+    return resolve(phrases, html, "\u200b");
+  }
+
+  /**
+   * Wraps phrases in the HTML string with non-breaking markup.
+   *
+   * @param phrases the phrases included in the HTML string.
+   * @param html the HTML string to resolve.
+   * @param separator the separator string.
+   * @return the HTML string of phrases wrapped in non-breaking markup.
+   */
   public static String resolve(List<String> phrases, String html, String separator) {
     Document doc = Jsoup.parseBodyFragment(html);
     PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases, separator);
