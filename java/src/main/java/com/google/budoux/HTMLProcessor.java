@@ -59,15 +59,28 @@ final class HTMLProcessor {
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
     private static final char SEP = '\uFFFF';
     private final String phrasesJoined;
+    private final String separator;
     private final StringBuilder output = new StringBuilder();
     private Integer scanIndex = 0;
     private boolean toSkip = false;
     private Stack<Boolean> elementStack = new Stack<Boolean>();
 
-    PhraseResolvingNodeVisitor(List<String> phrases) {
+    /**
+     * Constructs a PhraseResolvingNodeVisitor.
+     *
+     * @param phrases a list of phrase strings.
+     * @param separator the separator string.
+     */
+    PhraseResolvingNodeVisitor(List<String> phrases, String separator) {
+      this.separator = separator;
       this.phrasesJoined = String.join(Character.toString(SEP), phrases);
     }
 
+    /**
+     * Returns the resolved output string.
+     *
+     * @return the output string.
+     */
     public StringBuilder getOutput() {
       return output;
     }
@@ -86,7 +99,7 @@ final class HTMLProcessor {
         final String nodeName = node.nodeName();
         if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
           if (!toSkip && phrasesJoined.charAt(scanIndex) == SEP) {
-            output.append("<wbr>");
+            output.append(separator);
             scanIndex++;
           }
           toSkip = true;
@@ -98,7 +111,7 @@ final class HTMLProcessor {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
             if (!toSkip) {
-              output.append("<wbr>");
+              output.append(separator);
             }
             scanIndex++;
           }
@@ -127,8 +140,20 @@ final class HTMLProcessor {
    * @return the HTML string of phrases wrapped in non-breaking markup.
    */
   public static String resolve(List<String> phrases, String html) {
+    return resolve(phrases, html, "\u200b");
+  }
+
+  /**
+   * Wraps phrases in the HTML string with non-breaking markup.
+   *
+   * @param phrases the phrases included in the HTML string.
+   * @param html the HTML string to resolve.
+   * @param separator the separator string.
+   * @return the HTML string of phrases wrapped in non-breaking markup.
+   */
+  public static String resolve(List<String> phrases, String html, String separator) {
     Document doc = Jsoup.parseBodyFragment(html);
-    PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases);
+    PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases, separator);
     doc.body().traverse(nodeVisitor);
     return String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
   }

@@ -62,7 +62,7 @@ class TestParser(unittest.TestCase):
     input_html = 'xyzabcd'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'xyz<wbr>abcd</span>')
+        'xyz\u200babcd</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(
         output_html, expected_html,
@@ -75,7 +75,7 @@ class TestParser(unittest.TestCase):
     # content" and "skip breaking" in future.
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'xyz<wbr><script>alert(1);</script>xyz<wbr>abc</span>')
+        'xyz\u200b<script>alert(1);</script>xyz\u200babc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
                      'Should pass script tags as is.')
@@ -83,7 +83,7 @@ class TestParser(unittest.TestCase):
     input_html = 'xyz<code>abc</code>abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'xyz<wbr><code>abc</code><wbr>abc</span>')
+        'xyz\u200b<code>abc</code>\u200babc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
                      'Should skip some specific tags.')
@@ -91,7 +91,7 @@ class TestParser(unittest.TestCase):
     input_html = 'xyza<a href="#" hidden>bc</a>abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'xyz<wbr>a<a href="#" hidden>bc</a><wbr>abc</span>')
+        'xyz\u200ba<a href="#" hidden>bc</a>\u200babc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html,
                      'Should not ruin attributes of child elements.')
@@ -99,7 +99,7 @@ class TestParser(unittest.TestCase):
     input_html = 'xyza🇯🇵🇵🇹abc'
     expected_html = (
         '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'xyz<wbr>a🇯🇵🇵🇹<wbr>abc</span>')
+        'xyz\u200ba🇯🇵🇵🇹\u200babc</span>')
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html, 'Should work with emojis.')
 

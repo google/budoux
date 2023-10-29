@@ -183,6 +183,6 @@ public class Parser {
   public String translateHTMLString(String html) {
     String sentence = HTMLProcessor.getText(html);
     List<String> phrases = parse(sentence);
-    return HTMLProcessor.resolve(phrases, html);
+    return HTMLProcessor.resolve(phrases, html, "\u200b");
   }
 }

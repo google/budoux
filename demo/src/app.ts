@@ -59,7 +59,7 @@ const run = () => {
   const renderWithBR = brCheckElement.checked;
   if (renderWithBR) {
     outputContainerElement.innerHTML = window.DOMPurify.sanitize(
-      outputContainerElement.innerHTML.replace(/<wbr>/g, '<br>'));
+      outputContainerElement.innerHTML.replace(/\u200b/g, '<br>'));
   }
 };
 

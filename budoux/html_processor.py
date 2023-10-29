@@ -49,14 +49,16 @@ class HTMLChunkResolver(HTMLParser):
   """
   output = ''
 
-  def __init__(self, chunks: typing.List[str]):
+  def __init__(self, chunks: typing.List[str], separator: str):
     """Initializes the parser.
 
     Args:
       chunks (List[str]): The chunks to resolve.
+      separator (str): The separator string.
     """
     HTMLParser.__init__(self)
     self.chunks_joined = SEP.join(chunks)
+    self.separator = separator
     self.to_skip = False
     self.scan_index = 0
     self.element_stack: queue.LifoQueue[bool] = queue.LifoQueue()
@@ -73,7 +75,7 @@ class HTMLChunkResolver(HTMLParser):
     if tag.upper() in SKIP_NODES:
       if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
         self.scan_index += 1
-        self.output += '<wbr>'
+        self.output += self.separator
       self.to_skip = True
     self.output += '<%s%s>' % (tag, encoded_attrs)
 
@@ -85,7 +87,7 @@ class HTMLChunkResolver(HTMLParser):
     for char in data:
       if not char == self.chunks_joined[self.scan_index]:
         if not self.to_skip:
-          self.output += '<wbr>'
+          self.output += self.separator
         self.scan_index += 1
       self.output += char
       self.scan_index += 1
@@ -105,17 +107,20 @@ def get_text(html: str) -> str:
   return text_content_extractor.output
 
 
-def resolve(phrases: typing.List[str], html: str) -> str:
+def resolve(phrases: typing.List[str],
+            html: str,
+            separator: str = '\u200b') -> str:
   """Wraps phrases in the HTML string with non-breaking markup.
 
   Args:
     phrases (List[str]): The phrases included in the HTML string.
     html (str): The HTML string to resolve.
+    separator (str, optional): The separator string.
 
   Returns:
     The HTML string with phrases wrapped in non-breaking markup.
   """
-  resolver = HTMLChunkResolver(phrases)
+  resolver = HTMLChunkResolver(phrases, separator)
   resolver.feed(html)
   result = '<span style="%s">%s</span>' % (PARENT_CSS_STYLE, resolver.output)
   return result

@@ -32,7 +32,7 @@ public class HTMLProcessorTest {
   public void testResolveWithSimpleTextInput() {
     List<String> phrases = Arrays.asList("abc", "def");
     String html = "abcdef";
-    String result = HTMLProcessor.resolve(phrases, html);
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap: anywhere;\">abc<wbr>def</span>",
         result);
@@ -42,7 +42,7 @@ public class HTMLProcessorTest {
   public void testResolveWithStandardHTMLInput() {
     List<String> phrases = Arrays.asList("abc", "def");
     String html = "ab<a href=\"http://example.com\">cd</a>ef";
-    String result = HTMLProcessor.resolve(phrases, html);
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap: anywhere;\">ab<a"
             + " href=\"http://example.com\">c<wbr>d</a>ef</span>",
@@ -53,7 +53,7 @@ public class HTMLProcessorTest {
   public void testResolveWithNodesToSkip() {
     List<String> phrases = Arrays.asList("abc", "def", "ghi");
     String html = "a<button>bcde</button>fghi";
-    String result = HTMLProcessor.resolve(phrases, html);
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap:"
             + " anywhere;\">a<button>bcde</button>f<wbr>ghi</span>",
@@ -64,7 +64,7 @@ public class HTMLProcessorTest {
   public void testResolveWithNodesBreakBeforeSkip() {
     List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
     String html = "abc<nobr>defghi</nobr>jkl";
-    String result = HTMLProcessor.resolve(phrases, html);
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap:"
             + " anywhere;\">abc<wbr><nobr>defghi</nobr><wbr>jkl</span>",
@@ -75,7 +75,7 @@ public class HTMLProcessorTest {
   public void testResolveWithNothingToSplit() {
     List<String> phrases = Arrays.asList("abcdef");
     String html = "abcdef";
-    String result = HTMLProcessor.resolve(phrases, html);
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(
         "<span style=\"word-break: keep-all; overflow-wrap: anywhere;\">abcdef</span>", result);
   }
