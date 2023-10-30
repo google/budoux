@@ -24,12 +24,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.Stack;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -63,7 +63,7 @@ final class HTMLProcessor {
     private final StringBuilder output = new StringBuilder();
     private Integer scanIndex = 0;
     private boolean toSkip = false;
-    private Stack<Boolean> elementStack = new Stack<Boolean>();
+    private final ArrayDeque<Boolean> elementStack = new ArrayDeque<>();
 
     /**
      * Constructs a PhraseResolvingNodeVisitor.
@@ -126,7 +126,7 @@ final class HTMLProcessor {
       if (node.nodeName().equals("body") || node instanceof TextNode) {
         return;
       }
-      assert node instanceof Element;
+      // assume node instanceof Element;
       toSkip = elementStack.pop();
       output.append(String.format("</%s>", node.nodeName()));
     }
