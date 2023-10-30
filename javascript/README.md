@@ -67,12 +67,12 @@ You can also feed an HTML element to the parser to apply the process.
 const ele = document.querySelector('p.budou-this');
 console.log(ele.outerHTML);
 // <p class="budou-this">今日は<b>とても天気</b>です。</p>
-parser.applyElement(ele);
+parser.applyToElement(ele);
 console.log(ele.outerHTML);
 // <p class="budou-this" style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b><wbr>とても<wbr>天気</b>です。</p>
 ```
 
-Internally, the `applyElement` calls the [`HTMLProcessor`] class
+Internally, the `applyToElement` calls the [`HTMLProcessor`] class
 with a `<wbr>` element as the separator.
 You can use the [`HTMLProcessor`] class directly if desired.
 For example:

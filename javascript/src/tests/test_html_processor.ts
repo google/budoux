@@ -316,7 +316,7 @@ describe('HTMLProcessor.splitNodes', () => {
   });
 });
 
-describe('HTMLProcessingParser.applyElement', () => {
+describe('HTMLProcessingParser.applyToElement', () => {
   const checkEqual = (
     model: {[key: string]: {[key: string]: number}},
     inputHTML: string,
@@ -325,7 +325,7 @@ describe('HTMLProcessingParser.applyElement', () => {
     const inputDOM = parseFromString(inputHTML);
     const inputDocument = inputDOM.querySelector('p') as HTMLElement;
     const parser = new HTMLProcessingParser(model);
-    parser.applyElement(inputDocument);
+    parser.applyToElement(inputDocument);
     const expectedDocument = parseFromString(expectedHTML);
     const expectedElement = expectedDocument.querySelector('p') as HTMLElement;
     expect(inputDocument.isEqualNode(expectedElement)).toBeTrue();
