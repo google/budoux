@@ -33,7 +33,7 @@ describe('Web Components', () => {
 
     const mirroredElement = window.document.createElement('span');
     mirroredElement.textContent = inputText;
-    parser.applyElement(mirroredElement);
+    parser.applyToElement(mirroredElement);
 
     expect(budouxElement.innerHTML).toBe(mirroredElement.outerHTML);
   });
@@ -46,7 +46,7 @@ describe('Web Components', () => {
     const inputText = '明日はどうなるかな。';
     const mirroredElement = window.document.createElement('span');
     mirroredElement.textContent = inputText;
-    parser.applyElement(mirroredElement);
+    parser.applyToElement(mirroredElement);
 
     const observer = new window.MutationObserver(() => {
       expect(budouxElement.innerHTML).toBe(mirroredElement.outerHTML);

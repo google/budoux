@@ -54,7 +54,7 @@ const run = () => {
   worker.postMessage({'sentence': outputContainerElement.textContent, 'model': model});
   const parser = parsers.get(model);
   if (!parser) return;
-  parser.applyElement(outputContainerElement);
+  parser.applyToElement(outputContainerElement);
   outputContainerElement.style.fontSize = `${fontSizeElement.value}rem`;
   const renderWithBR = brCheckElement.checked;
   if (renderWithBR) {
