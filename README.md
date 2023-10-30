@@ -75,12 +75,17 @@ print(parser.parse('今天是晴天。'))
 # ['今天', '是', '晴天。']
 ```
 
-You can also translate an HTML string by wrapping phrases with non-breaking markup.
+You can also translate an HTML string to wrap phrases with non-breaking markup.
+The default parser uses zero-width space (U+200B) to separate phrases.
 
 ```python
 print(parser.translate_html_string('今日は<b>とても天気</b>です。'))
-# <span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b ><wbr>とても<wbr>天気</b>です。</span>
+# <span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b>\u200bとても\u200b天気</b>です。</span>
 ```
+
+Please note that separators are denoted as `\u200b` in the example above for
+illustrative purposes, but the actual output is an invisible string as it's a
+zero-width space.
 
 If you have a custom model, you can use it as follows.
 
@@ -130,8 +135,12 @@ $ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
 
 ```shellsession
 $ budoux 本日は晴天です。 -H
-<span style="word-break: keep-all; overflow-wrap: anywhere;">本日は<wbr>晴天です。</span>
+<span style="word-break: keep-all; overflow-wrap: anywhere;">本日は\u200b晴天です。</span>
 ```
+
+Please note that separators are denoted as `\u200b` in the example above for
+illustrative purposes, but the actual output is an invisible string as it's a
+zero-width space.
 
 If you want to see help, run `budoux -h`.
 
