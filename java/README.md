@@ -39,12 +39,17 @@ public class App
 ### Working with HTML
 
 If you want to use the result in a website, you can use the `translateHTMLString`
-method to get an HTML string with non-breaking markup to wrap phrases.
+method to get an HTML string that wraps phrases with non-breaking markup,
+speicifcally, zero-width space (U+200B).
 
 ```java
 System.out.println(parser.translateHTMLString("今日は<strong>良い天気</strong>ですね。"));
-//<span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<strong><wbr>良い<wbr>天気</strong>ですね。</span>
+//<span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<strong>\u200b良い\u200b天気</strong>ですね。</span>
 ```
+
+Please note that separators are denoted as `\u200b` in the example above for
+illustrative purposes, but the actual output is an invisible string as it's a
+zero-width space.
 
 ## Caveat
 

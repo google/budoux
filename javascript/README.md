@@ -52,12 +52,17 @@ console.log(parser.parse('是今天的天氣。'));
 
 ### Translating an HTML string
 
-You can also translate an HTML string to wrap phrases with non-breaking markup.
+You can also translate an HTML string to wrap phrases with non-breaking markup,
+specifically, zero-width spaces (U+200B).
 
 ```javascript
 console.log(parser.translateHTMLString('今日は<b>とても天気</b>です。'));
-// <span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b><wbr>とても<wbr>天気</b>です。</span>
+// <span style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b>\u200bとても\u200b天気</b>です。</span>
 ```
+
+Please note that separators are denoted as `\u200b` in the example above for
+illustrative purposes, but the actual output is an invisible string as it's a
+zero-width space.
 
 ### Applying to an HTML element
 
@@ -69,11 +74,11 @@ console.log(ele.outerHTML);
 // <p class="budou-this">今日は<b>とても天気</b>です。</p>
 parser.applyElement(ele);
 console.log(ele.outerHTML);
-// <p class="budou-this" style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b><wbr>とても<wbr>天気</b>です。</p>
+// <p class="budou-this" style="word-break: keep-all; overflow-wrap: anywhere;">今日は<b>\u200bとても\u200b天気</b>です。</p>
 ```
 
-Internally, the `applyElement` calls the [`HTMLProcessor`] class
-with a `<wbr>` element as the separator.
+Internally, the `applyElement` calls the [`HTMLProcessor`]'s `applyToElement`
+function with the zero-width space as the separator.
 You can use the [`HTMLProcessor`] class directly if desired.
 For example:
 
@@ -162,8 +167,12 @@ $ echo $'本日は晴天です。\n明日は曇りでしょう。' | budoux
 
 ```shellsession
 $ budoux 本日は晴天です。 -H
-<span style="word-break: keep-all; overflow-wrap: anywhere;">本日は<wbr>晴天です。</span>
+<span style="word-break: keep-all; overflow-wrap: anywhere;">本日は\u200b晴天です。</span>
 ```
+
+Please note that separators are denoted as `\u200b` in the example above for
+illustrative purposes, but the actual output is an invisible string as it's a
+zero-width space.
 
 If you want to see help, run `budoux -h`.
 
