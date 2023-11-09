@@ -102,8 +102,7 @@ def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
       X_rows.extend(i for _ in range(len(hit_indices)))
       X_cols.extend(hit_indices)
       i += 1
-  return Dataset(
-      jnp.asarray(X_rows), jnp.asarray(X_cols), jnp.asarray(Y))
+  return Dataset(jnp.asarray(X_rows), jnp.asarray(X_cols), jnp.asarray(Y))
 
 
 def preprocess(
@@ -266,6 +265,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
   Y_train = dataset_train.Y > 0
   Y_test = dataset_val.Y > 0 if dataset_val else None
   w = jnp.abs(dataset_train.Y) / jnp.sum(jnp.abs(dataset_train.Y))
+
   def output_progress(t: int) -> None:
     with open(weights_filename, 'a') as f:
       f.write('\n'.join('%s\t%.6f' % p for p in feature_score_buffer) + '\n')
@@ -312,8 +312,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
   for t in range(iters):
     w, scores, best_feature_index, score = update(w, scores,
                                                   dataset_train.X_rows,
-                                                  dataset_train.X_cols,
-                                                  Y_train)
+                                                  dataset_train.X_cols, Y_train)
     w.block_until_ready()
     feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))

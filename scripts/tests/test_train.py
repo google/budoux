@@ -335,5 +335,6 @@ class TestLoadDataset(unittest.TestCase):
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -14, 10, -11, -1])
 
+
 if __name__ == '__main__':
   unittest.main()
