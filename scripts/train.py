@@ -88,7 +88,7 @@ def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
   Returns:
     A dataset
   """
-  Y = array.array('B')
+  Y = array.array('i')
   X_rows = array.array('I')
   X_cols = array.array('I')
   with open(data_path) as f:
@@ -97,13 +97,12 @@ def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
       cols = row.strip().split('\t')
       if len(cols) < 2:
         continue
-      Y.append(cols[0] == '1')
+      Y.append(int(cols[0]))
       hit_indices = [findex[feat] for feat in cols[1:] if feat in findex]
       X_rows.extend(i for _ in range(len(hit_indices)))
       X_cols.extend(hit_indices)
       i += 1
-  return Dataset(
-      jnp.asarray(X_rows), jnp.asarray(X_cols), jnp.asarray(Y, dtype=bool))
+  return Dataset(jnp.asarray(X_rows), jnp.asarray(X_cols), jnp.asarray(Y))
 
 
 def preprocess(
@@ -173,9 +172,10 @@ def get_metrics(pred: jax.Array, actual: jax.Array) -> Result:
   tn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 0))  # type: ignore
   fp: int = jnp.sum(jnp.logical_and(pred == 1, actual == 0))  # type: ignore
   fn: int = jnp.sum(jnp.logical_and(pred == 0, actual == 1))  # type: ignore
-  accuracy = (tp + tn) / (tp + tn + fp + fn)
-  precision = tp / (tp + fp)
-  recall = tp / (tp + fn)
+  accuracy = (tp + tn) / (tp + tn + fp + fn + EPS)
+  precision = tp / (tp + fp + EPS)
+  recall = tp / (tp + fn + EPS)
+  fscore = 2 * precision * recall / (precision + recall + EPS)
   return Result(
       tp=tp,
       tn=tn,
@@ -184,7 +184,7 @@ def get_metrics(pred: jax.Array, actual: jax.Array) -> Result:
       accuracy=accuracy,
       precision=precision,
       recall=recall,
-      fscore=2 * precision * recall / (precision + recall),
+      fscore=fscore,
   )
 
 
@@ -262,7 +262,9 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
   feature_score_buffer: typing.List[typing.Tuple[str, float]] = []
   N_train = dataset_train.Y.shape[0]
   N_test = dataset_val.Y.shape[0] if dataset_val else 0
-  w = jnp.ones(N_train) / N_train
+  Y_train = dataset_train.Y > 0
+  Y_test = dataset_val.Y > 0 if dataset_val else None
+  w = jnp.abs(dataset_train.Y) / jnp.sum(jnp.abs(dataset_train.Y))
 
   def output_progress(t: int) -> None:
     with open(weights_filename, 'a') as f:
@@ -275,7 +277,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
     with open(log_filename, 'a') as f:
       pred_train = pred(scores, dataset_train.X_rows, dataset_train.X_cols,
                         N_train)
-      metrics_train = get_metrics(pred_train, dataset_train.Y)
+      metrics_train = get_metrics(pred_train, Y_train)
       print('train accuracy:\t%.5f' % metrics_train.accuracy)
       print('train prec.:\t%.5f' % metrics_train.precision)
       print('train recall:\t%.5f' % metrics_train.recall)
@@ -291,7 +293,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
 
       if dataset_val:
         pred_test = pred(scores, dataset_val.X_rows, dataset_val.X_cols, N_test)
-        metrics_test = get_metrics(pred_test, dataset_val.Y)
+        metrics_test = get_metrics(pred_test, Y_test)
         print('test accuracy:\t%.5f' % metrics_test.accuracy)
         print('test prec.:\t%.5f' % metrics_test.precision)
         print('test recall:\t%.5f' % metrics_test.recall)
@@ -310,8 +312,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
   for t in range(iters):
     w, scores, best_feature_index, score = update(w, scores,
                                                   dataset_train.X_rows,
-                                                  dataset_train.X_cols,
-                                                  dataset_train.Y)
+                                                  dataset_train.X_cols, Y_train)
     w.block_until_ready()
     feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))
