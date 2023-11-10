@@ -29,6 +29,18 @@ with open(
   SKIP_NODES: typing.Set[str] = set(json.load(f))
 
 
+class ElementState(object):
+  """Represents the state for an element.
+
+  Attributes:
+    tag (str): The tag name.
+    to_skip (bool): Whether the content should be skipped or not.
+  """
+  def __init__(self, tag: str, to_skip: bool) -> None:
+    self.tag = tag
+    self.to_skip = to_skip
+
+
 class TextContentExtractor(HTMLParser):
   """An HTML parser to extract text content.
 
@@ -61,7 +73,7 @@ class HTMLChunkResolver(HTMLParser):
     self.separator = separator
     self.to_skip = False
     self.scan_index = 0
-    self.element_stack: queue.LifoQueue[bool] = queue.LifoQueue()
+    self.element_stack: queue.LifoQueue[ElementState] = queue.LifoQueue()
 
   def handle_starttag(self, tag: str, attrs: HTMLAttr) -> None:
     attr_pairs = []
@@ -71,7 +83,7 @@ class HTMLChunkResolver(HTMLParser):
       else:
         attr_pairs.append(' %s="%s"' % (attr[0], attr[1]))
     encoded_attrs = ''.join(attr_pairs)
-    self.element_stack.put(self.to_skip)
+    self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
       if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
         self.scan_index += 1
@@ -81,7 +93,17 @@ class HTMLChunkResolver(HTMLParser):
 
   def handle_endtag(self, tag: str) -> None:
     self.output += '</%s>' % (tag)
-    self.to_skip = self.element_stack.get_nowait()
+    while not self.element_stack.empty():
+      state = self.element_stack.get_nowait()
+      if state.tag == tag:
+        self.to_skip = state.to_skip
+        break
+      # If the close tag doesn't match the open tag, remove it and keep looking.
+      # This means that close tags close their corresponding open tags.
+      # e.g., `<span>abc<img>def</span>` or `<p>abc<span>def</p>` are both valid
+      # HTML as per the HTML spec.
+      # Note the HTML "adoption agency algorithm" isn't fully supported.
+      # See https://html.spec.whatwg.org/multipage/parsing.html#an-introduction-to-error-handling-and-strange-cases-in-the-parser
 
   def handle_data(self, data: str) -> None:
     for char in data:
