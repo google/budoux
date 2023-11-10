@@ -36,6 +36,7 @@ class ElementState(object):
     tag (str): The tag name.
     to_skip (bool): Whether the content should be skipped or not.
   """
+
   def __init__(self, tag: str, to_skip: bool) -> None:
     self.tag = tag
     self.to_skip = to_skip
