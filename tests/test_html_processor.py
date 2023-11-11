@@ -46,6 +46,38 @@ class TestHTMLChunkResolver(unittest.TestCase):
     self.assertEqual(resolver.output, expected,
                      'WBR tags should be inserted as specified by chunks.')
 
+  def test_unpaired(self) -> None:
+    input = '<p>abcdef</p></p>'
+    expected = '<p>abc<wbr>def</p></p>'
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def'], '<wbr>')
+    resolver.feed(input)
+    self.assertEqual(resolver.output, expected,
+                     'Unpaired close tag should not cause errors.')
+
+  def test_nobr(self) -> None:
+    input = '<p>ab<nobr>cde</nobr>f</p>'
+    expected = '<p>ab<nobr>cde</nobr>f</p>'
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def'], '<wbr>')
+    resolver.feed(input)
+    self.assertEqual(resolver.output, expected,
+                     'WBR tags should not be inserted if in NOBR.')
+
+  def test_after_nobr(self) -> None:
+    input = '<p>ab<nobr>xy</nobr>abcdef</p>'
+    expected = '<p>ab<nobr>xy</nobr>abc<wbr>def</p>'
+    resolver = html_processor.HTMLChunkResolver(['abxyabc', 'def'], '<wbr>')
+    resolver.feed(input)
+    self.assertEqual(resolver.output, expected,
+                     'WBR tags should be inserted if after NOBR.')
+
+  def test_img_in_nobr(self) -> None:
+    input = '<p>ab<nobr>x<img>y</nobr>abcdef</p>'
+    expected = '<p>ab<nobr>x<img>y</nobr>abc<wbr>def</p>'
+    resolver = html_processor.HTMLChunkResolver(['abxyabc', 'def'], '<wbr>')
+    resolver.feed(input)
+    self.assertEqual(resolver.output, expected,
+                     'IMG should not affect surrounding NOBR.')
+
 
 class TestResolve(unittest.TestCase):
 
