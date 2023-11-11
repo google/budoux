@@ -128,7 +128,7 @@ final class HTMLProcessor {
       }
       // assume node instanceof Element;
       toSkip = elementStack.pop();
-      Element element = (Element)node;
+      Element element = (Element) node;
       if (element.tag().isSelfClosing()) {
         return;
       }
