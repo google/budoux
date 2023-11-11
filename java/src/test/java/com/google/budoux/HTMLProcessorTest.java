@@ -47,9 +47,7 @@ public class HTMLProcessorTest {
     List<String> phrases = Arrays.asList("abc", "def");
     String html = "ab<a href=\"http://example.com\">cd</a>ef";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
-    assertEquals(
-        this.wrap("ab<a href=\"http://example.com\">c<wbr>d</a>ef"),
-        result);
+    assertEquals(this.wrap("ab<a href=\"http://example.com\">c<wbr>d</a>ef"), result);
   }
 
   @Test
@@ -89,9 +87,7 @@ public class HTMLProcessorTest {
     List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
     String html = "abc<nobr>def</nobr>ghijkl";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
-    assertEquals(
-        this.wrap("abc<wbr><nobr>def</nobr><wbr>ghi<wbr>jkl"),
-        result);
+    assertEquals(this.wrap("abc<wbr><nobr>def</nobr><wbr>ghi<wbr>jkl"), result);
   }
 
   @Test
@@ -99,9 +95,7 @@ public class HTMLProcessorTest {
     List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
     String html = "abc<nobr>d<img>ef</nobr>ghijkl";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
-    assertEquals(
-        this.wrap("abc<wbr><nobr>d<img>ef</nobr><wbr>ghi<wbr>jkl"),
-        result);
+    assertEquals(this.wrap("abc<wbr><nobr>d<img>ef</nobr><wbr>ghi<wbr>jkl"), result);
   }
 
   @Test
