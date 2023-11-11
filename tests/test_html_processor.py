@@ -76,7 +76,7 @@ class TestHTMLChunkResolver(unittest.TestCase):
     resolver = html_processor.HTMLChunkResolver(['abxyabc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(resolver.output, expected,
-                     'WBR tags should not be inserted if NOBR.')
+                     'IMG should not affect surrounding NOBR.')
 
 
 class TestResolve(unittest.TestCase):
