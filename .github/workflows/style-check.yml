@@ -71,7 +71,8 @@ jobs:
           args: "--replace"
           skip-commit: true
       - name: Print diffs
-        run: git --no-pager diff --exit-code  markdown-style-check:
+        run: git --no-pager diff --exit-code
+  markdown-style-check:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
