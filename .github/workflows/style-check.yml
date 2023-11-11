@@ -69,7 +69,7 @@ jobs:
         uses: axel-op/googlejavaformat-action@fe78db8a90171b6a836449f8d0e982d5d71e5c5a
         with:
           args: "--replace"
-          skip-commit: true
+          skipCommit: true
       - name: Print diffs
         run: git --no-pager diff --exit-code
   markdown-style-check:
