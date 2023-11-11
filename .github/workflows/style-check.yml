@@ -68,8 +68,10 @@ jobs:
       - name: Google Java Format
         uses: axel-op/googlejavaformat-action@fe78db8a90171b6a836449f8d0e982d5d71e5c5a
         with:
-          args: "--dry-run --set-exit-if-changed"
-  markdown-style-check:
+          args: "--replace"
+          skip-commit: true
+      - name: Print diffs
+        run: git --no-pager diff --exit-code  markdown-style-check:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
