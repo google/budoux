@@ -66,9 +66,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Google Java Format
-        uses: axel-op/googlejavaformat-action@fe78db8a90171b6a836449f8d0e982d5d71e5c5a
+        uses: axel-op/googlejavaformat-action@dbff853fb823671ec5781365233bf86543b13215
         with:
-          args: "--dry-run --set-exit-if-changed"
+          args: "--replace"
+          skip-commit: true
+      - name: Print diffs
+        run: git --no-pager diff --exit-code
   markdown-style-check:
     runs-on: ubuntu-latest
     steps:
