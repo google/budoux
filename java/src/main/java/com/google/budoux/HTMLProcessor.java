@@ -79,6 +79,9 @@ final class HTMLProcessor {
         output.append(((TextNode) node).getWholeText());
       }
     }
+
+    @Override
+    public void tail(Node node, int depth) {}
   }
 
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
