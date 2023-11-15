@@ -56,6 +56,31 @@ final class HTMLProcessor {
     }
   }
 
+  /**
+   * A `NodeVisitor` subclass that concatenates all `TextNode`s to a string.
+   *
+   * <p>It also converts `&lt;br>` to `\n`.
+   */
+  private static class TextizeNodeVisitor implements NodeVisitor {
+    private StringBuilder output = new StringBuilder();
+
+    public String getString() {
+      return output.toString();
+    }
+
+    @Override
+    public void head(Node node, int depth) {
+      if (node instanceof Element) {
+        final String nodeName = node.nodeName();
+        if (nodeName.equals("br")) {
+          output.append('\n');
+        }
+      } else if (node instanceof TextNode) {
+        output.append(((TextNode) node).getWholeText());
+      }
+    }
+  }
+
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
     private static final char SEP = '\uFFFF';
     private final String phrasesJoined;
@@ -97,12 +122,11 @@ final class HTMLProcessor {
                 .map(attribute -> " " + attribute)
                 .collect(Collectors.joining(""));
         final String nodeName = node.nodeName();
-        final String upperNodeName = nodeName.toUpperCase(Locale.ENGLISH);
-        if (upperNodeName.equals("BR")) {
-          // Match jsoup `Element.wholeText()` returning `\n` for `<br>`.
+        if (nodeName.equals("br")) {
+          // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
           // Assume phrasesJoined.charAt(scanIndex) == '\n'.
           scanIndex++;
-        } else if (skipNodes.contains(upperNodeName)) {
+        } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
           if (!toSkip && phrasesJoined.charAt(scanIndex) == SEP) {
             output.append(separator);
             scanIndex++;
@@ -175,6 +199,9 @@ final class HTMLProcessor {
    * @return the text content.
    */
   public static String getText(String html) {
-    return Jsoup.parseBodyFragment(html).wholeText();
+    Document doc = Jsoup.parseBodyFragment(html);
+    TextizeNodeVisitor nodeVisitor = new TextizeNodeVisitor();
+    doc.body().traverse(nodeVisitor);
+    return nodeVisitor.getString();
   }
 }
