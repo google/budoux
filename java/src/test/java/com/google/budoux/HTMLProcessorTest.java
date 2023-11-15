@@ -107,9 +107,33 @@ public class HTMLProcessorTest {
   }
 
   @Test
+  public void testResolveBR() {
+    String html = " 1  <br>  2 ";
+    String text = HTMLProcessor.getText(html);
+    assertEquals(" 1  \n  2 ", text);
+    List<String> phrases = Arrays.asList(" 1  \n  2 ");
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap(" 1  <br>  2 "), result);
+  }
+
+  @Test
   public void testGetText() {
     String html = "Hello <button><b>W</b>orld</button>!";
     String result = HTMLProcessor.getText(html);
     assertEquals("Hello World!", result);
+  }
+
+  @Test
+  public void testGetTextWhiteSpace() {
+    String html = " H    e  ";
+    String result = HTMLProcessor.getText(html);
+    assertEquals(" H    e  ", result);
+  }
+
+  @Test
+  public void testGetTextWhiteSpaceAcrossElements() {
+    String html = "<div> 1 </div><div> 2 </div>";
+    String result = HTMLProcessor.getText(html);
+    assertEquals(" 1  2 ", result);
   }
 }

@@ -97,7 +97,12 @@ final class HTMLProcessor {
                 .map(attribute -> " " + attribute)
                 .collect(Collectors.joining(""));
         final String nodeName = node.nodeName();
-        if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
+        final String upperNodeName = nodeName.toUpperCase(Locale.ENGLISH);
+        if (upperNodeName.equals("BR")) {
+          // Match jsoup `Element.wholeText()` returning `\n` for `<br>`.
+          // Assume phrasesJoined.charAt(scanIndex) == '\n'.
+          scanIndex++;
+        } else if (skipNodes.contains(upperNodeName)) {
           if (!toSkip && phrasesJoined.charAt(scanIndex) == SEP) {
             output.append(separator);
             scanIndex++;
@@ -110,6 +115,7 @@ final class HTMLProcessor {
         for (int i = 0; i < data.length(); i++) {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
+            // Assume phrasesJoined.charAt(scanIndex) == SEP.
             if (!toSkip) {
               output.append(separator);
             }
@@ -169,6 +175,6 @@ final class HTMLProcessor {
    * @return the text content.
    */
   public static String getText(String html) {
-    return Jsoup.parseBodyFragment(html).text();
+    return Jsoup.parseBodyFragment(html).wholeText();
   }
 }
