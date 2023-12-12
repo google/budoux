@@ -118,7 +118,7 @@ class TestPreprocess(unittest.TestCase):
     else:
       raise ValueError('val_dataset is not an instance of Dataset.')
 
-  def teset_no_val(self) -> None:
+  def test_no_val(self) -> None:
     train_data_path = tempfile.NamedTemporaryFile().name
     with open(train_data_path, 'w') as f:
       f.write(('1\tfoo\tbar\n'
@@ -128,7 +128,7 @@ class TestPreprocess(unittest.TestCase):
                '-1\tbaz\tqux\n'))
     train_dataset, features, val_dataset = train.preprocess(train_data_path, 1)
     self.assertEqual(features, ['foo', 'bar', 'baz'])
-    self.assertEqual(train_dataset.Y.tolist(), [True, False, True, True, False])
+    self.assertEqual(train_dataset.Y.tolist(), [1, -1, 1, 1, -1])
     self.assertEqual(train_dataset.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(train_dataset.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertIsNone(val_dataset)
