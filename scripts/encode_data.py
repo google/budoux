@@ -96,19 +96,27 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       help='''Number of processes to use.
           (default: the number of CPUs in the system)''',
       default=None)
+  parser.add_argument(
+      '--scale',
+      type=int,
+      help='''Weight scale for the entrties. The value should be a unsigned
+         integer. (default: 1)''',
+      default=1)
   if test is None:
     return parser.parse_args()
   else:
     return parser.parse_args(test)
 
 
-def process(i: int, sentence: str, sep_indices: typing.Set[int]) -> str:
+def process(i: int, sentence: str, sep_indices: typing.Set[int],
+            scale: int) -> str:
   """Outputs an encoded line of features from the given index.
 
   Args:
     i (int): index
     sentence (str): A sentence
     sep_indices (typing.Set[int]): A set of separator indices.
+    scale (int): A weight scale for the entries.
   """
   feature = get_feature(sentence[i - 3] if i > 2 else INVALID,
                         sentence[i - 2] if i > 1 else INVALID, sentence[i - 1],
@@ -116,7 +124,7 @@ def process(i: int, sentence: str, sep_indices: typing.Set[int]) -> str:
                         sentence[i + 1] if i + 1 < len(sentence) else INVALID,
                         sentence[i + 2] if i + 2 < len(sentence) else INVALID)
   positive = i in sep_indices
-  line = '\t'.join(['1' if positive else '-1'] + feature)
+  line = '\t'.join(['%d' % (scale) if positive else '%d' % (-scale)] + feature)
   return line
 
 
@@ -142,12 +150,13 @@ def main(test: ArgList = None) -> None:
   source_filename: str = args.source_data
   entries_filename: str = args.outfile
   processes = None if args.processes is None else int(args.processes)
+  scale: int = args.scale
   with open(source_filename, encoding=sys.getdefaultencoding()) as f:
     data = f.read()
   sentence, sep_indices = normalize_input(data)
   with multiprocessing.Pool(processes) as p:
     func = functools.partial(
-        process, sentence=sentence, sep_indices=sep_indices)
+        process, sentence=sentence, sep_indices=sep_indices, scale=scale)
     lines = p.map(func, range(1, len(sentence) + 1))
 
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:

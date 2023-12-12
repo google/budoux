@@ -97,6 +97,7 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.source_data, 'source.txt')
     self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
     self.assertIsNone(output.processes)
+    self.assertEqual(output.scale, 1)
 
   def test_cmdargs_with_outfile(self) -> None:
     cmdargs = ['source.txt', '-o', 'out.txt']
@@ -104,6 +105,7 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.source_data, 'source.txt')
     self.assertEqual(output.outfile, 'out.txt')
     self.assertIsNone(output.processes)
+    self.assertEqual(output.scale, 1)
 
   def test_cmdargs_with_processes(self) -> None:
     cmdargs = ['source.txt', '--processes', '8']
@@ -111,6 +113,15 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.source_data, 'source.txt')
     self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
     self.assertEqual(output.processes, 8)
+    self.assertEqual(output.scale, 1)
+
+  def test_cmdargs_with_scale(self) -> None:
+    cmdargs = ['source.txt', '--scale', '20']
+    output = encode_data.parse_args(cmdargs)
+    self.assertEqual(output.source_data, 'source.txt')
+    self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
+    self.assertIsNone(output.processes)
+    self.assertEqual(output.scale, 20)
 
 
 class TestProcess(unittest.TestCase):
@@ -118,20 +129,20 @@ class TestProcess(unittest.TestCase):
   sentence = '六本木ヒルズでお昼を食べる。'
   sep_indices = {7, 10, 13}
 
-  def test_on_positive_point(self) -> None:
-    line = encode_data.process(8, self.sentence, self.sep_indices)
+  def test_on_negative_point_with_scale(self) -> None:
+    line = encode_data.process(8, self.sentence, self.sep_indices, 16)
     items = line.split('\t')
-    positive = items[0]
+    weight = items[0]
     features = set(items[1:])
-    self.assertEqual(positive, '-1')
+    self.assertEqual(weight, '-16')
     self.assertIn('UW2:で', features)
 
-  def test_on_negative_point(self) -> None:
-    line = encode_data.process(7, self.sentence, self.sep_indices)
+  def test_on_positive_point_with_scale(self) -> None:
+    line = encode_data.process(7, self.sentence, self.sep_indices, 13)
     items = line.split('\t')
-    positive = items[0]
+    weight = items[0]
     features = set(items[1:])
-    self.assertEqual(positive, '1')
+    self.assertEqual(weight, '13')
     self.assertIn('UW3:で', features)
 
 
