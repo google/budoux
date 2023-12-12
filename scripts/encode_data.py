@@ -99,7 +99,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
   parser.add_argument(
       '--scale',
       type=int,
-      help='''Weight scale for the entrties. The value should be a unsigned
+      help='''Weight scale for the entries. The value should be a unsigned
          integer. (default: 1)''',
       default=1)
   if test is None:
