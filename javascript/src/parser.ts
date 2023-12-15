@@ -35,7 +35,7 @@ export class Parser {
    * Parses the input sentence and returns a list of semantic chunks.
    *
    * @param sentence An input sentence.
-   * @returns The retrieved chunks.
+   * @return The retrieved chunks.
    */
   parse(sentence: string): string[] {
     if (sentence === '') return [];
@@ -54,7 +54,7 @@ export class Parser {
    * Parses the input sentence and returns a list of boundaries.
    *
    * @param sentence An input sentence.
-   * @returns The list of boundaries.
+   * @return The list of boundaries.
    */
   parseBoundaries(sentence: string): number[] {
     const result = [];

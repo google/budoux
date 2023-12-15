@@ -166,7 +166,7 @@ const NODETYPE = {
 /**
  * Determine the action for an element.
  * @param element An element to determine the action for.
- * @returns The {@link domActions} for the element.
+ * @return The {@link domActions} for the element.
  */
 function actionForElement(element: Element): DomAction {
   const nodeName = element.nodeName;
@@ -292,7 +292,7 @@ class Paragraph {
   }
 
   /**
-   * @returns Indices of forced break opportunities in the source.
+   * @return Indices of forced break opportunities in the source.
    * They can be created by `<wbr>` tag or `&ZeroWidthSpace;`.
    */
   getForcedOpportunities(): number[] {
@@ -318,7 +318,7 @@ class Paragraph {
   }
 
   /**
-   * @returns Filtered {@param boundaries} by excluding
+   * @return Filtered {@param boundaries} by excluding
    * {@link getForcedOpportunities} if it's not empty.
    * Otherwise {@param boundaries}.
    */
@@ -378,7 +378,7 @@ export class HTMLProcessor {
    * Checks if the given element has a text node in its children.
    *
    * @param ele An element to be checked.
-   * @returns Whether the element has a child text node.
+   * @return Whether the element has a child text node.
    */
   static hasChildTextNode(ele: HTMLElement) {
     for (const child of ele.childNodes) {
@@ -405,7 +405,7 @@ export class HTMLProcessor {
    * Find paragraphs from a given HTML element.
    * @param element The root element to find paragraphs.
    * @param parent The parent {@link Paragraph} if any.
-   * @returns A list of {@link Paragraph}s.
+   * @return A list of {@link Paragraph}s.
    */
   *getBlocks(
     element: HTMLElement,
@@ -629,7 +629,7 @@ export class HTMLProcessingParser extends Parser {
    * Translates the given HTML string to another HTML string with markups
    * for semantic line breaks.
    * @param html An input html string.
-   * @returns The translated HTML string.
+   * @return The translated HTML string.
    */
   translateHTMLString(html: string) {
     if (html === '') return html;
