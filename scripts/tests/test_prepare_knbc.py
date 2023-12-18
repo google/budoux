@@ -61,12 +61,17 @@ class TestKNBCHTMLParser(unittest.TestCase):
   </html>
   '''
 
-  def test_parse(self) -> None:
-    parser = prepare_knbc.KNBCHTMLParser(False)
+  def test_parse_phrase(self) -> None:
+    parser = prepare_knbc.KNBCHTMLParser('phrase')
     parser.feed(self.example_html)
     self.assertListEqual(parser.chunks, ['abcdefghijkl', 'mn'])
 
-  def test_parse_split_tags(self) -> None:
-    parser = prepare_knbc.KNBCHTMLParser(True)
+  def test_parse_tag(self) -> None:
+    parser = prepare_knbc.KNBCHTMLParser('tag')
     parser.feed(self.example_html)
     self.assertListEqual(parser.chunks, ['abcde', 'fghijkl', 'mn'])
+
+  def test_parse_word(self) -> None:
+    parser = prepare_knbc.KNBCHTMLParser('word')
+    parser.feed(self.example_html)
+    self.assertListEqual(parser.chunks, ['abc', 'de', 'fgh', 'ijkl', 'mn'])
