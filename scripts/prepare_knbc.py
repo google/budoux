@@ -36,6 +36,9 @@ sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import utils  # noqa (module hack)
 
+GRANULARITY_OPTIONS = {'phrase', 'tag', 'word'}
+Granularity = typing.Literal['phrase', 'tag', 'word']
+
 
 class KNBCHTMLParser(HTMLParser):
   """Parses the HTML files in the KNBC corpus to collect chunks.
@@ -46,17 +49,17 @@ class KNBCHTMLParser(HTMLParser):
     col: The current column index.
     current_word: The current word to process.
     on_split_row: Whether the scan is on the splitting row.
-    split_tab: Whether to split by tags in addition to Bunsetsu.
+    granularity: Granularity of the output chunks.
   """
 
   BUNSETSU_SPLIT_ID = 'bnst-kugiri'
   TAG_SPLIT_ID = 'tag-kugiri'
 
-  def __init__(self, split_tab: bool = False) -> None:
+  def __init__(self, granularity: Granularity) -> None:
     """Initializes the HTML parser for the KNBC corpus.
 
     Args:
-      split_tab: Split by tags in addition to Bunsetsu. (default: False)
+      granularity: Granularity of the output chunks.
     """
     super().__init__()
     self.chunks = ['']
@@ -64,7 +67,7 @@ class KNBCHTMLParser(HTMLParser):
     self.col = 0
     self.current_word = ''
     self.on_split_row = False
-    self.split_tab = split_tab
+    self.granularity = granularity
 
   def handle_starttag(
       self, tag: str,
@@ -78,8 +81,10 @@ class KNBCHTMLParser(HTMLParser):
     if tag == 'td':
       self.col += 1
       for name, value in attributes:
-        if (name == 'id' and value == self.BUNSETSU_SPLIT_ID) or (
-            self.split_tab and name == 'id' and value == self.TAG_SPLIT_ID):
+        if (name == 'id' and
+            value == self.BUNSETSU_SPLIT_ID) or (self.granularity == 'tag' and
+                                                 name == 'id' and
+                                                 value == self.TAG_SPLIT_ID):
           self.on_split_row = True
 
   def handle_endtag(self, tag: str) -> None:
@@ -90,6 +95,8 @@ class KNBCHTMLParser(HTMLParser):
     if self.on_split_row:
       return self.chunks.append('')
     if self.col == 5:
+      if self.granularity == 'word' and self.chunks[-1]:
+        self.chunks.append('')
       self.chunks[-1] += self.current_word
 
   def handle_data(self, data: str) -> None:
@@ -130,6 +137,7 @@ def postprocess(chunks: typing.List[str]) -> typing.List[str]:
 
 def parse_args() -> argparse.Namespace:
   DEFAULT_OUT_PATH = 'source.txt'
+  DEFAULT_GRANULARITY = 'phrase'
   parser = argparse.ArgumentParser(
       description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('source_dir', help='Path to the KNBC corpus directory.')
@@ -138,6 +146,21 @@ def parse_args() -> argparse.Namespace:
       '--outfile',
       help=f'File path to the output dataset. (default: {DEFAULT_OUT_PATH})',
       default=DEFAULT_OUT_PATH)
+  parser.add_argument(
+      '--granularity',
+      help=f'''Granularity of the output chunks. (default: {DEFAULT_GRANULARITY})
+The value should be one of "phrase", "tag", or "word".
+"phrase" is equivalent to Bunsetu-based segmentation.
+"tag" provides more granular segmentation than "phrase".
+"word" is equivalent to word-based segmentation.
+
+e.g. 携帯ユーザーの仲間入りをするかです。
+phrase: 携帯ユーザーの / 仲間入りを / するかです。
+tag: 携帯 / ユーザーの / 仲間 / 入りを / するかです。
+word: 携帯 / ユーザー / の / 仲間 / 入り / を / する / か / です / 。
+''',
+      choices=GRANULARITY_OPTIONS,
+      default=DEFAULT_GRANULARITY)
   return parser.parse_args()
 
 
@@ -145,12 +168,13 @@ def main() -> None:
   args = parse_args()
   source_dir = args.source_dir
   outfile = args.outfile
+  granularity = args.granularity
   html_dir = os.path.join(source_dir, 'html')
   with open(outfile, 'w') as f:
     for file in sorted(os.listdir(html_dir)):
       if file[-11:] != '-morph.html':
         continue
-      parser = KNBCHTMLParser(split_tab=False)
+      parser = KNBCHTMLParser(granularity)
       data = open(os.path.join(html_dir, file)).read()
       parser.feed(data)
       chunks = parser.chunks
