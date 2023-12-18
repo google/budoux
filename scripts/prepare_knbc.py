@@ -81,10 +81,9 @@ class KNBCHTMLParser(HTMLParser):
     if tag == 'td':
       self.col += 1
       for name, value in attributes:
-        if (name == 'id' and
-            value == self.BUNSETSU_SPLIT_ID) or (self.granularity == 'tag' and
-                                                 name == 'id' and
-                                                 value == self.TAG_SPLIT_ID):
+        bunsetsu_row = name == 'id' and value == self.BUNSETSU_SPLIT_ID
+        tag_row = name == 'id' and value == self.TAG_SPLIT_ID
+        if bunsetsu_row or (self.granularity == 'tag' and tag_row):
           self.on_split_row = True
 
   def handle_endtag(self, tag: str) -> None:
