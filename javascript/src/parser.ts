@@ -19,7 +19,7 @@
  */
 export class Parser {
   /** BudouX model data */
-  model;
+  private readonly model: Map<string, Map<string, number>>;
 
   /**
    * Constructs a BudouX parser.
