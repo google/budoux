@@ -20,6 +20,7 @@
 export class Parser {
   /** BudouX model data */
   private readonly model: Map<string, Map<string, number>>;
+  private readonly baseScore: number;
 
   /**
    * Constructs a BudouX parser.
@@ -29,6 +30,12 @@ export class Parser {
     this.model = new Map(
       Object.entries(model).map(([k, v]) => [k, new Map(Object.entries(v))])
     );
+    this.baseScore =
+      -0.5 *
+      [...this.model.values()]
+        .map(group => [...group.values()])
+        .flat()
+        .reduce((prev, curr) => prev + curr, 0);
   }
 
   /**
@@ -58,15 +65,9 @@ export class Parser {
    */
   parseBoundaries(sentence: string): number[] {
     const result = [];
-    const baseScore =
-      -0.5 *
-      [...this.model.values()]
-        .map(group => [...group.values()])
-        .flat()
-        .reduce((prev, curr) => prev + curr, 0);
 
     for (let i = 1; i < sentence.length; i++) {
-      let score = baseScore;
+      let score = this.baseScore;
       /* eslint-disable */
       score += this.model.get('UW1')?.get(sentence.substring(i - 3, i - 2)) || 0;
       score += this.model.get('UW2')?.get(sentence.substring(i - 2, i - 1)) || 0;
