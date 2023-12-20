@@ -133,3 +133,14 @@ def load_default_traditional_chinese_parser() -> Parser:
   with open(os.path.join(MODEL_DIR, 'zh-hant.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
+
+
+def load_default_thai_parser() -> Parser:
+  """Loads a parser equipped with the default Thai model.
+
+  Returns:
+    A parser (:obj:`budoux.Parser`).
+  """
+  with open(os.path.join(MODEL_DIR, 'th.json'), encoding='utf-8') as f:
+    model = json.load(f)
+  return Parser(model)

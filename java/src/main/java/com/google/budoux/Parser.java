@@ -85,6 +85,15 @@ public class Parser {
   }
 
   /**
+   * Loads the default Thai parser.
+   *
+   * @return a BudouX parser with the default Thai model.
+   */
+  public static Parser loadDefaultThaiParser() {
+    return loadByFileName("/models/th.json");
+  }
+
+  /**
    * Loads a parser by specifying the model file path.
    *
    * @param modelFileName the model file path.
