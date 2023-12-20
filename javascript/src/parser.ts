@@ -68,6 +68,7 @@ export class Parser {
 
     for (let i = 1; i < sentence.length; i++) {
       let score = this.baseScore;
+      // NOTE: Score values in models may be negative.
       /* eslint-disable */
       score += this.model.get('UW1')?.get(sentence.substring(i - 3, i - 2)) || 0;
       score += this.model.get('UW2')?.get(sentence.substring(i - 2, i - 1)) || 0;
