@@ -17,6 +17,7 @@
 import {model as jaModel} from './data/models/ja.js';
 import {model as zhHansModel} from './data/models/zh-hans.js';
 import {model as zhHantModel} from './data/models/zh-hant.js';
+import {model as thModel} from './data/models/th.js';
 import {HTMLProcessingParser} from './html_processor.js';
 
 export {Parser} from './parser.js';
@@ -48,6 +49,13 @@ export const loadDefaultTraditionalChineseParser = () => {
 };
 
 /**
+ * Loads a parser equipped with the default Thai model.
+ * @returns A parser with the default Thai model.
+ */
+export const loadDefaultThaiParser = () => {
+  return new HTMLProcessingParser(thModel);
+};
+/**
  * Loads available default parsers.
  * @returns A map between available lang codes and their default parsers.
  */
@@ -56,5 +64,6 @@ export const loadDefaultParsers = () => {
     ['ja', loadDefaultJapaneseParser()],
     ['zh-hans', loadDefaultSimplifiedChineseParser()],
     ['zh-hant', loadDefaultTraditionalChineseParser()],
+    ['th', loadDefaultThaiParser()],
   ]);
 };
