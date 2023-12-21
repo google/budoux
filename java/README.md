@@ -35,6 +35,7 @@ public class App
 - Japanese: `Parser.loadDefaultJapaneseParser()`
 - Simplified Chinese: `Parser.loadDefaultSimplifiedChineseParser()`
 - Traditional Chinese: `Parser.loadDefaultTraditionalChineseParser()`
+- Thai: `Parser.loadDefaultThaiParser()`
 
 ### Working with HTML
 
