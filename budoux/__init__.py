@@ -21,3 +21,4 @@ Parser = parser.Parser
 load_default_japanese_parser = parser.load_default_japanese_parser
 load_default_simplified_chinese_parser = parser.load_default_simplified_chinese_parser
 load_default_traditional_chinese_parser = parser.load_default_traditional_chinese_parser
+load_default_thai_parser = parser.load_default_thai_parser

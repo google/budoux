@@ -26,6 +26,7 @@ Last but not least, BudouX supports HTML inputs.
 - Japanese
 - Simplified Chinese
 - Traditional Chinese
+- Thai
 
 ## Supported Programming languages
 
@@ -75,6 +76,14 @@ print(parser.parse('今天是晴天。'))
 # ['今天', '是', '晴天。']
 ```
 
+**Thai:**
+```python
+import budoux
+parser = budoux.load_default_thai_parser()
+print(parser.parse('วันนี้อากาศดี'))
+# ['วัน', 'นี้', 'อากาศ', 'ดี']
+```
+
 You can also translate an HTML string to wrap phrases with non-breaking markup.
 The default parser uses zero-width space (U+200B) to separate phrases.
 
@@ -122,6 +131,12 @@ $ budoux -l zh-hant 今天天氣晴朗。
 今天
 天氣
 晴朗。
+
+$ budoux -l th วันนี้อากาศดี
+วัน
+นี้
+อากาศ
+ดี
 ```
 
 ```shellsession
@@ -166,6 +181,7 @@ supported languages of `-l`, `--lang`:
 - ja
 - zh-hans
 - zh-hant
+- th
 ```
 
 ## Caveat

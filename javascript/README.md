@@ -50,6 +50,15 @@ console.log(parser.parse('是今天的天氣。'));
 // ['是', '今天', '的', '天氣。']
 ```
 
+**Thai:**
+
+```javascript
+import { loadDefaultThaiParser } from 'budoux';
+const parser = loadDefaultThaiParser();
+console.log(parser.parse('วันนี้อากาศดี'));
+// ['วัน', 'นี้', 'อากาศ', 'ดี']
+```
+
 ### Translating an HTML string
 
 You can also translate an HTML string to wrap phrases with non-breaking markup,
@@ -113,11 +122,13 @@ All you have to do is wrap sentences with:
 - `<budoux-ja>` for Japanese
 - `<budoux-zh-hans>` for Simplified Chinese
 - `<budoux-zh-hant>` for Traditional Chinese
+- `<budoux-th>` for Thai
 
 ```html
 <budoux-ja>今日は天気です。</budoux-ja>
 <budoux-zh-hans>今天是晴天。</budoux-zh-hans>
 <budoux-zh-hant>今天是晴天。</budoux-zh-hant>
+<budoux-th>วันนี้อากาศดี</budoux-th>
 ```
 
 In order to enable the custom element, you can simply add this line to load the bundle.
@@ -131,6 +142,9 @@ In order to enable the custom element, you can simply add this line to load the 
 
 <!-- For Traditional Chinese -->
 <script src="https://unpkg.com/budoux/bundle/budoux-zh-hant.min.js"></script>
+
+<!-- For Thai -->
+<script src="https://unpkg.com/budoux/bundle/budoux-th.min.js"></script>
 ```
 
 Otherwise, if you wish to bundle the component with the rest of your source code,
@@ -145,6 +159,9 @@ import 'budoux/module/webcomponents/budoux-zh-hans';
 
 // For Traditional Chinese
 import 'budoux/module/webcomponents/budoux-zh-hant';
+
+// For Thai
+import 'budoux/module/webcomponents/budoux-th';
 ```
 
 ### CLI
