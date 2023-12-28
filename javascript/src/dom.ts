@@ -24,7 +24,7 @@ import {win} from './win.js';
 /**
  * Parses an html string and returns a parsed html document.
  * @param html An HTML string.
- * @returns A Document.
+ * @return A Document.
  */
 export const parseFromString = (html: string) => {
   return new win.DOMParser().parseFromString(html, 'text/html');

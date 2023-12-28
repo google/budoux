@@ -26,7 +26,7 @@ export {jaModel, zhHansModel, zhHantModel};
 
 /**
  * Loads a parser equipped with the default Japanese model.
- * @returns A parser with the default Japanese model.
+ * @return A parser with the default Japanese model.
  */
 export const loadDefaultJapaneseParser = () => {
   return new HTMLProcessingParser(jaModel);
@@ -34,7 +34,7 @@ export const loadDefaultJapaneseParser = () => {
 
 /**
  * Loads a parser equipped with the default Simplified Chinese model.
- * @returns A parser with the default Simplified Chinese model.
+ * @return A parser with the default Simplified Chinese model.
  */
 export const loadDefaultSimplifiedChineseParser = () => {
   return new HTMLProcessingParser(zhHansModel);
@@ -42,7 +42,7 @@ export const loadDefaultSimplifiedChineseParser = () => {
 
 /**
  * Loads a parser equipped with the default Traditional Chinese model.
- * @returns A parser with the default Traditional Chinese model.
+ * @return A parser with the default Traditional Chinese model.
  */
 export const loadDefaultTraditionalChineseParser = () => {
   return new HTMLProcessingParser(zhHantModel);
@@ -57,7 +57,7 @@ export const loadDefaultThaiParser = () => {
 };
 /**
  * Loads available default parsers.
- * @returns A map between available lang codes and their default parsers.
+ * @return A map between available lang codes and their default parsers.
  */
 export const loadDefaultParsers = () => {
   return new Map([
