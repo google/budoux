@@ -27,6 +27,7 @@ from budoux import load_default_japanese_parser, utils  # noqa (module hack)
 class TestQuality(unittest.TestCase):
 
   def test_ja(self) -> None:
+    errors = []
     parser = load_default_japanese_parser()
     fp = os.path.join(os.path.dirname(__file__), 'quality', 'ja.tsv')
     with open(fp, 'r', encoding='utf-8') as f:
@@ -34,4 +35,8 @@ class TestQuality(unittest.TestCase):
     expected_sentences = [line[1].strip() for line in data if len(line) > 1]
     for expected in expected_sentences:
       result = utils.SEP.join(parser.parse(expected.replace(utils.SEP, '')))
-      self.assertEqual(result, expected)
+      if result != expected:
+        errors.append((expected, result))
+    self.assertEqual(
+        len(errors), 0, 'Failing sentences:\n' +
+        '\n'.join([f'expected:{err[0]}\tactual:{err[1]}' for err in errors]))
