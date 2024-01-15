@@ -38,5 +38,5 @@ class TestQuality(unittest.TestCase):
       if result != expected:
         errors.append((expected, result))
     self.assertEqual(
-        len(errors), 0, 'Failing sentences:\n' +
-        '\n'.join([f'expected:{err[0]}\tactual:{err[1]}' for err in errors]))
+        len(errors), 0, 'Failing sentences:\n{}'.format('\n'.join(
+            [f'expected:{err[0]}\tactual:{err[1]}' for err in errors])))
