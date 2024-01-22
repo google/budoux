@@ -63,6 +63,6 @@
   },
   "dependencies": {
     "commander": "^11.0.0",
-    "jsdom": "^23.0.0"
+    "jsdom": "^24.0.0"
   }
 }
