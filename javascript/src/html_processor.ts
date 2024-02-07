@@ -164,6 +164,27 @@ const NODETYPE = {
 };
 
 /**
+ * Determine the action for a CSS `display` property value.
+ * @param display The value of the CSS `display` property.
+ * @return The {@link domActions} for the value.
+ */
+function actionForDisplay(display: string): DomAction {
+  // Handle common cases first.
+  if (display === 'inline') return DomAction.Inline;
+  if (display === 'block') return DomAction.Block;
+
+  // Handle Ruby base as in-flow.
+  if (display.startsWith('ruby')) {
+    if (display === 'ruby-text') return DomAction.Skip;
+    return DomAction.Inline;
+  }
+
+  // Handle other values including multi-value syntax as blocks.
+  // https://drafts.csswg.org/css-display/#the-display-properties
+  return DomAction.Block;
+}
+
+/**
  * Determine the action for an element.
  * @param element An element to determine the action for.
  * @return The {@link domActions} for the element.
@@ -182,8 +203,7 @@ function actionForElement(element: Element): DomAction {
     }
 
     const display = style.display;
-    if (display)
-      return display === 'inline' ? DomAction.Inline : DomAction.Block;
+    if (display) return actionForDisplay(display);
     // `display` is an empty string if the element is not connected.
   }
 
