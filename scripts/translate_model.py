@@ -44,7 +44,7 @@ def translate_icu(model: typing.Dict[str, typing.Dict[str, int]]) -> str:
   """
   indent = '    '
   output = 'jaml {\n'
-  for group_name, members in model.items():
+  for group_name, members in sorted(model.items()):
     output += f'{indent}{group_name}Keys {{\n'
     for key in members.keys():
       output += f'{indent}{indent}"{key}",\n'

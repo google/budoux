@@ -53,7 +53,9 @@ class TestNormalize(unittest.TestCase):
 class TestTranslateICU(unittest.TestCase):
 
   def test_standard(self) -> None:
-    model = {'a': {'x': 12, 'y': 88}, 'b': {'x': 47, 'z': 13}}
+    model = {}
+    model['b'] = {'x': 47, 'z': 13}
+    model['a'] = {'x': 12, 'y': 88}
     expect = '''
 jaml {
     aKeys {
