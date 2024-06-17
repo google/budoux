@@ -1,4 +1,4 @@
-name: Experimental: build machine learning model
+name: Experimental - build machine learning model
 on:
   push:
     paths-ignore:
