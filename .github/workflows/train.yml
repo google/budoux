@@ -37,6 +37,7 @@ jobs:
           curl -o knbc.tar.bz2 https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2
           tar -xf knbc.tar.bz2
           python ./scripts/prepare_knbc.py KNBC_v1.0_090925_utf8 -o source_knbc.txt
-          python ./scripts/encode_data.py source_knbc.txt -o encoded_data.txt
+          top -n 100 source_knbc.txt > source.txt
+          python ./scripts/encode_data.py source.txt -o encoded_data.txt
           python ./scripts/train.py encoded_data.txt -o weights.txt
           python ./scripts/build_model.py weights.txt -o mymodel.json
