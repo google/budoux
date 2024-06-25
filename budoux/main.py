@@ -22,6 +22,7 @@ import textwrap
 import typing
 from pathlib import Path
 
+# TODO: replace with importlib.resources when py3.8 support is dropped.
 import importlib_resources
 
 import budoux
