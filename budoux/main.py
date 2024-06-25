@@ -15,18 +15,20 @@
 """BudouX Script to provide CLI for user."""
 import argparse
 import glob
+import importlib.resources
 import json
 import os
 import shutil
 import sys
 import textwrap
 import typing
-
-import pkg_resources
+from pathlib import Path
 
 import budoux
 
 ArgList = typing.Optional[typing.List[str]]
+models: Path = importlib.resources.files('budoux') / "models"  # type: ignore
+langs = dict((model.stem, model) for model in models.glob("*.json"))
 
 
 class BudouxHelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
@@ -52,22 +54,7 @@ def check_file(path: str) -> str:
     raise argparse.ArgumentTypeError(f"'{path}' is not found.")
 
 
-def get_model_langs() -> typing.Dict[str, str]:
-  """Get a dictionary of model languages and its paths.
-
-  Returns:
-      typing.Dict[str, str]: A dictionary of model languages and its paths.
-  """
-  models = glob.glob(
-      pkg_resources.resource_filename(__name__, "models") + "/*.json")
-  langs = {}
-  for model in models:
-    lang = model.split(os.sep)[-1][:-5]
-    langs[lang] = model
-  return langs
-
-
-def check_lang(lang: str) -> str:
+def check_lang(lang: str) -> Path:
   """Check if given language exists or not.
 
   Args:
@@ -77,9 +64,8 @@ def check_lang(lang: str) -> str:
       argparse.ArgumentTypeError: Raise if no model for given language exists.
 
   Returns:
-      str: A model path.
+      The model path.
   """
-  langs = get_model_langs()
   if lang in langs:
     return langs[lang]
   else:
@@ -110,8 +96,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
         BudouX is the successor to Budou,
         the machine learning powered line break organizer tool."""),
       epilog="\n- ".join(
-          ["supported languages of `-l`, `--lang`:",
-           *get_model_langs().keys()]))
+          ["supported languages of `-l`, `--lang`:", *langs.keys()]))
 
   parser.add_argument("text", metavar="TXT", nargs="?", type=str, help="text")
   parser.add_argument(
@@ -126,7 +111,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       "--model",
       metavar="JSON",
       type=check_file,
-      default=pkg_resources.resource_filename(__name__, "models/ja.json"),
+      default=check_lang('ja'),
       help="custom model file path",
   )
   model_select_group.add_argument(
