@@ -14,8 +14,6 @@
 # limitations under the License.
 """BudouX Script to provide CLI for user."""
 import argparse
-import glob
-import importlib.resources
 import json
 import os
 import shutil
@@ -24,10 +22,12 @@ import textwrap
 import typing
 from pathlib import Path
 
+import importlib_resources
+
 import budoux
 
 ArgList = typing.Optional[typing.List[str]]
-models: Path = importlib.resources.files('budoux') / "models"  # type: ignore
+models: Path = importlib_resources.files('budoux') / "models"  # type: ignore
 langs = dict((model.stem, model) for model in models.glob("*.json"))
 
 
