@@ -28,7 +28,7 @@ import importlib.resources
 import budoux
 
 ArgList = typing.Optional[typing.List[str]]
-models: Path = importlib_resources.files('budoux') / "models"
+models: Path = importlib.resources.files('budoux') / "models"
 langs = dict((model.stem, model) for model in models.glob("*.json"))
 
 
