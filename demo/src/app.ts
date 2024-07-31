@@ -57,12 +57,13 @@ const run = () => {
   const parser = parsers.get(model);
   if (!parser) return;
   parser.applyToElement(outputContainerElement);
-  outputContainerElement.style.fontSize = `${fontSizeElement.value}rem`;
   const renderWithBR = brCheckElement.checked;
   if (renderWithBR) {
     outputContainerElement.innerHTML = window.DOMPurify.sanitize(
       outputContainerElement.innerHTML.replace(/\u200b/g, '<br>'));
   }
+  url.searchParams.set('q', inputTextElement.value);
+  window.history.replaceState('', '', url.toString());
 };
 
 /**
@@ -71,13 +72,13 @@ const run = () => {
 const init = () => {
   const lang = url.searchParams.get('lang');
   if (lang) modelSelectElement.value = lang;
-  const input = defaultInputs.get(modelSelectElement.value);
+  const input = url.searchParams.get('q') || defaultInputs.get(modelSelectElement.value);
   if (input) inputTextElement.value = input;
   run();
 }
 
 fontSizeElement.addEventListener('input', () => {
-  run();
+  outputContainerElement.style.fontSize = `${fontSizeElement.value}rem`;
 })
 
 inputTextElement.addEventListener('input', () => {
