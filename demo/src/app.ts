@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import DOMPurify from 'dompurify';
 import { loadDefaultJapaneseParser, loadDefaultSimplifiedChineseParser, loadDefaultTraditionalChineseParser, loadDefaultThaiParser } from 'budoux';
 
 const parsers = new Map([
@@ -39,19 +40,12 @@ worker.onmessage = (e: MessageEvent) => {
   console.log('response from worker:', e);
 };
 
-declare global {
-  interface Window {
-    DOMPurify: {
-      sanitize: (value: string) => string;
-    }
-  }
-}
 
 /**
  * Runs the BudouX model to process the input text and render the processed HTML.
  */
 const run = () => {
-  outputContainerElement.innerHTML = window.DOMPurify.sanitize(inputTextElement.value);
+  outputContainerElement.innerHTML = DOMPurify.sanitize(inputTextElement.value);
   const model = modelSelectElement.value;
   worker.postMessage({'sentence': outputContainerElement.textContent, 'model': model});
   const parser = parsers.get(model);
@@ -60,7 +54,7 @@ const run = () => {
   outputContainerElement.style.fontSize = `${fontSizeElement.value}rem`;
   const renderWithBR = brCheckElement.checked;
   if (renderWithBR) {
-    outputContainerElement.innerHTML = window.DOMPurify.sanitize(
+    outputContainerElement.innerHTML = DOMPurify.sanitize(
       outputContainerElement.innerHTML.replace(/\u200b/g, '<br>'));
   }
 };
