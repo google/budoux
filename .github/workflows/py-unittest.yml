@@ -37,8 +37,8 @@ jobs:
       - name: Run unittest
         run: pytest ./tests
       - name: Install Jax
-        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version >= '3.9' }}
+        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version > 3.9 }}
         run: pip install ".[jaxcpu]"
       - name: Run unittest with Jax
-        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version >= '3.9' }}
+        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version > 3.9 }}
         run: pytest ./scripts/tests
