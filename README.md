@@ -29,7 +29,7 @@ Last but not least, BudouX supports HTML inputs.
 - Thai
 
 ### Korean support?
-Korean uses spaces between words, so you can generally prevent words from being split across lines by applying the CSS property `word-break: keep-all` to the paragraph, which should be much performant than installing BudouX.
+Korean uses spaces between words, so you can generally prevent words from being split across lines by applying the CSS property `word-break: keep-all` to the paragraph, which should be much more performant than installing BudouX.
 That said, we're happy to explore dedicated Korean language support if the above solution proves insufficient.
 
 ## Supported Programming languages
