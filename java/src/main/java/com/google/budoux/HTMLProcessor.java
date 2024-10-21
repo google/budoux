@@ -131,7 +131,9 @@ final class HTMLProcessor {
           // Assume phrasesJoined.charAt(scanIndex) == '\n'.
           scanIndex++;
         } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
-          if (!toSkip && phrasesJoined.charAt(scanIndex) == SEP) {
+          if (!toSkip
+              && scanIndex < phrasesJoined.length()
+              && phrasesJoined.charAt(scanIndex) == SEP) {
             output.append(separator);
             scanIndex++;
           }

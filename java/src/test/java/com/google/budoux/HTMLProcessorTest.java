@@ -138,6 +138,14 @@ public class HTMLProcessorTest {
   }
 
   @Test
+  public void testResolveSkipNodeAtTheEnd() {
+    List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
+    String html = "abcdefghijkl<img src=\"example.png\">";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc<wbr>def<wbr>ghi<wbr>jkl<img src=\"example.png\">"), result);
+  }
+
+  @Test
   public void testResolveWithComments() {
     List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
     String html = "abcdef<!-- comments should be ignored-->ghijkl";
