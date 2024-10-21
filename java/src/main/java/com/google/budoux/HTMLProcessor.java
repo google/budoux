@@ -32,6 +32,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -156,7 +157,7 @@ final class HTMLProcessor {
 
     @Override
     public void tail(Node node, int depth) {
-      if (node.nodeName().equals("body") || node instanceof TextNode) {
+      if (node.nodeName().equals("body") || node instanceof TextNode || node instanceof Comment) {
         return;
       }
       // assume node instanceof Element;
