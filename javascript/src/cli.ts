@@ -24,7 +24,7 @@ import {
   loadDefaultJapaneseParser,
 } from './index.js';
 
-const CLI_VERSION = '0.6.2';
+const CLI_VERSION = '0.6.3';
 const defaultParsers = loadDefaultParsers();
 
 /**
