@@ -14,48 +14,57 @@
  * limitations under the License.
  */
 
-import {loadDefaultJapaneseParser} from '../index.js';
 import '../webcomponents/budoux-ja.js';
-
-const parser = loadDefaultJapaneseParser();
 
 describe('Web Components', () => {
   beforeAll(async () => {
     await window.customElements.whenDefined('budoux-ja');
   });
 
-  it('should process the provided text.', () => {
-    const inputText = '今日は良い天気です。';
-
-    const budouxElement = window.document.createElement('budoux-ja');
-    budouxElement.textContent = inputText;
-    window.document.body.appendChild(budouxElement);
-
-    const mirroredElement = window.document.createElement('span');
-    mirroredElement.textContent = inputText;
-    parser.applyToElement(mirroredElement);
-
-    expect(budouxElement.innerHTML).toBe(mirroredElement.outerHTML);
+  beforeEach(() => {
+    window.document.body.innerText = '';
   });
 
-  it('should react to the text content change after attached.', resolve => {
+  it('should process the provided text.', () => {
     const budouxElement = window.document.createElement('budoux-ja');
     budouxElement.textContent = '今日は良い天気です。';
     window.document.body.appendChild(budouxElement);
 
-    const inputText = '明日はどうなるかな。';
-    const mirroredElement = window.document.createElement('span');
-    mirroredElement.textContent = inputText;
-    parser.applyToElement(mirroredElement);
+    expect(budouxElement.innerHTML).toBe('今日は\u200B良い\u200B天気です。');
+  });
+
+  it('should react to text content changes after attached.', resolve => {
+    const budouxElement = window.document.createElement('budoux-ja');
+    budouxElement.textContent = '今日は良い天気です。';
+    window.document.body.appendChild(budouxElement);
 
     const observer = new window.MutationObserver(() => {
-      expect(budouxElement.innerHTML).toBe(mirroredElement.outerHTML);
+      expect(budouxElement.innerHTML).toBe('明日は\u200B晴れるかな？');
       resolve();
     });
     observer.observe(budouxElement, {
       childList: true,
     });
+    budouxElement.textContent = '明日は晴れるかな？';
+  });
 
-    budouxElement.textContent = inputText;
+  it('should work with HTML inputs.', () => {
+    const budouxElement = window.document.createElement('budoux-ja');
+    budouxElement.appendChild(window.document.createTextNode('昨日は'));
+    const b = window.document.createElement('b');
+    b.textContent = '雨';
+    budouxElement.appendChild(b);
+    budouxElement.appendChild(window.document.createTextNode('でした。'));
+    window.document.body.appendChild(budouxElement);
+    expect(budouxElement.innerHTML).toBe('昨日は<b>\u200B雨</b>でした。');
+  });
+
+  it('should have wrapping styles to control line breaks.', () => {
+    const budouxElement = window.document.createElement('budoux-ja');
+    budouxElement.textContent = 'Hello world';
+    window.document.body.appendChild(budouxElement);
+    const styles = budouxElement.computedStyleMap();
+    expect(styles.get('word-break')?.toString()).toBe('keep-all');
+    expect(styles.get('overflow-wrap')?.toString()).toBe('anywhere');
   });
 });
