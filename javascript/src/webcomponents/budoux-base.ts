@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {setInnerHtml} from '../dom.js';
+import {applyWrapStyle} from '../dom.js';
 import {HTMLProcessingParser} from '../html_processor.js';
 
 const MUTATION_OBSERVER_OPTIONS = {
@@ -43,6 +43,7 @@ export abstract class BudouXBaseElement extends HTMLElement {
   }
 
   connectedCallback() {
+    applyWrapStyle(this);
     this.sync();
   }
 
@@ -52,7 +53,7 @@ export abstract class BudouXBaseElement extends HTMLElement {
 
   sync() {
     this.observer.disconnect();
-    setInnerHtml(this, this.parser.translateHTMLString(this.innerHTML));
+    this.parser.applyToElement(this);
     this.observer.observe(this, MUTATION_OBSERVER_OPTIONS);
   }
 }
