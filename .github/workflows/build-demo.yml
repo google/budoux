@@ -1,12 +1,12 @@
 name: Build Demo
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
 permissions:
   contents: read
 
 jobs:
-  deploy:
-    permissions:
-      contents: write  # for peaceiris/actions-gh-pages to push pages branch
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -24,9 +24,21 @@ jobs:
         working-directory: ./demo
       - run: npm run build
         working-directory: ./demo
-      - name: Publish Demo
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./demo/static
+          path: ./demo/static/
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
