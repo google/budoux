@@ -15,7 +15,7 @@
  */
 
 import {applyWrapStyle} from '../dom.js';
-import {HTMLProcessingParser} from '../html_processor.js';
+import {type HTMLProcessingParser} from '../html_processor.js';
 
 const MUTATION_OBSERVER_OPTIONS = {
   attributes: false,
@@ -28,7 +28,7 @@ const MUTATION_OBSERVER_OPTIONS = {
  * Base BudouX Web component.
  */
 export abstract class BudouXBaseElement extends HTMLElement {
-  parser: HTMLProcessingParser;
+  abstract parser: HTMLProcessingParser;
   observer: MutationObserver;
 
   /**
@@ -37,7 +37,6 @@ export abstract class BudouXBaseElement extends HTMLElement {
   constructor() {
     super();
 
-    this.parser = new HTMLProcessingParser({});
     this.observer = new MutationObserver(this.sync.bind(this));
     this.observer.observe(this, MUTATION_OBSERVER_OPTIONS);
   }

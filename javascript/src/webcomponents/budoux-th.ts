@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import {loadDefaultThaiParser} from '../index.js';
+import {type HTMLProcessingParser, loadDefaultThaiParser} from '../index.js';
 import {BudouXBaseElement} from './budoux-base.js';
 
 /**
  * BudouX Thai Web component.
  */
 export class BudouXThaiElement extends BudouXBaseElement {
+  parser: HTMLProcessingParser;
+
   /**
    * BudouX Thai Web component constructor.
    */

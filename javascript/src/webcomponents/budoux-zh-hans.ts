@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-import {loadDefaultSimplifiedChineseParser} from '../index.js';
+import {
+  type HTMLProcessingParser,
+  loadDefaultSimplifiedChineseParser,
+} from '../index.js';
 import {BudouXBaseElement} from './budoux-base.js';
 
 /**
  * BudouX Simplified Chinese Web component.
  */
 export class BudouXSimplifiedChineseElement extends BudouXBaseElement {
+  parser: HTMLProcessingParser;
+
   /**
    * BudouX Simplified Chinese Web component constructor.
    */

@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-import {loadDefaultJapaneseParser} from '../index.js';
+import {
+  type HTMLProcessingParser,
+  loadDefaultJapaneseParser,
+} from '../index.js';
 import {BudouXBaseElement} from './budoux-base.js';
 
 /**
  * BudouX Japanese Web component.
  */
 export class BudouXJapaneseElement extends BudouXBaseElement {
+  parser: HTMLProcessingParser;
+
   /**
    * BudouX Japanese Web component constructor.
    */
