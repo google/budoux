@@ -230,16 +230,18 @@ class NodeOrText {
     this.nodeOrText = nodeOrText;
   }
 
-  get isString(): boolean {
+  private isString(value: Text | string): value is string {
     return typeof this.nodeOrText === 'string';
   }
+
   get canSplit(): boolean {
-    return !this.isString;
+    return !this.isString(this.nodeOrText);
   }
+
   get text(): string | null {
-    return this.isString
-      ? (this.nodeOrText as string)
-      : (this.nodeOrText as Text).nodeValue;
+    return this.isString(this.nodeOrText)
+      ? this.nodeOrText
+      : this.nodeOrText.nodeValue;
   }
   get length(): number {
     return this.text?.length ?? 0;
@@ -253,8 +255,10 @@ class NodeOrText {
     const chunks = this.chunks;
     assert(chunks.length === 0 || chunks.join('') === this.text);
     if (chunks.length <= 1) return;
-    assert(this.canSplit);
-    const node = this.nodeOrText as Text;
+    if (this.isString(this.nodeOrText)) {
+      return;
+    }
+    const node = this.nodeOrText;
     if (typeof separator === 'string') {
       // If the `separator` is a string, insert it at each boundary.
       node.nodeValue = chunks.join(separator);
