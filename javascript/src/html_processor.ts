@@ -231,7 +231,7 @@ class NodeOrText {
   }
 
   private static isString(value: Text | string): value is string {
-    return typeof value  =='string';
+    return typeof value === 'string';
   }
 
   get canSplit(): boolean {
