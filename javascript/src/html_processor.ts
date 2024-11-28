@@ -243,6 +243,7 @@ class NodeOrText {
       ? this.nodeOrText
       : this.nodeOrText.nodeValue;
   }
+
   get length(): number {
     return this.text?.length ?? 0;
   }
@@ -255,9 +256,7 @@ class NodeOrText {
     const chunks = this.chunks;
     assert(chunks.length === 0 || chunks.join('') === this.text);
     if (chunks.length <= 1) return;
-    if (this.isString(this.nodeOrText)) {
-      return;
-    }
+    if (this.isString(this.nodeOrText)) return;
     const node = this.nodeOrText;
     if (typeof separator === 'string') {
       // If the `separator` is a string, insert it at each boundary.
