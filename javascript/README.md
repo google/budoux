@@ -177,7 +177,19 @@ import 'budoux/module/webcomponents/budoux-zh-hant';
 import 'budoux/module/webcomponents/budoux-th';
 ```
 
-**Note:** BudouX Web Components directly manipulate the input HTML content instead of outputting the result to a shadow DOM. This design was chosen because the goal of BudouX Web Components is to simply insert zero-width spaces (ZWSPs) into the content, and isolating the style from the rest of the document could introduce unexpected side effects for developers. Consequently, cloning or editing the component might lead to duplicated ZWSPs between phrases. This is because BudouX Web Components cannot distinguish between characters that originate in the source and those that are inserted by BudouX itself once connected to the document. Duplicating ZWSPs will not cause any severe problems in controlling line breaks, and they are invisible anyway, but this is the reason we do not support other separator characters for these components.
+**Note:** BudouX Web Components directly manipulate the input HTML content
+instead of outputting the result to a shadow DOM. This design was chosen because
+the goal of BudouX Web Components is to simply insert zero-width spaces (ZWSPs)
+into the content, and isolating the style from the rest of the document could
+introduce unexpected side effects for developers.
+
+Consequently, cloning or editing the element might lead to duplicated ZWSPs
+between phrases. This is because BudouX Web Components cannot distinguish
+between characters that originate in the source and those that are inserted by
+BudouX itself once connected to the document. Duplicating ZWSPs will not cause
+any severe problems in controlling line breaks, and they are invisible anyway,
+but this is the reason we do not support other separator characters for these
+components.
 
 ### CLI
 
