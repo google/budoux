@@ -23,7 +23,7 @@ from typing import NamedTuple
 import jax
 import jax.numpy as jnp
 
-EPS: float = jnp.finfo(float).eps
+EPS = float(jnp.finfo(float).eps)
 DEFAULT_OUTPUT_NAME = 'weights.txt'
 DEFAULT_LOG_NAME = 'train.log'
 DEFAULT_FEATURE_THRES = 10
