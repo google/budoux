@@ -38,12 +38,3 @@ export const parseFromString = (html: string) => {
 export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
   element.innerHTML = html;
 };
-
-/**
- * Applies wrapping styles to make linebreak controls work in children.
- * @param element A parent element to apply the styles.
- */
-export const applyWrapStyle = (element: HTMLElement) => {
-  element.style.wordBreak = 'keep-all';
-  element.style.overflowWrap = 'anywhere';
-};

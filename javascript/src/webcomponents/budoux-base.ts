@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {applyWrapStyle} from '../dom.js';
-import {type HTMLProcessingParser} from '../html_processor.js';
+import {applyWrapStyle, type HTMLProcessingParser} from '../html_processor.js';
 
 const MUTATION_OBSERVER_OPTIONS = {
   attributes: false,

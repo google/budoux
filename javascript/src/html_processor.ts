@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {applyWrapStyle, parseFromString} from './dom.js';
+import {parseFromString} from './dom.js';
 import {Parser} from './parser.js';
 import {win} from './win.js';
 
@@ -213,6 +213,15 @@ function actionForElement(element: Element): DomAction {
     ? DomAction.Block
     : DomAction.Inline;
 }
+
+/**
+ * Applies wrapping styles to make linebreak controls work in children.
+ * @param element A parent element to apply the styles.
+ */
+export const applyWrapStyle = (element: HTMLElement) => {
+  element.style.wordBreak = 'keep-all';
+  element.style.overflowWrap = 'anywhere';
+};
 
 /**
  * Represents a node in {@link Paragraph}.
