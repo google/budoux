@@ -27,7 +27,7 @@ from collections import OrderedDict
 from jax import Array, grad, jit
 from jax import numpy as jnp
 
-EPSILON: float = jnp.finfo(float).eps
+EPSILON = float(jnp.finfo(float).eps)
 DEFAULT_OUTPUT_NAME = 'finetuned-weights.txt'
 DEFAULT_NUM_ITERS = 1000
 DEFAULT_LOG_SPAN = 100
