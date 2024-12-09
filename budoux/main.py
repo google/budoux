@@ -123,12 +123,12 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       help="language of custom model",
   )
   parser.add_argument(
-      "-D",
-      "--phrase-delimiter",
+      "-s",
+      "--sep",
       metavar="STR",
       type=str,
       default="\n",
-      help="output phrase delimiter in TEXT mode",
+      help="output phrase separator in TEXT mode",
   )
   parser.add_argument(
       "-d",
@@ -169,7 +169,7 @@ def _main(test: ArgList = None) -> str:
     else:
       inputs = [v.rstrip() for v in args.text.splitlines()]
     outputs = [parser.parse(sentence) for sentence in inputs]
-    combined_output = [args.phrase_delimiter.join(output) for output in outputs]
+    combined_output = [args.sep.join(output) for output in outputs]
     ors = "\n" + args.delim + "\n"
     res = ors.join(combined_output)
 
