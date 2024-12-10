@@ -34,13 +34,18 @@ const defaultParsers = loadDefaultParsers();
 export const cli = (argv: string[]) => {
   const program = new Command('budoux');
 
-  program.usage('[-h] [-H] [-d STR] [-t THRES] [-m JSON] [-l LANG] [-V] [TXT]');
+  program.usage('[-h] [-H] [-d STR] [-s STR] [-m JSON] [-l LANG] [-V] [TXT]');
   program.description(
     'BudouX is the successor to Budou, the machine learning powered line break organizer tool.'
   );
   program
     .option('-H, --html', 'HTML mode', false)
-    .option('-d, --delim <str>', 'output delimiter in TEXT mode', '---')
+    .option(
+      '-d, --delim <str>',
+      'output sentence delimiter in TEXT mode',
+      '---'
+    )
+    .option('-s, --sep <str>', 'output phrase separator in TEXT mode', '\n')
     .option('-m, --model <json>', 'model file path')
     .option(
       '-l, --lang <str>',
@@ -55,9 +60,10 @@ export const cli = (argv: string[]) => {
   program.parse(argv);
 
   const options = program.opts();
-  const {lang, model, delim, html} = options as {
+  const {lang, model, delim, sep, html} = options as {
     html: boolean;
     delim: string;
+    sep: string;
     model?: string;
     lang?: string;
   };
@@ -80,12 +86,12 @@ export const cli = (argv: string[]) => {
         stdin += line + '\n';
       });
       process.stdin.on('end', () => {
-        outputParsedTexts(parser, html, delim, [stdin]);
+        outputParsedTexts(parser, html, delim, sep, [stdin]);
       });
       break;
     }
     case 1: {
-      outputParsedTexts(parser, html, delim, args);
+      outputParsedTexts(parser, html, delim, sep, args);
       break;
     }
     default: {
@@ -101,12 +107,14 @@ export const cli = (argv: string[]) => {
  * @param parser A parser.
  * @param html A flag of html output mode.
  * @param delim A delimiter to separate output sentence.
+ * @param sep A separator to separate output phrases.
  * @param args string array to parse. Array should have only one element.
  */
 const outputParsedTexts = (
   parser: HTMLProcessingParser,
   html: boolean,
   delim: string,
+  sep: string,
   args: string[]
 ) => {
   if (html) {
@@ -119,9 +127,7 @@ const outputParsedTexts = (
       .filter(text => text !== '');
     splitedTextsByNewLine.forEach((text, index) => {
       const parsedTexts = parser.parse(text);
-      parsedTexts.forEach(parsedText => {
-        console.log(parsedText);
-      });
+      console.log(parsedTexts.join(sep));
       if (index + 1 !== splitedTextsByNewLine.length) console.log(delim);
     });
   }
