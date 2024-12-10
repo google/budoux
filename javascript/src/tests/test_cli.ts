@@ -53,10 +53,6 @@ const runCli = (args: string[], stdin?: string): Promise<execFileCallBack> => {
 };
 
 describe('cli', () => {
-  beforeEach(() => {
-    spyOn(console, 'log');
-  });
-
   it('should output the wrapped HTML sentence when execute budoux command with --html option.', async () => {
     const inputText = '今日は天気です。';
     const argv = ['--html', inputText];
