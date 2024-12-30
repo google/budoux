@@ -64,7 +64,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "commander": "^12.0.0",
+    "commander": "^13.0.0",
     "jsdom": "^25.0.0"
   },
   "overrides": {
