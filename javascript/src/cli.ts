@@ -53,7 +53,8 @@ export const cli = (argv: string[]) => {
         ...defaultParsers.keys(),
       ].join(', ')}`
     )
-    .argument('[txt]', 'text');
+    .argument('[txt]', 'text')
+    .allowExcessArguments();
 
   program.version(CLI_VERSION);
 
