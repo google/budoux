@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "commander": "^13.0.0",
-    "jsdom": "^25.0.0"
+    "jsdom": "^26.0.0"
   },
   "overrides": {
     "tough-cookie": "^5.0.0-rc.4"
