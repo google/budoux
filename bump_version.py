@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import json
 import re
 import subprocess
 
@@ -34,8 +35,16 @@ def main():
     f.write(new_content)
 
   # Updates JavaScript port version number
-  npm_command = ['npm', 'version', new_version, '--no-git-tag-version']
-  subprocess.run(npm_command, cwd='javascript', check=True)
+  package_json_path = 'javascript/package.json'
+  with open(package_json_path, 'r') as f:
+    package_data = json.load(f)
+    current_version = package_data.get('version')
+
+  if current_version != new_version:
+    npm_command = ['npm', 'version', new_version, '--no-git-tag-version']
+    subprocess.run(npm_command, cwd='javascript', check=True)
+  else:
+    print(f"JavaScript version is already {new_version}, skipping npm version.")
 
   cli_file = 'javascript/src/cli.ts'
   with open(cli_file, 'r') as f:
