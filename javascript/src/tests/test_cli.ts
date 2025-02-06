@@ -57,7 +57,7 @@ describe('cli', () => {
     const inputText = '今日は天気です。';
     const argv = ['--html', inputText];
     const expectedStdOut =
-      '<span style="word-break: keep-all; overflow-wrap: anywhere;">今日は\u200B天気です。</span>';
+      '<span style="word-break:keep-all;overflow-wrap:anywhere">今日は\u200B天気です。</span>';
     const {stdout} = await runCli(argv);
     expect(stdout.trim()).toBe(expectedStdOut);
   });
@@ -66,7 +66,7 @@ describe('cli', () => {
     const inputText = '今日は天気です。';
     const argv = ['-H', inputText];
     const expectedStdOut =
-      '<span style="word-break: keep-all; overflow-wrap: anywhere;">今日は\u200B天気です。</span>';
+      '<span style="word-break:keep-all;overflow-wrap:anywhere">今日は\u200B天気です。</span>';
     const {stdout} = await runCli(argv);
     expect(stdout.trim()).toBe(expectedStdOut);
   });

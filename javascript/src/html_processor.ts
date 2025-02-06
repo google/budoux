@@ -16,7 +16,6 @@
 
 import {parseFromString} from './dom.js';
 import {Parser} from './parser.js';
-import {win} from './win.js';
 
 const assert = console.assert;
 
@@ -156,13 +155,6 @@ const defaultBlockElements = new Set([
   'MARQUEE',
 ]);
 
-// We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
-// but we define the same here for Node.js environments.
-const NODETYPE = {
-  ELEMENT: 1,
-  TEXT: 3,
-};
-
 /**
  * Determine the action for a CSS `display` property value.
  * @param display The value of the CSS `display` property.
@@ -194,8 +186,8 @@ function actionForElement(element: Element): DomAction {
   const action = domActions[nodeName];
   if (action !== undefined) return action;
 
-  if (typeof win.getComputedStyle === 'function') {
-    const style = win.getComputedStyle(element);
+  if (typeof globalThis.getComputedStyle === 'function') {
+    const style = globalThis.getComputedStyle(element);
     switch (style.whiteSpace) {
       case 'nowrap':
       case 'pre':
@@ -414,7 +406,7 @@ export class HTMLProcessor {
    */
   static hasChildTextNode(ele: HTMLElement) {
     for (const child of ele.childNodes) {
-      if (child.nodeType === NODETYPE.TEXT) return true;
+      if (child.nodeType === NodeType.TEXT_NODE) return true;
     }
     return false;
   }
@@ -667,7 +659,7 @@ export class HTMLProcessingParser extends Parser {
     if (html === '') return html;
     const doc = parseFromString(html);
     if (HTMLProcessor.hasChildTextNode(doc.body)) {
-      const wrapper = doc.createElement('span');
+      const wrapper = doc.createElement('span') as unknown as HTMLElement;
       wrapper.append(...doc.body.childNodes);
       doc.body.append(wrapper);
     }

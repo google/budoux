@@ -19,7 +19,6 @@
  * BudouX does not apply any HTML sanitization by default, but this is the place
  * to install a sanitizer if needed.
  */
-import {DOMParser, parseHTML} from 'linkedom';
 
 /**
  * Parses an html string and returns a parsed html document.
@@ -27,10 +26,7 @@ import {DOMParser, parseHTML} from 'linkedom';
  * @return A Document.
  */
 export const parseFromString = (html: string) => {
-  return new DOMParser().parseFromString(
-    `<!doctype html><html><body>${html}</body></html>`,
-    'text/html'
-  );
+  return new window.DOMParser().parseFromString(html, 'text/html');
 };
 
 /**
@@ -47,11 +43,10 @@ export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
  * @returns Document
  */
 export const createDocument = () => {
-  const {document} = parseHTML('<!doctype html><html></html>');
-  return document;
+  return window.document;
 };
 
 /**
  * Whether the running environment is a Web browser.
  */
-export const isBrowser = false;
+export const isBrowser = true;
