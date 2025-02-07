@@ -16,7 +16,6 @@
 
 import {parseFromString} from './dom.js';
 import {Parser} from './parser.js';
-import {win} from './win.js';
 
 const assert = console.assert;
 
@@ -187,8 +186,8 @@ function actionForElement(element: Element): DomAction {
   const action = domActions[nodeName];
   if (action !== undefined) return action;
 
-  if (typeof win.getComputedStyle === 'function') {
-    const style = win.getComputedStyle(element);
+  if (typeof globalThis.getComputedStyle === 'function') {
+    const style = globalThis.getComputedStyle(element);
     switch (style.whiteSpace) {
       case 'nowrap':
       case 'pre':
@@ -660,7 +659,7 @@ export class HTMLProcessingParser extends Parser {
     if (html === '') return html;
     const doc = parseFromString(html);
     if (HTMLProcessor.hasChildTextNode(doc.body)) {
-      const wrapper = doc.createElement('span');
+      const wrapper = doc.createElement('span') as unknown as HTMLElement;
       wrapper.append(...doc.body.childNodes);
       doc.body.append(wrapper);
     }

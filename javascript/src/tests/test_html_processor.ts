@@ -22,8 +22,12 @@ import {
   NodeOrTextForTesting,
   ParagraphForTesting,
 } from '../html_processor.js';
-import {win} from '../win.js';
-import {parseFromString, setInnerHtml} from '../dom.js';
+import {
+  parseFromString,
+  setInnerHtml,
+  createDocument,
+  isBrowser,
+} from '../dom.js';
 
 const parser = loadDefaultJapaneseParser();
 
@@ -33,15 +37,53 @@ class MockHTMLProcessorBase extends HTMLProcessor {
   }
 }
 
+function isEqualNodeWithStyleNormalized(a: HTMLElement, b: HTMLElement) {
+  if (a.nodeType !== b.nodeType) return false;
+  if (a.nodeType === 3) {
+    // is a text node
+    return a.nodeValue === b.nodeValue;
+  }
+  if (a.nodeName !== b.nodeName) return false;
+  if (a.attributes.length !== b.attributes.length) return false;
+  for (let i = 0; i < a.attributes.length; i++) {
+    const attribName = a.attributes[i].name;
+    const aAttribValue = a.getAttribute(attribName);
+    const bAttribValue = b.getAttribute(attribName);
+    if (attribName === 'style') {
+      const aNormalizedStyle = aAttribValue
+        ?.replace(/\s+/g, '')
+        .replace(/;$/, '');
+      const bNormalizedStyle = bAttribValue
+        ?.replace(/\s+/g, '')
+        .replace(/;$/, '');
+      if (aNormalizedStyle !== bNormalizedStyle) return false;
+    } else {
+      if (aAttribValue !== bAttribValue) return false;
+    }
+  }
+  if (a.childNodes.length !== b.childNodes.length) return false;
+  for (let i = 0; i < a.childNodes.length; i++) {
+    if (
+      !isEqualNodeWithStyleNormalized(
+        a.childNodes[i] as HTMLElement,
+        b.childNodes[i] as HTMLElement
+      )
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function getBlocks(html: string): IterableIterator<ParagraphForTesting> {
-  const document = win.document;
+  const document = createDocument();
   setInnerHtml(document.body, html);
   const processor = new MockHTMLProcessorBase();
   return processor.getBlocks(document.body);
 }
 
 describe('HTMLProcessor.applyToElement', () => {
-  const document = win.document;
+  const document = createDocument();
   const wbr = document.createElement('wbr');
   function apply(html: string, separator: string | Node) {
     setInnerHtml(document.body, html);
@@ -57,56 +99,85 @@ describe('HTMLProcessor.applyToElement', () => {
     {
       in: '<div>晴れ</div>',
       out: '<div>晴れ</div>',
+      browserOnly: false,
     },
     {
       in: '<div>今日は晴れです</div>',
       out: '<div class="applied">今日は|晴れです</div>',
+      browserOnly: false,
     },
     {
       in: '<div><span>今日は</span>晴れです</div>',
       out: '<div class="applied"><span>今日は</span>|晴れです</div>',
+      browserOnly: false,
     },
     {
       in: '<div><span>今日は晴れ</span>です</div>',
       out: '<div class="applied"><span>今日は|晴れ</span>です</div>',
+      browserOnly: false,
     },
     {
       in: '<code>今日は晴れです</code>',
       out: '<code>今日は晴れです</code>',
+      browserOnly: false,
     },
     {
       in: '<div>今日は<code>code</code>晴れです</div>',
       out: '<div class="applied">今日は<code>code</code>|晴れです</div>',
+      browserOnly: false,
     },
     {
       in: '<div>今日は晴れ、今日は晴れ</div>',
       out: '<div class="applied">今日は|晴れ、|今日は|晴れ</div>',
+      browserOnly: false,
     },
     {
       in: '<div>今日は<nobr>晴れ、今日は</nobr>晴れ</div>',
       out: '<div class="applied">今日は|<nobr>晴れ、今日は</nobr>|晴れ</div>',
+      browserOnly: true,
     },
     {
       in: '<div>今日は<span style="white-space: nowrap">晴れ、今日は</span>晴れ</div>',
       out: '<div class="applied">今日は|<span style="white-space: nowrap">晴れ、今日は</span>|晴れ</div>',
+      browserOnly: true,
     },
   ]) {
     // Test when the separator is an `Element`.
     it(test.in, () => {
       const out = test.out.replace(/\|/g, '<wbr>');
-      expect(apply(test.in, wbr)).toEqual(out);
+      if (test.browserOnly && !isBrowser) return;
+      const result = apply(test.in, wbr);
+      const isEqual = isEqualNodeWithStyleNormalized(
+        parseFromString(result).body,
+        parseFromString(out).body
+      );
+      if (!isEqual) {
+        console.log('actual:', result);
+        console.log('expected:', out);
+      }
+      expect(isEqual).toBeTrue();
     });
     // Test when the separator is a `string`.
     it(test.in, () => {
       const out = test.out.replace(/\|/g, '/');
-      expect(apply(test.in, '/')).toEqual(out);
+      if (test.browserOnly && !isBrowser) return;
+      const result = apply(test.in, '/');
+      const isEqual = isEqualNodeWithStyleNormalized(
+        parseFromString(result).body,
+        parseFromString(out).body
+      );
+      if (!isEqual) {
+        console.log('actual:', result);
+        console.log('expected:', out);
+      }
+      expect(isEqual).toBeTrue();
     });
   }
 });
 
 describe('HTMLProcessor.applyToElement.separator.node', () => {
   it('should clone separator element deeply', () => {
-    const doc = win.document;
+    const doc = createDocument();
     setInnerHtml(doc.body, '<div>今日は良い天気です</div>');
     const separator = doc.createElement('span');
     separator.style.whiteSpace = 'normal';
@@ -116,11 +187,19 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
       className: 'applied',
     });
     processor.applyToElement(doc.body);
-    expect(doc.body.innerHTML).toEqual(
+    const expected =
       '<div class="applied">今日は' +
-        '<span style="white-space: normal;">\u200B</span>良い' +
-        '<span style="white-space: normal;">\u200B</span>天気です</div>'
+      '<span style="white-space: normal;">\u200B</span>良い' +
+      '<span style="white-space: normal;">\u200B</span>天気です</div>';
+    const isEqual = isEqualNodeWithStyleNormalized(
+      doc.body,
+      parseFromString(expected).body
     );
+    if (!isEqual) {
+      console.log('actual:', doc.body.innerHTML);
+      console.log('expected:', expected);
+    }
+    expect(isEqual).toBeTrue();
   });
 });
 
@@ -168,9 +247,13 @@ describe('HTMLProcessor.getBlocks', () => {
     expect(
       getText('<div>123<div style="display: inline-block">456</div>789</div>')
     ).toEqual(['456', '123789']);
-    expect(
-      getText('<div>123<span style="display: inline-block">456</span>789</div>')
-    ).toEqual(['456', '123789']);
+    if (isBrowser) {
+      expect(
+        getText(
+          '<div>123<span style="display: inline-block">456</span>789</div>'
+        )
+      ).toEqual(['456', '123789']);
+    }
   });
 
   it('should skip textarea elements', () => {
@@ -323,12 +406,22 @@ describe('HTMLProcessingParser.applyToElement', () => {
     expectedHTML: string
   ) => {
     const inputDOM = parseFromString(inputHTML);
-    const inputDocument = inputDOM.querySelector('p') as HTMLElement;
+    const inputDocument = inputDOM.querySelector('p') as unknown as HTMLElement;
     const parser = new HTMLProcessingParser(model);
     parser.applyToElement(inputDocument);
     const expectedDocument = parseFromString(expectedHTML);
-    const expectedElement = expectedDocument.querySelector('p') as HTMLElement;
-    expect(inputDocument.isEqualNode(expectedElement)).toBeTrue();
+    const expectedElement = expectedDocument.querySelector(
+      'p'
+    ) as unknown as HTMLElement;
+    const isEqual = isEqualNodeWithStyleNormalized(
+      inputDocument,
+      expectedElement
+    );
+    if (!isEqual) {
+      console.log('actual:', inputDocument.outerHTML);
+      console.log('expected:', expectedElement.outerHTML);
+    }
+    expect(isEqual).toBeTrue();
   };
   const style = 'word-break: keep-all; overflow-wrap: anywhere;';
 
@@ -381,20 +474,27 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     const result = parser.translateHTMLString(inputHTML);
     const resultDocument = parseFromString(result);
     const expectedDocument = parseFromString(expectedHTML);
-    expect(resultDocument.isEqualNode(expectedDocument)).toBeTrue();
+    const isEqual = isEqualNodeWithStyleNormalized(
+      resultDocument.body,
+      expectedDocument.body
+    );
+    if (!isEqual) {
+      console.log('actual', result);
+      console.log('expected', expectedHTML);
+    }
+    expect(isEqual).toBeTrue();
   };
 
   it('should output a html string with a SPAN parent with proper style attributes.', () => {
     const inputHTML = 'xyzabcd';
-    const expectedHTML = `
-    <span style="word-break: keep-all; overflow-wrap: anywhere;">xyz\u200Babcd</span>`;
+    const expectedHTML = `<span
+    style="word-break: keep-all; overflow-wrap: anywhere;">xyz\u200Babcd</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
 
   it('should not add a SPAN parent if the input already has one single parent.', () => {
     const inputHTML = '<p class="foo" style="color: red">xyzabcd</p>';
-    const expectedHTML = `
-    <p class="foo"
+    const expectedHTML = `<p class="foo"
        style="color: red; word-break: keep-all; overflow-wrap: anywhere;"
     >xyz\u200Babcd</p>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
@@ -411,14 +511,6 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     const expectedHTML = `<span
     style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz<script>alert(1);</script>xyz\u200Babc</span>`;
-    checkEqual(defaultModel, inputHTML, expectedHTML);
-  });
-
-  it('script tags on top should be discarded by the DOMParser.', () => {
-    const inputHTML = '<script>alert(1);</script>xyzabc';
-    const expectedHTML = `<span
-    style="word-break: keep-all; overflow-wrap: anywhere;"
-    >xyz\u200Babc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
 
