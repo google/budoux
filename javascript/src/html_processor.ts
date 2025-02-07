@@ -156,13 +156,6 @@ const defaultBlockElements = new Set([
   'MARQUEE',
 ]);
 
-// We could use `Node.TEXT_NODE` and `Node.ELEMENT_NODE` in a browser context,
-// but we define the same here for Node.js environments.
-const NODETYPE = {
-  ELEMENT: 1,
-  TEXT: 3,
-};
-
 /**
  * Determine the action for a CSS `display` property value.
  * @param display The value of the CSS `display` property.
@@ -414,7 +407,7 @@ export class HTMLProcessor {
    */
   static hasChildTextNode(ele: HTMLElement) {
     for (const child of ele.childNodes) {
-      if (child.nodeType === NODETYPE.TEXT) return true;
+      if (child.nodeType === NodeType.TEXT_NODE) return true;
     }
     return false;
   }
