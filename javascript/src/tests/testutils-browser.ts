@@ -15,11 +15,11 @@
  */
 
 /**
- * Sets an innerHTML on a given Element or ShadowRoot.
- * @param element An Element or ShadowRoot.
+ * Sets an innerHTML on a given Element.
+ * @param element An Element.
  * @param html An HTML string to set.
  */
-export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
+export const setInnerHtml = (element: Element, html: string) => {
   element.innerHTML = html;
 };
 
