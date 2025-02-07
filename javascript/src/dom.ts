@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-/**
- * This file is a collection of risky functions that interact with elements.
- * BudouX does not apply any HTML sanitization by default, but this is the place
- * to install a sanitizer if needed.
- */
-import {DOMParser, parseHTML} from 'linkedom';
+import {DOMParser} from 'linkedom';
 
 /**
  * Parses an html string and returns a parsed html document.
@@ -32,26 +27,3 @@ export const parseFromString = (html: string) => {
     'text/html'
   );
 };
-
-/**
- * Sets an innerHTML on a given Element or ShadowRoot.
- * @param element An Element or ShadowRoot.
- * @param html An HTML string to set.
- */
-export const setInnerHtml = (element: Element | ShadowRoot, html: string) => {
-  element.innerHTML = html;
-};
-
-/**
- * Creates an HTML document.
- * @returns Document
- */
-export const createDocument = () => {
-  const {document} = parseHTML('<!doctype html><html></html>');
-  return document;
-};
-
-/**
- * Whether the running environment is a Web browser.
- */
-export const isBrowser = false;

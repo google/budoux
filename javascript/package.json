@@ -19,7 +19,9 @@
   },
   "browser": {
     "./dist/dom.js": "./dist/dom-browser.js",
-    "./module/dom.js": "./module/dom-browser.js"
+    "./module/dom.js": "./module/dom-browser.js",
+    "./dist/tests/testutils.js": "./dist/tests/testutils-browser.js",
+    "./module/tests/testutils.js": "./module/tests/testutils-browser.js"
   },
   "bin": {
     "budoux": "./bin/budoux.js"

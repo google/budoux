@@ -22,12 +22,8 @@ import {
   NodeOrTextForTesting,
   ParagraphForTesting,
 } from '../html_processor.js';
-import {
-  parseFromString,
-  setInnerHtml,
-  createDocument,
-  isBrowser,
-} from '../dom.js';
+import {parseFromString} from '../dom.js';
+import {setInnerHtml, createDocument, isBrowser} from './testutils.js';
 
 const parser = loadDefaultJapaneseParser();
 
