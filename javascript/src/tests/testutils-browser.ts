@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2021 Google LLC
+ * Copyright 2025 Google LLC
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,10 +15,23 @@
  */
 
 /**
- * Parses an html string and returns a parsed html document.
- * @param html An HTML string.
- * @return A Document.
+ * Sets an innerHTML on a given Element.
+ * @param element An Element.
+ * @param html An HTML string to set.
  */
-export const parseFromString = (html: string) => {
-  return new window.DOMParser().parseFromString(html, 'text/html');
+export const setInnerHtml = (element: Element, html: string) => {
+  element.innerHTML = html;
 };
+
+/**
+ * Creates an HTML document.
+ * @returns Document
+ */
+export const createDocument = () => {
+  return window.document;
+};
+
+/**
+ * Whether the running environment is a Web browser.
+ */
+export const isBrowser = true;
