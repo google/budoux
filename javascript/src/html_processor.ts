@@ -627,21 +627,6 @@ export class HTMLProcessingParser extends Parser {
   }
 
   /**
-   * @deprecated Use `applyToElement` instead. `applyElement` will be removed
-   * in v0.7.0 to align the function name with `HTMLProcessor`'s API.
-   *
-   * Applies markups for semantic line breaks to the given HTML element.
-   * @param parentElement The input element.
-   */
-  applyElement(parentElement: HTMLElement) {
-    console.warn(
-      '`applyElement` is deprecated. Please use `applyToElement` instead. ' +
-        '`applyElement` will be removed in v0.7.0.'
-    );
-    this.applyToElement(parentElement);
-  }
-
-  /**
    * Applies markups for semantic line breaks to the given HTML element.
    * @param parentElement The input element.
    */
