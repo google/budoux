@@ -1,0 +1,83 @@
+name: Release
+on:
+  release:
+    types: [published]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # PyPI
+      - name: Setup Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.10'
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]"
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc # v1.12.4
+        with:
+          username: __token__
+          password: ${{ secrets.PYPI_PASSWORD }}
+
+      # NPM
+      - name: Setup Node 20
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: ./javascript
+      # Now configure with the publish service for install.
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '20'
+          registry-url: 'https://wombat-dressing-room.appspot.com/'
+      - run: npm publish
+        working-directory: ./javascript
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+
+      # Maven
+      - name: Import GPG key
+        run: |
+          echo "$GPG_PRIVATE_KEY" > private.key
+          gpg --batch --import private.key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      - name: Configure Maven
+        run: |
+          mkdir -p ~/.m2
+          cat <<EOF >> ~/.m2/settings.xml
+          <settings>
+            <servers>
+              <server>
+                <id>sonatype-nexus-staging</id>
+                <username>${{ secrets.OSSRH_USERNAME }}</username>
+                <password>${{ secrets.OSSRH_PASSWORD }}</password>
+              </server>
+            </servers>
+            <profiles>
+              <profile>
+                <id>ossrh</id>
+                <activation>
+                  <activeByDefault>true</activeByDefault>
+                </activation>
+                <properties>
+                  <gpg.executable>gpg</gpg.executable>
+                  <gpg.keyname>${{ secrets.GPG_USERNAME }}</gpg.keyname>
+                  <gpg.passphrase>${{ secrets.GPG_PASSPHRASE }}</gpg.passphrase>
+                </properties>
+              </profile>
+            </profiles>
+          </settings>
+      - name: Publish to maven
+        run: mvn -Psonatype-oss-release deploy
+        working-directory: ./java
