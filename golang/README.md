@@ -13,7 +13,7 @@ This is the Go implementation of [BudouX](https://github.com/google/budoux).
 ## Installation
 
 ```bash
-go get github.com/soundkitchen/budoux/golang
+go get github.com/google/budoux/golang
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ package main
 
 import (
     "fmt"
-    "github.com/soundkitchen/budoux/golang"
+    "github.com/google/budoux/golang"
 )
 
 func main() {

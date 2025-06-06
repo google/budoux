@@ -14,7 +14,7 @@
 
 package budoux
 
-import "github.com/soundkitchen/budoux/golang/models"
+import "github.com/google/budoux/golang/models"
 
 type Parser struct {
 	model models.Model

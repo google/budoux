@@ -1,3 +1,3 @@
-module github.com/soundkitchen/budoux/golang
+module github.com/google/budoux/golang
 
 go 1.22
