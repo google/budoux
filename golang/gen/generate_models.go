@@ -83,7 +83,7 @@ func saveModelByName(name string) error {
 		Name: strings.ReplaceAll(name, "-", ""),
 		Data: data,
 	}
-	dst, err := generateModelPathByName(name)
+	dst, err := getModelPathByName(name)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func saveModelByName(name string) error {
 }
 
 func loadDataByName(name string) ([]byte, error) {
-	fp, err := generateFilePathByName(name)
+	fp, err := getDataPathByName(name)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func loadDataByName(name string) ([]byte, error) {
 	return b, nil
 }
 
-func generateFilePathByName(name string) (string, error) {
+func getDataPathByName(name string) (string, error) {
 	fp, err := filepath.Abs(filepath.Join("..", "..", "budoux", "models", fmt.Sprintf("%s.json", name)))
 	if err != nil {
 		return "", err
@@ -123,7 +123,7 @@ func generateFilePathByName(name string) (string, error) {
 	return fp, nil
 }
 
-func generateModelPathByName(name string) (string, error) {
+func getModelPathByName(name string) (string, error) {
 	fp, err := filepath.Abs(filepath.Join("..", "models", fmt.Sprintf("%s.go", name)))
 	if err != nil {
 		return "", err
