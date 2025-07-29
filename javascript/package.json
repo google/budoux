@@ -15,6 +15,22 @@
     ".": {
       "import": "./module/index.js",
       "require": "./dist/index.js"
+    },
+    "./module/webcomponents/budoux-ja": {
+      "import": "./module/webcomponents/budoux-ja.js",
+      "require": "./dist/webcomponents/budoux-ja.js"
+    },
+    "./module/webcomponents/budoux-th": {
+      "import": "./module/webcomponents/budoux-th.js",
+      "require": "./dist/webcomponents/budoux-th.js"
+    },
+    "./module/webcomponents/budoux-zh-hans": {
+      "import": "./module/webcomponents/budoux-zh-hans.js",
+      "require": "./dist/webcomponents/budoux-zh-hans.js"
+    },
+    "./module/webcomponents/budoux-zh-hant": {
+      "import": "./module/webcomponents/budoux-zh-hant.js",
+      "require": "./dist/webcomponents/budoux-zh-hant.js"
     }
   },
   "browser": {
@@ -71,7 +87,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "commander": "^13.0.0",
+    "commander": "^13.0.0",.
     "linkedom": "^0.18.7"
   },
   "overrides": {
