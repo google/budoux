@@ -87,7 +87,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "commander": "^13.0.0",
+    "commander": "^14.0.0",
     "linkedom": "^0.18.7"
   },
   "overrides": {
