@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -37,8 +37,8 @@ jobs:
       - name: Run unittest
         run: pytest ./tests
       - name: Install Jax
-        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.9' }}
+        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.10' }}
         run: pip install ".[jaxcpu]"
       - name: Run unittest with Jax
-        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.9' }}
+        if:  ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.10' }}
         run: pytest ./scripts/tests
