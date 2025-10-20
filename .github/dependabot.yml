@@ -5,26 +5,31 @@
 
 version: 2
 updates:
+  # Python updates
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: daily
+    groups:
+      patch:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
 
+  # GitHub Actions updates
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: daily
 
+  # JavaScript/npm updates
   - package-ecosystem: npm
-    directory: /demo
+    directory: "/*" 
     schedule:
       interval: daily
 
-  - package-ecosystem: npm
-    directory: /javascript
-    schedule:
-      interval: daily
-
+  # Java/Maven updates
   - package-ecosystem: maven
     directory: /java
     schedule:
