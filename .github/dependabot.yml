@@ -5,11 +5,11 @@
 
 version: 2
 updates:
-  # Python updates
+  # Python/pip updates
   - package-ecosystem: pip
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
     groups:
       patch:
         patterns:
@@ -21,16 +21,36 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
+    groups:
+      patch:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
 
   # JavaScript/npm updates
   - package-ecosystem: npm
-    directory: "/*" 
+    directories:
+      - /javascript
+      - /demo
     schedule:
-      interval: daily
+      interval: weekly
+    groups:
+      patch:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
 
   # Java/Maven updates
   - package-ecosystem: maven
     directory: /java
     schedule:
-      interval: daily
+      interval: weekly
+    groups:
+      patch:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
