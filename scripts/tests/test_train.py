@@ -219,7 +219,7 @@ class TestFit(unittest.TestCase):
     iters = 5
     out_span = 2
     scores = train.fit(dataset, dataset, features, iters, weights_file_path,
-                       log_file_path, out_span)
+                       log_file_path, out_span, None)
     with open(weights_file_path) as f:
       weights = [
           line.split('\t') for line in f.read().splitlines() if line.strip()
