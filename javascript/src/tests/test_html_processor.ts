@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {describe, it, expect} from 'vitest';
 import {loadDefaultJapaneseParser} from '../index.js';
 import {
   HTMLProcessingParser,
@@ -151,7 +152,7 @@ describe('HTMLProcessor.applyToElement', () => {
         console.log('actual:', result);
         console.log('expected:', out);
       }
-      expect(isEqual).toBeTrue();
+      expect(isEqual).toBe(true);
     });
     // Test when the separator is a `string`.
     it(test.in, () => {
@@ -166,7 +167,7 @@ describe('HTMLProcessor.applyToElement', () => {
         console.log('actual:', result);
         console.log('expected:', out);
       }
-      expect(isEqual).toBeTrue();
+      expect(isEqual).toBe(true);
     });
   }
 });
@@ -195,7 +196,7 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
       console.log('actual:', doc.body.innerHTML);
       console.log('expected:', expected);
     }
-    expect(isEqual).toBeTrue();
+    expect(isEqual).toBe(true);
   });
 });
 
@@ -417,7 +418,7 @@ describe('HTMLProcessingParser.applyToElement', () => {
       console.log('actual:', inputDocument.outerHTML);
       console.log('expected:', expectedElement.outerHTML);
     }
-    expect(isEqual).toBeTrue();
+    expect(isEqual).toBe(true);
   };
   const style = 'word-break: keep-all; overflow-wrap: anywhere;';
 
@@ -478,7 +479,7 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
       console.log('actual', result);
       console.log('expected', expectedHTML);
     }
-    expect(isEqual).toBeTrue();
+    expect(isEqual).toBe(true);
   };
 
   it('should output a html string with a SPAN parent with proper style attributes.', () => {

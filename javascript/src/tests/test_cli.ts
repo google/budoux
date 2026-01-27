@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {describe, it, expect} from 'vitest';
 import {cli} from '../cli.js';
 import {execFile, ExecFileException} from 'child_process';
 import * as path from 'path';

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {describe, it, expect, beforeAll, beforeEach} from 'vitest';
 import '../webcomponents/budoux-ja.js';
 
 describe('Web Components', () => {
@@ -33,20 +34,21 @@ describe('Web Components', () => {
     expect(budouxElement.innerHTML).toBe('今日は\u200B良い\u200B天気です。');
   });
 
-  it('should react to text content changes after attached.', resolve => {
-    const budouxElement = window.document.createElement('budoux-ja');
-    budouxElement.textContent = '今日は良い天気です。';
-    window.document.body.appendChild(budouxElement);
+  it('should react to text content changes after attached.', () =>
+    new Promise<void>(resolve => {
+      const budouxElement = window.document.createElement('budoux-ja');
+      budouxElement.textContent = '今日は良い天気です。';
+      window.document.body.appendChild(budouxElement);
 
-    const observer = new window.MutationObserver(() => {
-      expect(budouxElement.innerHTML).toBe('明日は\u200B晴れるかな？');
-      resolve();
-    });
-    observer.observe(budouxElement, {
-      childList: true,
-    });
-    budouxElement.textContent = '明日は晴れるかな？';
-  });
+      const observer = new window.MutationObserver(() => {
+        expect(budouxElement.innerHTML).toBe('明日は\u200B晴れるかな？');
+        resolve();
+      });
+      observer.observe(budouxElement, {
+        childList: true,
+      });
+      budouxElement.textContent = '明日は晴れるかな？';
+    }));
 
   it('should work with HTML inputs.', () => {
     const budouxElement = window.document.createElement('budoux-ja');

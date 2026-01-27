@@ -1,4 +1,4 @@
-name: Unittest for NodeJS
+name: Unittest for JavaScript
 on:
   push:
     paths:
@@ -10,13 +10,13 @@ permissions:
   contents: read
 
 jobs:
-  nodejs-unittest:
+  javascript-unittest:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: [18, 20]
+        node-version: [20, 22, 24]
 
     steps:
       - name: Harden Runner
