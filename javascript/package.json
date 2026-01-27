@@ -59,7 +59,7 @@
     "clean": "rm -rf dist module src/data",
     "copy": "node ./scripts/copy-data.js",
     "prebuild": "npm run clean && npm run copy",
-    "prepare": "npm run clean && npm run copy && npm run build && npm run bundle",
+    "prepare": "npm run build && npm run bundle && npx playwright install",
     "pretest": "npm run build",
     "test": "vitest run && npm run test:cli-version",
     "test:cli-version": "node ./scripts/check-cli-version.js",
