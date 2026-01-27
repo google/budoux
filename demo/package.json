@@ -10,7 +10,7 @@
     "watch:app": "esbuild src/app.ts --watch --bundle --minify --outfile=static/app.js",
     "watch:worker": "esbuild src/worker.ts --watch --bundle --minify --outfile=static/worker.js",
     "watch": "concurrently \"npm run watch:app\" \"npm run watch:worker\"",
-    "serve": "http-server static",
+    "serve": "serve static",
     "dev": "concurrently \"npm run serve\" \"npm run watch\"",
     "start": "npm run dev"
   },
@@ -22,10 +22,9 @@
     "dompurify": "^3.3.0"
   },
   "devDependencies": {
-    "@types/dompurify": "^3.2.0",
     "concurrently": "^9.2.1",
     "esbuild": "^0.19.5",
-    "http-server": "^14.1.1",
+    "serve": "^14.2.5",
     "typescript": "^5.2.2"
   }
 }
