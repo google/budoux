@@ -1,4 +1,4 @@
-name: Unittest for NodeJS
+name: Unittest for JavaScript
 on:
   push:
     paths:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  nodejs-unittest:
+  javascript-unittest:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
