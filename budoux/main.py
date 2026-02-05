@@ -22,14 +22,19 @@ import textwrap
 import typing
 from pathlib import Path
 
-# TODO: replace with importlib.resources when py3.8 support is dropped.
-import importlib_resources
+if sys.version_info >= (3, 9):
+  from importlib import resources
+else:
+  import importlib_resources as resources
 
 import budoux
 
 ArgList = typing.Optional[typing.List[str]]
-models: Path = importlib_resources.files('budoux') / "models"
-langs = dict((model.stem, model) for model in models.glob("*.json"))
+models: Path = resources.files('budoux') / "models"
+langs = {
+    model.name[:-5]: model
+    for model in models.iterdir() if model.name.endswith(".json")
+}
 
 
 class BudouxHelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
