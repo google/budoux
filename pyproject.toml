@@ -67,7 +67,7 @@ dev = [
     "types-regex",
     "types-setuptools",
     "yapf",
-    "jax>=0.4.0; python_version >= '3.11'",
+    "jax>=0.9.0",
 ]
 
 [tool.yapf]
