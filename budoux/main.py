@@ -20,11 +20,7 @@ import shutil
 import sys
 import textwrap
 import typing
-
-if sys.version_info >= (3, 9):
-  from importlib import resources
-else:
-  import importlib_resources as resources
+from importlib import resources
 
 import budoux
 
