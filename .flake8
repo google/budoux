@@ -1,0 +1,8 @@
+[flake8]
+# E124: closing bracket does not match visual indentation
+# E126: over-indentation
+# E501: line too long
+# BLK100: black formattable
+ignore = E124,E126,E501,BLK100
+indent-size = 2
+exclude = .venv,build,dist

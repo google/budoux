@@ -56,7 +56,7 @@ where = ["."]
 include = ["budoux*"]
 
 [tool.setuptools.package-data]
-budoux = ["models/*.json", "skip_nodes.json", "py.typed", "unicode_blocks.json"]
+budoux = ["models/*.json", "skip_nodes.json", "py.typed"]
 
 [dependency-groups]
 dev = [
@@ -77,13 +77,6 @@ dev = [
 [tool.yapf]
 based_on_style = "yapf"
 
-[tool.flake8]
-# E124: closing bracket does not match visual indentation
-# E126: over-indentation
-# E501: line too long
-# BLK100: black formattable
-ignore = ["E124", "E126", "E501", "BLK100"]
-indent-size = 2
 
 [tool.mypy]
 python_version = "3.10"

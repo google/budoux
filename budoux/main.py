@@ -20,7 +20,6 @@ import shutil
 import sys
 import textwrap
 import typing
-from pathlib import Path
 
 if sys.version_info >= (3, 9):
   from importlib import resources
@@ -30,10 +29,11 @@ else:
 import budoux
 
 ArgList = typing.Optional[typing.List[str]]
-models: Path = resources.files('budoux') / "models"
+models = resources.files('budoux') / "models"
 langs = {
     model.name[:-5]: model
-    for model in models.iterdir() if model.name.endswith(".json")
+    for model in models.iterdir()
+    if model.name.endswith(".json")
 }
 
 
@@ -60,7 +60,7 @@ def check_file(path: str) -> str:
     raise argparse.ArgumentTypeError(f"'{path}' is not found.")
 
 
-def check_lang(lang: str) -> Path:
+def check_lang(lang: str) -> typing.Any:
   """Check if given language exists or not.
 
   Args:
