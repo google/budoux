@@ -22,11 +22,16 @@ import textwrap
 import typing
 from importlib import resources
 
+if sys.version_info >= (3, 11):
+  from importlib.resources.abc import Traversable
+else:
+  from importlib.abc import Traversable
+
 import budoux
 
 ArgList = typing.Optional[typing.List[str]]
-models = resources.files('budoux') / "models"
-langs = {
+models: Traversable = resources.files('budoux') / "models"
+langs: typing.Dict[str, Traversable] = {
     model.name[:-5]: model
     for model in models.iterdir()
     if model.name.endswith(".json")
@@ -56,7 +61,7 @@ def check_file(path: str) -> str:
     raise argparse.ArgumentTypeError(f"'{path}' is not found.")
 
 
-def check_lang(lang: str) -> typing.Any:
+def check_lang(lang: str) -> Traversable:
   """Check if given language exists or not.
 
   Args:
@@ -154,8 +159,12 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
 def _main(test: ArgList = None) -> str:
   args = parse_args(test=test)
   model_path = args.lang or args.model
-  with open(model_path, 'r', encoding='utf-8') as f:
-    model = json.load(f)
+  if isinstance(model_path, str):
+    with open(model_path, 'r', encoding='utf-8') as f:
+      model = json.load(f)
+  else:
+    with model_path.open('r', encoding='utf-8') as f:
+      model = json.load(f)
 
   parser = budoux.Parser(model)
   if args.html:

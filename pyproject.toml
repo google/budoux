@@ -25,13 +25,13 @@ dependencies = []
 
 [project.optional-dependencies]
 jaxcpu = [
-    "jax==0.9.0; python_version >= '3.11'",
+    "jax>=0.4.0; python_version >= '3.11'",
 ]
 dev = [
     "build",
     "flake8",
     "isort",
-    "mypy==1.19.1",
+    "mypy>=1.0.0",
     "pytest",
     "regex",
     "toml",
@@ -59,7 +59,7 @@ dev = [
     "build",
     "flake8",
     "isort",
-    "mypy==1.19.1",
+    "mypy>=1.0.0",
     "pytest",
     "regex",
     "toml",
@@ -67,7 +67,7 @@ dev = [
     "types-regex",
     "types-setuptools",
     "yapf",
-    "jax==0.9.0; python_version >= '3.11'",
+    "jax>=0.4.0; python_version >= '3.11'",
 ]
 
 [tool.yapf]
