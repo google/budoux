@@ -20,16 +20,19 @@ import shutil
 import sys
 import textwrap
 import typing
-from pathlib import Path
-
-# TODO: replace with importlib.resources when py3.8 support is dropped.
-import importlib_resources
+from importlib import resources
 
 import budoux
 
 ArgList = typing.Optional[typing.List[str]]
-models: Path = importlib_resources.files('budoux') / "models"
-langs = dict((model.stem, model) for model in models.glob("*.json"))
+# Using typing.Any for resource related objects to avoid complex conditional
+# imports for Traversable which varies across Python versions.
+models: typing.Any = resources.files('budoux') / "models"
+langs: typing.Dict[str, typing.Any] = {
+    model.name[:-5]: model
+    for model in models.iterdir()
+    if model.name.endswith(".json")
+}
 
 
 class BudouxHelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
@@ -55,7 +58,7 @@ def check_file(path: str) -> str:
     raise argparse.ArgumentTypeError(f"'{path}' is not found.")
 
 
-def check_lang(lang: str) -> Path:
+def check_lang(lang: str) -> typing.Any:
   """Check if given language exists or not.
 
   Args:
@@ -153,6 +156,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
 def _main(test: ArgList = None) -> str:
   args = parse_args(test=test)
   model_path = args.lang or args.model
+  # Using open() directly assuming model_path is a path-like object.
   with open(model_path, 'r', encoding='utf-8') as f:
     model = json.load(f)
 
