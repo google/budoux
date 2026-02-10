@@ -73,8 +73,8 @@ export const cli = (argv: string[]) => {
   const parser = model
     ? loadCustomParser(model)
     : lang && defaultParsers.has(lang)
-    ? defaultParsers.get(lang)!
-    : loadDefaultJapaneseParser();
+      ? defaultParsers.get(lang)!
+      : loadDefaultJapaneseParser();
 
   switch (args.length) {
     case 0: {
