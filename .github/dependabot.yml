@@ -16,6 +16,11 @@ updates:
           - "*"
         update-types:
           - "patch"
+    ignore:
+      - dependency-name: "eslint"
+        versions: [">= 10.0.0"]
+      - dependency-name: "@eslint/js"
+        versions: [">= 10.0.0"]
 
   # GitHub Actions updates
   - package-ecosystem: github-actions
