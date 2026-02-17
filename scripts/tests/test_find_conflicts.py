@@ -26,7 +26,7 @@ class TestFindConflicts(unittest.TestCase):
       f.write("1\tUW1:a\tUW2:b\n")
       f.write("-1\tUW1:c\tUW2:d\n")
 
-    find_conflicts(self.input_file, self.output_file, strategy='delete_all')
+    find_conflicts(self.input_file, self.output_file, threshold=1.0)
 
     with open(self.output_file, 'r', encoding='utf-8') as f:
       lines = f.readlines()
@@ -35,14 +35,15 @@ class TestFindConflicts(unittest.TestCase):
     self.assertEqual(lines[0].strip(), "1\tUW1:a\tUW2:b")
     self.assertEqual(lines[1].strip(), "-1\tUW1:c\tUW2:d")
 
-  def test_delete_all_conflicts(self):
+  def test_strict_threshold_deletes_all_conflicts(self):
     # Setup data with a conflict on UW1:a
     with open(self.input_file, 'w', encoding='utf-8') as f:
-      f.write("1\tUW1:a\tUW2:b\n")  # Conflict
-      f.write("-1\tUW1:a\tUW2:b\n")  # Conflict
-      f.write("1\tUW1:c\tUW2:d\n")  # Safe
+      f.write("1\tUW1:a\tUW2:b\n")  # Conflict 50%
+      f.write("-1\tUW1:a\tUW2:b\n")  # Conflict 50%
+      f.write("1\tUW1:c\tUW2:d\n")  # Safe 100%
 
-    find_conflicts(self.input_file, self.output_file, strategy='delete_all')
+    # Passing 1.0 acts as delete_all
+    find_conflicts(self.input_file, self.output_file, threshold=1.0)
 
     with open(self.output_file, 'r', encoding='utf-8') as f:
       lines = f.readlines()
@@ -50,7 +51,7 @@ class TestFindConflicts(unittest.TestCase):
     self.assertEqual(len(lines), 1)
     self.assertEqual(lines[0].strip(), "1\tUW1:c\tUW2:d")
 
-  def test_majority_conflict_above_threshold(self):
+  def test_threshold_keeps_majority(self):
     # Setup data with 90% positive / 10% negative on UW1:x
     with open(self.input_file, 'w', encoding='utf-8') as f:
       for _ in range(9):
@@ -61,8 +62,7 @@ class TestFindConflicts(unittest.TestCase):
       f.write("1\tUW1:c\tUW2:d\n")
 
     # threshold 0.8 should keep the 9 positive entries
-    find_conflicts(
-        self.input_file, self.output_file, strategy='majority', threshold=0.8)
+    find_conflicts(self.input_file, self.output_file, threshold=0.8)
 
     with open(self.output_file, 'r', encoding='utf-8') as f:
       lines = f.readlines()
@@ -74,7 +74,7 @@ class TestFindConflicts(unittest.TestCase):
     safe_count = sum(1 for line in lines if "1\tUW1:c\tUW2:d" in line)
     self.assertEqual(safe_count, 1)
 
-  def test_majority_conflict_below_threshold(self):
+  def test_threshold_deletes_when_majority_not_met(self):
     # Setup data with 60% positive / 40% negative on UW1:x
     with open(self.input_file, 'w', encoding='utf-8') as f:
       for _ in range(6):
@@ -84,9 +84,8 @@ class TestFindConflicts(unittest.TestCase):
       # Add a safe one
       f.write("1\tUW1:c\tUW2:d\n")
 
-    # threshold 0.8 means 0.6 is not enough, so it should default to delete_all
-    find_conflicts(
-        self.input_file, self.output_file, strategy='majority', threshold=0.8)
+    # threshold 0.8 means 0.6 is not enough, so it should discard all conflicts
+    find_conflicts(self.input_file, self.output_file, threshold=0.8)
 
     with open(self.output_file, 'r', encoding='utf-8') as f:
       lines = f.readlines()
@@ -101,12 +100,31 @@ class TestFindConflicts(unittest.TestCase):
       f.write("1\tUW1:a\tUW2:b\n")
       f.write("-1\tUW2:b\tUW1:a\n")
 
-    find_conflicts(self.input_file, self.output_file, strategy='delete_all')
+    find_conflicts(self.input_file, self.output_file, threshold=1.0)
 
     with open(self.output_file, 'r', encoding='utf-8') as f:
       lines = f.readlines()
 
     self.assertEqual(len(lines), 0)
+
+  def test_three_competing_labels(self):
+    # Setup data with three competing labels
+    with open(self.input_file, 'w', encoding='utf-8') as f:
+      for _ in range(6):
+        f.write("100\tUW1:z\n")  # 60%
+      for _ in range(3):
+        f.write("1\tUW1:z\n")  # 30%
+      for _ in range(1):
+        f.write("-1\tUW1:z\n")  # 10%
+
+    find_conflicts(self.input_file, self.output_file, threshold=0.5)
+
+    with open(self.output_file, 'r', encoding='utf-8') as f:
+      lines = f.readlines()
+
+    # Label "100" has 60% which > 0.5 threshold, so 6 items survive.
+    self.assertEqual(len(lines), 6)
+    self.assertEqual(lines[0].strip(), "100\tUW1:z")
 
 
 if __name__ == '__main__':

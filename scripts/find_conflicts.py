@@ -23,19 +23,18 @@ from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 
 
-def _reconstruct_text(features: str) -> str:
-  """Reconstructs the human-readable text from features."""
+def _reconstruct_text_from_unigram(features: str) -> str:
+  """Reconstructs the human-readable text from unigrams."""
   feature_list = features.split('\t')
   unigrams = {}
   for feat in feature_list:
-    if feat.startswith('UW'):
-      parts = feat.split(':', 1)
-      if len(parts) == 2:
-        try:
-          idx = int(parts[0][2:])
-          unigrams[idx] = parts[1]
-        except ValueError:
-          pass
+    if not feat.startswith('UW'):
+      continue
+    parts = feat.split(':', 1)
+    if not len(parts) == 2:
+      continue
+    idx = int(parts[0][2:])
+    unigrams[idx] = parts[1]
 
   # We expect UW1 to UW6
   left = "".join([unigrams.get(i, "　") for i in range(1, 4)])
@@ -44,16 +43,14 @@ def _reconstruct_text(features: str) -> str:
 
 
 def find_conflicts(data_path: str,
-                   resolve_path: str = None,
-                   strategy: str = "delete_all",
-                   threshold: float = 0.8) -> None:
+                   output_path: str,
+                   threshold: float = 1.0) -> None:
   """Finds and prints conflicting entries in the encoded data file.
 
     Args:
       data_path: The path to the encoded data file.
-      resolve_path: The path to save the cleaned encoded data file.
-      strategy: The resolution strategy ("delete_all" or "majority").
-      threshold: The threshold for majority vote resolution.
+      output_path: The path to save the cleaned encoded data file.
+      threshold: The minimum ratio to keep the majority label (default 1.0 = unanimity).
     """
 
   features_to_labels: Dict[str, Set[int]] = defaultdict(set)
@@ -68,10 +65,7 @@ def find_conflicts(data_path: str,
       cols = line.strip('\n').split('\t')
       if len(cols) < 2:
         continue
-      try:
-        label = int(cols[0])
-      except ValueError:
-        continue
+      label = int(cols[0])
 
       # Canonicalize features by sorting them
       features = '\t'.join(sorted(cols[1:]))
@@ -94,7 +88,7 @@ def find_conflicts(data_path: str,
         f"Found {len(conflicts)} unique feature sets with conflicting labels:\n"
     )
     for features, labels in conflicts.items():
-      print(f"Features: {_reconstruct_text(features)}")
+      print(f"Features: {_reconstruct_text_from_unigram(features)}")
       total_for_feat = sum(
           features_to_count[features][label] for label in labels)
       winner_label = None
@@ -104,19 +98,23 @@ def find_conflicts(data_path: str,
         count = features_to_count[features][label]
         ratio = count / total_for_feat
         print(f"  Label {label:2}: {count} occurrences ({ratio:.1%})")
-        if ratio > max_ratio:
+        if ratio >= max_ratio:
           max_ratio = ratio
           winner_label = label
 
-      if strategy == "majority" and max_ratio >= threshold:
+      if max_ratio >= threshold:
         majority_features[features] = winner_label
-        print(f"  -> Resolved by majority vote: keeping label {winner_label}")
+        print(
+            f"  -> Threshold met ({max_ratio:.1%} >= {threshold:.1%} limit): keeping label {winner_label}"
+        )
         # We delete all the ones that aren't the winner
         deleted_points += (
             total_for_feat - features_to_count[features][winner_label])
         resolved_features.add(features)
       else:
-        print(f"  -> Conflicting: deleted all ({total_for_feat} occurrences)")
+        print(
+            f"  -> Threshold not met: deleted all ({total_for_feat} occurrences)"
+        )
         deleted_points += total_for_feat
         resolved_features.add(features)
       print("-" * 40)
@@ -130,54 +128,41 @@ def find_conflicts(data_path: str,
     )
 
   # Second pass: write out resolved file
-  if resolve_path:
-    with open(
-        data_path, 'r', encoding='utf-8') as fin, open(
-            resolve_path, 'w', encoding='utf-8') as fout:
-      for line in fin:
-        cols = line.strip('\n').split('\t')
-        if len(cols) < 2:
-          continue
-        try:
-          label = int(cols[0])
-        except ValueError:
-          continue
+  with open(
+      data_path, 'r', encoding='utf-8') as fin, open(
+          output_path, 'w', encoding='utf-8') as fout:
+    for line in fin:
+      cols = line.strip('\n').split('\t')
+      label = int(cols[0])
+      features = '\t'.join(sorted(cols[1:]))
+      if features in resolved_features:
+        if features in majority_features:
+          if label == majority_features[features]:
+            fout.write(line)
+        # if threshold not met, discard
+      else:
+        fout.write(line)
 
-        features = '\t'.join(sorted(cols[1:]))
-        if features in resolved_features:
-          if strategy == "majority" and features in majority_features:
-            if label == majority_features[features]:
-              fout.write(line)
-          # if delete_all or didn't meet threshold, discard
-        else:
-          fout.write(line)
-
-    print(f"Cleaned data saved to {resolve_path}")
+    print(f"Cleaned data saved to {output_path}")
 
 
 def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument('encoded_data', help='File path for the encoded data.')
   parser.add_argument(
-      '-r',
-      '--resolve',
+      '-o',
+      '--output',
       help='File path to save the cleaned encoded data.',
       default=None)
-  parser.add_argument(
-      '-s',
-      '--strategy',
-      choices=['delete_all', 'majority'],
-      default='delete_all',
-      help='Conflict resolution strategy (default: delete_all).')
   parser.add_argument(
       '-t',
       '--threshold',
       type=float,
-      default=0.8,
-      help='Threshold for majority vote (default: 0.8).')
+      default=1.0,
+      help='Threshold ratio for majority vote (default: 1.0 [Delete All]).')
   args = parser.parse_args()
 
-  find_conflicts(args.encoded_data, args.resolve, args.strategy, args.threshold)
+  find_conflicts(args.encoded_data, args.output, args.threshold)
 
 
 if __name__ == '__main__':
