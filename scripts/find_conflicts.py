@@ -18,9 +18,8 @@ but different labels.
 """
 
 import argparse
-import sys
 from collections import defaultdict
-from typing import Dict, List, Set, Tuple
+from typing import Dict
 
 
 def _reconstruct_text_from_unigram(features: str) -> str:

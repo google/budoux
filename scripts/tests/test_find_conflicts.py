@@ -25,15 +25,15 @@ from scripts.find_conflicts import find_conflicts  # noqa (module hack)
 
 class TestFindConflicts(unittest.TestCase):
 
-  def setUp(self):
+  def setUp(self) -> None:
     self.temp_dir = tempfile.TemporaryDirectory()
     self.input_file = os.path.join(self.temp_dir.name, 'input.txt')
     self.output_file = os.path.join(self.temp_dir.name, 'output.txt')
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     self.temp_dir.cleanup()
 
-  def test_no_conflicts(self):
+  def test_no_conflicts(self) -> None:
     # Setup data with no conflicts (different features)
     with open(self.input_file, 'w', encoding='utf-8') as f:
       f.write("1\tUW1:a\tUW2:b\n")
@@ -48,7 +48,7 @@ class TestFindConflicts(unittest.TestCase):
     self.assertEqual(lines[0].strip(), "1\tUW1:a\tUW2:b")
     self.assertEqual(lines[1].strip(), "-1\tUW1:c\tUW2:d")
 
-  def test_strict_threshold_deletes_all_conflicts(self):
+  def test_strict_threshold_deletes_all_conflicts(self) -> None:
     # Setup data with a conflict on UW1:a
     with open(self.input_file, 'w', encoding='utf-8') as f:
       f.write("1\tUW1:a\tUW2:b\n")  # Conflict 50%
@@ -64,7 +64,7 @@ class TestFindConflicts(unittest.TestCase):
     self.assertEqual(len(lines), 1)
     self.assertEqual(lines[0].strip(), "1\tUW1:c\tUW2:d")
 
-  def test_threshold_keeps_majority(self):
+  def test_threshold_keeps_majority(self) -> None:
     # Setup data with 90% positive / 10% negative on UW1:x
     with open(self.input_file, 'w', encoding='utf-8') as f:
       for _ in range(9):
@@ -87,7 +87,7 @@ class TestFindConflicts(unittest.TestCase):
     safe_count = sum(1 for line in lines if "1\tUW1:c\tUW2:d" in line)
     self.assertEqual(safe_count, 1)
 
-  def test_threshold_deletes_when_majority_not_met(self):
+  def test_threshold_deletes_when_majority_not_met(self) -> None:
     # Setup data with 60% positive / 40% negative on UW1:x
     with open(self.input_file, 'w', encoding='utf-8') as f:
       for _ in range(6):
@@ -107,7 +107,7 @@ class TestFindConflicts(unittest.TestCase):
     self.assertEqual(len(lines), 1)
     self.assertEqual(lines[0].strip(), "1\tUW1:c\tUW2:d")
 
-  def test_different_feature_order_is_same_conflict(self):
+  def test_different_feature_order_is_same_conflict(self) -> None:
     # Setup data where features are same but different order
     with open(self.input_file, 'w', encoding='utf-8') as f:
       f.write("1\tUW1:a\tUW2:b\n")
@@ -120,7 +120,7 @@ class TestFindConflicts(unittest.TestCase):
 
     self.assertEqual(len(lines), 0)
 
-  def test_three_competing_labels(self):
+  def test_three_competing_labels(self) -> None:
     # Setup data with three competing labels
     with open(self.input_file, 'w', encoding='utf-8') as f:
       for _ in range(6):
