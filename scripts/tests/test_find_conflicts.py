@@ -88,7 +88,7 @@ class TestFindConflicts(unittest.TestCase):
     with open(self.input_file, 'w', encoding='utf-8') as f:
       f.write("5\tUW1:x\tUW2:y\n")
       f.write("-4\tUW1:x\tUW2:y\n")
-      f.write("1\tUW1:c\tUW2:d\n")
+      f.write("1\tUW1:c\tUW2:d\n")  # Safe
 
     # threshold 0.8 > 55% -> discard all
     find_conflicts(self.input_file, self.output_file, threshold=0.8)
