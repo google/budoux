@@ -53,7 +53,6 @@ def find_conflicts(data_path: str,
       threshold: The minimum ratio to keep the majority label (default 1.0 = unanimity).
     """
 
-  features_to_labels: Dict[str, Set[int]] = defaultdict(set)
   features_to_count: Dict[str,
                           Dict[int,
                                int]] = defaultdict(lambda: defaultdict(int))
@@ -69,13 +68,12 @@ def find_conflicts(data_path: str,
 
       # Canonicalize features by sorting them
       features = '\t'.join(sorted(cols[1:]))
-      features_to_labels[features].add(label)
       features_to_count[features][label] += 1
       total_data_points += 1
 
   conflicts = {
-      feat: labels
-      for feat, labels in features_to_labels.items()
+      feat: labels.keys()
+      for feat, labels in features_to_count.items()
       if len(labels) > 1
   }
 
@@ -102,7 +100,7 @@ def find_conflicts(data_path: str,
           max_ratio = ratio
           winner_label = label
 
-      if max_ratio >= threshold:
+      if max_ratio >= threshold and winner_label is not None:
         majority_features[features] = winner_label
         print(
             f"  -> Threshold met ({max_ratio:.1%} >= {threshold:.1%} limit): keeping label {winner_label}"
