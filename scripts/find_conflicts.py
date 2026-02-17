@@ -18,8 +18,9 @@ but different labels.
 """
 
 import argparse
+import sys
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, List, Set, Tuple
 
 
 def _reconstruct_text_from_unigram(features: str) -> str:
@@ -53,9 +54,10 @@ def find_conflicts(data_path: str,
       threshold: The minimum ratio to keep the majority label (default 1.0 = unanimity).
     """
 
-  features_to_count: Dict[str,
-                          Dict[int,
-                               int]] = defaultdict(lambda: defaultdict(int))
+  features_to_pos_weight: Dict[str, int] = defaultdict(int)
+  features_to_neg_weight: Dict[str, int] = defaultdict(int)
+  features_to_pos_count: Dict[str, int] = defaultdict(int)
+  features_to_neg_count: Dict[str, int] = defaultdict(int)
   total_data_points = 0
 
   # First pass: identify conflicts
@@ -68,13 +70,20 @@ def find_conflicts(data_path: str,
 
       # Canonicalize features by sorting them
       features = '\t'.join(sorted(cols[1:]))
-      features_to_count[features][label] += 1
+
+      if label > 0:
+        features_to_pos_weight[features] += label
+        features_to_pos_count[features] += 1
+      elif label < 0:
+        features_to_neg_weight[features] += abs(label)
+        features_to_neg_count[features] += 1
+
       total_data_points += 1
 
+  # A conflict requires both positive and negative evidence
   conflicts = {
-      feat: labels.keys()
-      for feat, labels in features_to_count.items()
-      if len(labels) > 1
+      feat for feat, pos_w in features_to_pos_weight.items()
+      if pos_w > 0 and features_to_neg_weight[feat] > 0
   }
 
   deleted_points = 0
@@ -85,35 +94,46 @@ def find_conflicts(data_path: str,
     print(
         f"Found {len(conflicts)} unique feature sets with conflicting labels:\n"
     )
-    for features, labels in conflicts.items():
+    for features in conflicts:
       print(f"Features: {_reconstruct_text_from_unigram(features)}")
-      total_for_feat = sum(
-          features_to_count[features][label] for label in labels)
-      winner_label = None
-      max_ratio = 0.0
+      pos_w = features_to_pos_weight[features]
+      neg_w = features_to_neg_weight[features]
+      total_w = pos_w + neg_w
+      pos_ratio = pos_w / total_w
+      neg_ratio = neg_w / total_w
 
-      for label in sorted(labels):
-        count = features_to_count[features][label]
-        ratio = count / total_for_feat
-        print(f"  Label {label:2}: {count} occurrences ({ratio:.1%})")
-        if ratio >= max_ratio:
-          max_ratio = ratio
-          winner_label = label
+      print(
+          f"  Positive weight: {pos_w} ({pos_ratio:.1%}) from {features_to_pos_count[features]} occurrences"
+      )
+      print(
+          f"  Negative weight: {neg_w} ({neg_ratio:.1%}) from {features_to_neg_count[features]} occurrences"
+      )
 
-      if max_ratio >= threshold and winner_label is not None:
-        majority_features[features] = winner_label
+      if pos_ratio >= neg_ratio:
+        max_ratio = pos_ratio
+        winner_sign = 1
+        winner_name = "positive"
+        loser_count = features_to_neg_count[features]
+      else:
+        max_ratio = neg_ratio
+        winner_sign = -1
+        winner_name = "negative"
+        loser_count = features_to_pos_count[features]
+
+      if max_ratio >= threshold:
+        majority_features[features] = winner_sign
         print(
-            f"  -> Threshold met ({max_ratio:.1%} >= {threshold:.1%} limit): keeping label {winner_label}"
+            f"  -> Threshold met ({max_ratio:.1%} >= {threshold:.1%} limit): keeping {winner_name} sign"
         )
         # We delete all the ones that aren't the winner
-        deleted_points += (
-            total_for_feat - features_to_count[features][winner_label])
+        deleted_points += loser_count
         resolved_features.add(features)
       else:
         print(
-            f"  -> Threshold not met: deleted all ({total_for_feat} occurrences)"
+            f"  -> Threshold not met: deleted all ({features_to_pos_count[features] + features_to_neg_count[features]} occurrences)"
         )
-        deleted_points += total_for_feat
+        deleted_points += features_to_pos_count[
+            features] + features_to_neg_count[features]
         resolved_features.add(features)
       print("-" * 40)
   else:
@@ -135,7 +155,8 @@ def find_conflicts(data_path: str,
       features = '\t'.join(sorted(cols[1:]))
       if features in resolved_features:
         if features in majority_features:
-          if label == majority_features[features]:
+          winner_sign = majority_features[features]
+          if (label > 0 and winner_sign > 0) or (label < 0 and winner_sign < 0):
             fout.write(line)
         # if threshold not met, discard
       else:
