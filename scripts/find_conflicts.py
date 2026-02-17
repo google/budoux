@@ -37,8 +37,9 @@ def _reconstruct_text_from_unigram(features: str) -> str:
     unigrams[idx] = parts[1]
 
   # We expect UW1 to UW6
-  left = "".join([unigrams.get(i, "　") for i in range(1, 4)])
-  right = "".join([unigrams.get(i, "　") for i in range(4, 7)])
+  full_width_space = chr(0x3000)
+  left = "".join([unigrams.get(i, full_width_space) for i in range(1, 4)])
+  right = "".join([unigrams.get(i, full_width_space) for i in range(4, 7)])
   return f"{left} / {right}"
 
 
