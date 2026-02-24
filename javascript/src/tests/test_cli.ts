@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {describe, it, expect} from 'vitest';
-import {cli} from '../cli.js';
-import {execFile, ExecFileException} from 'child_process';
+import {type ExecFileException, execFile} from 'child_process';
 import * as path from 'path';
 import stream from 'stream';
+import {describe, expect, it} from 'vitest';
+import {cli} from '../cli.js';
 import {loadDefaultParsers} from '../index.js';
 
 type execFileCallBack = {

@@ -63,20 +63,15 @@
     "pretest": "npm run build",
     "test": "vitest run && npm run test:cli-version",
     "test:cli-version": "node ./scripts/check-cli-version.js",
-    "lint": "eslint src/** --no-error-on-unmatched-pattern",
-    "fix": "eslint src/** --no-error-on-unmatched-pattern --fix"
+    "lint": "biome check .",
+    "fix": "biome check --write ."
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.9.0",
+    "@biomejs/biome": "^2.4.4",
     "@types/node": "^25.2.2",
-    "@typescript-eslint/eslint-plugin": "^8.0.1",
     "@vitest/browser": "^4.0.18",
     "@vitest/browser-playwright": "^4.0.18",
     "esbuild": "^0.27.0",
-    "eslint": "^9.9.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.0.0",
     "playwright": "^1.58.0",
     "typescript": "^5.1.6",
     "vitest": "^4.0.18"

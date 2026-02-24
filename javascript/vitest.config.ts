@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { defineConfig } from 'vitest/config';
-import { playwright } from '@vitest/browser-playwright';
+import {playwright} from '@vitest/browser-playwright';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
+import {defineConfig} from 'vitest/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,9 +40,7 @@ export default defineConfig({
             enabled: true,
             provider: playwright(),
             headless: true,
-            instances: [
-              { browser: 'chromium' },
-            ],
+            instances: [{browser: 'chromium'}],
           },
           include: [
             'src/tests/test_webcomponents.ts',
@@ -59,7 +57,10 @@ export default defineConfig({
             },
             {
               find: /^(\.)?\.\/testutils.js$/,
-              replacement: path.resolve(__dirname, 'src/tests/testutils-browser.ts'),
+              replacement: path.resolve(
+                __dirname,
+                'src/tests/testutils-browser.ts'
+              ),
             },
           ],
         },

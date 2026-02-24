@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import {describe, it, expect} from 'vitest';
-import {loadDefaultJapaneseParser} from '../index.js';
+import {describe, expect, it} from 'vitest';
+import {parseFromString} from '../dom.js';
 import {
   HTMLProcessingParser,
   HTMLProcessor,
-  HTMLProcessorOptions,
+  type HTMLProcessorOptions,
   NodeOrTextForTesting,
-  ParagraphForTesting,
+  type ParagraphForTesting,
 } from '../html_processor.js';
-import {parseFromString} from '../dom.js';
-import {setInnerHtml, createDocument, isBrowser} from './testutils.js';
+import {loadDefaultJapaneseParser} from '../index.js';
+import {createDocument, isBrowser, setInnerHtml} from './testutils.js';
 
 const parser = loadDefaultJapaneseParser();
 

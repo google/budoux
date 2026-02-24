@@ -17,9 +17,9 @@
 const assert = require('assert');
 const path = require('path');
 const childProcess = require('child_process');
-const package = require('../package.json');
+const packageJson = require('../package.json');
 
-const packageVersion = package.version;
+const packageVersion = packageJson.version;
 const runCli = args =>
   new Promise(resolve => {
     childProcess.execFile(
