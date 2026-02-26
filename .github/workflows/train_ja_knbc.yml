@@ -25,10 +25,13 @@ jobs:
       - name: Train model
         run: |
           echo "Starting training..."
-          date
+          start_time=$(date +%s)
           python scripts/train.py encoded_knbc.txt -o weights_knbc.txt --iter 100000
-          date
+          end_time=$(date +%s)
+          duration=$((end_time - start_time))
           echo "Training finished."
+          echo "Duration: $duration seconds"
+          echo "Duration: $(($duration / 60)) minutes and $(($duration % 60)) seconds"
       - name: Build model
         run: python scripts/build_model.py weights_knbc.txt -o model.json
       - name: Upload artifact
