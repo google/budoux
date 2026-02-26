@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
+import {Command} from 'commander';
 import {readFileSync} from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
-import {Command} from 'commander';
 import {
   HTMLProcessingParser,
-  loadDefaultParsers,
   loadDefaultJapaneseParser,
+  loadDefaultParsers,
 } from './index.js';
 
 const CLI_VERSION = '0.7.0';
@@ -73,8 +73,8 @@ export const cli = (argv: string[]) => {
   const parser = model
     ? loadCustomParser(model)
     : lang && defaultParsers.has(lang)
-    ? defaultParsers.get(lang)!
-    : loadDefaultJapaneseParser();
+      ? defaultParsers.get(lang)!
+      : loadDefaultJapaneseParser();
 
   switch (args.length) {
     case 0: {

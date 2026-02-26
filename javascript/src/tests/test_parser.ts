@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {describe, it, expect} from 'vitest';
+import {describe, expect, it} from 'vitest';
 import {Parser} from '../parser.js';
 
 describe('Parser.parse', () => {

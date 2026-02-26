@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {describe, it, expect, beforeAll, beforeEach} from 'vitest';
+import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import '../webcomponents/budoux-ja.js';
 
 describe('Web Components', () => {
