@@ -1,0 +1,38 @@
+name: Train Japanese Model (KNBC)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          pip install ".[jaxcpu]"
+      - name: Prepare KNBC data
+        run: |
+          curl -o knbc.tar.bz2 https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2
+          tar -xf knbc.tar.bz2
+          python scripts/prepare_knbc.py KNBC_v1.0_090925_utf8 -o source_knbc.txt
+      - name: Encode data
+        run: python scripts/encode_data.py source_knbc.txt -o encoded_knbc.txt
+      - name: Train model
+        run: |
+          echo "Starting training..."
+          date
+          python scripts/train.py encoded_knbc.txt -o weights_knbc.txt --iter 100000
+          date
+          echo "Training finished."
+      - name: Build model
+        run: python scripts/build_model.py weights_knbc.txt -o model.json
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: budoux-ja-knbc-model
+          path: model.json
