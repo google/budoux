@@ -45,7 +45,7 @@ dev = [
 budoux = "budoux.main:main"
 
 [tool.setuptools.dynamic]
-version = {attr = "budoux.__init__.__version__"}
+version = {attr = "budoux.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["."]
