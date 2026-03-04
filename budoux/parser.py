@@ -42,7 +42,7 @@ class Parser:
     self._base_score = -sum(sum(g.values()) for g in self._model.values()) * 0.5
 
   @property
-  def model(self):
+  def model(self) -> typing.Dict[str, typing.Dict[str, int]]:
     return self._model
 
   def parse(self, sentence: str) -> typing.List[str]:
