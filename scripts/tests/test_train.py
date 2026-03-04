@@ -19,7 +19,9 @@ import sys
 import tempfile
 import typing
 import unittest
+import pytest
 
+pytest.importorskip("jax")
 from jax import numpy as jnp
 
 # module hack
