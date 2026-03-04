@@ -29,7 +29,7 @@ class Parser:
   chunks and markups from the given input string.
 
   Attributes:
-    model: A dict mapping a feature (str) and its score (int).
+    _model: A dict mapping a feature (str) and its score (int).
   """
 
   def __init__(self, model: typing.Dict[str, typing.Dict[str, int]]):
@@ -38,8 +38,12 @@ class Parser:
     Args:
       model (Dict[str, Dict[str, int]]): A dict mapping a feature and its score.
     """
-    self.model = model
-    self._base_score = -sum(sum(g.values()) for g in self.model.values()) * 0.5
+    self._model = model
+    self._base_score = -sum(sum(g.values()) for g in self._model.values()) * 0.5
+
+  @property
+  def model(self) -> typing.Dict[str, typing.Dict[str, int]]:
+    return self._model
 
   def parse(self, sentence: str) -> typing.List[str]:
     """Parses the input sentence and returns a list of semantic chunks.
@@ -56,30 +60,30 @@ class Parser:
     for i in range(1, len(sentence)):
       score = self._base_score
       if i > 2:
-        score += self.model.get('UW1', {}).get(sentence[i - 3], 0)
+        score += self._model.get('UW1', {}).get(sentence[i - 3], 0)
       if i > 1:
-        score += self.model.get('UW2', {}).get(sentence[i - 2], 0)
-      score += self.model.get('UW3', {}).get(sentence[i - 1], 0)
-      score += self.model.get('UW4', {}).get(sentence[i], 0)
+        score += self._model.get('UW2', {}).get(sentence[i - 2], 0)
+      score += self._model.get('UW3', {}).get(sentence[i - 1], 0)
+      score += self._model.get('UW4', {}).get(sentence[i], 0)
       if i + 1 < len(sentence):
-        score += self.model.get('UW5', {}).get(sentence[i + 1], 0)
+        score += self._model.get('UW5', {}).get(sentence[i + 1], 0)
       if i + 2 < len(sentence):
-        score += self.model.get('UW6', {}).get(sentence[i + 2], 0)
+        score += self._model.get('UW6', {}).get(sentence[i + 2], 0)
 
       if i > 1:
-        score += self.model.get('BW1', {}).get(sentence[i - 2:i], 0)
-      score += self.model.get('BW2', {}).get(sentence[i - 1:i + 1], 0)
+        score += self._model.get('BW1', {}).get(sentence[i - 2:i], 0)
+      score += self._model.get('BW2', {}).get(sentence[i - 1:i + 1], 0)
       if i + 1 < len(sentence):
-        score += self.model.get('BW3', {}).get(sentence[i:i + 2], 0)
+        score += self._model.get('BW3', {}).get(sentence[i:i + 2], 0)
 
       if i > 2:
-        score += self.model.get('TW1', {}).get(sentence[i - 3:i], 0)
+        score += self._model.get('TW1', {}).get(sentence[i - 3:i], 0)
       if i > 1:
-        score += self.model.get('TW2', {}).get(sentence[i - 2:i + 1], 0)
+        score += self._model.get('TW2', {}).get(sentence[i - 2:i + 1], 0)
       if i + 1 < len(sentence):
-        score += self.model.get('TW3', {}).get(sentence[i - 1:i + 2], 0)
+        score += self._model.get('TW3', {}).get(sentence[i - 1:i + 2], 0)
       if i + 2 < len(sentence):
-        score += self.model.get('TW4', {}).get(sentence[i:i + 3], 0)
+        score += self._model.get('TW4', {}).get(sentence[i:i + 3], 0)
 
       if score > 0:
         chunks.append(sentence[i])
