@@ -39,6 +39,7 @@ class Parser:
       model (Dict[str, Dict[str, int]]): A dict mapping a feature and its score.
     """
     self.model = model
+    self._base_score = -sum(sum(g.values()) for g in self.model.values()) * 0.5
 
   def parse(self, sentence: str) -> typing.List[str]:
     """Parses the input sentence and returns a list of semantic chunks.
@@ -52,9 +53,8 @@ class Parser:
     if sentence == '':
       return []
     chunks = [sentence[0]]
-    base_score = -sum(sum(g.values()) for g in self.model.values()) * 0.5
     for i in range(1, len(sentence)):
-      score = base_score
+      score = self._base_score
       if i > 2:
         score += self.model.get('UW1', {}).get(sentence[i - 3], 0)
       if i > 1:
