@@ -17,10 +17,11 @@ import os
 import sys
 import tempfile
 import unittest
+
 import pytest
 
 pytest.importorskip("jax")
-from jax import numpy as jnp
+from jax import numpy as jnp  # noqa: E402
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
