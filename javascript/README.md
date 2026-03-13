@@ -116,7 +116,7 @@ parser.parse('xyzabc');  // ['xyz', 'abc']
 
 ### Working with Web Worker
 
-If you like to use BudouX inside a Web worker script, constrcut a parser without
+If you like to use BudouX inside a Web worker script, construct a parser without
 `HTMLProcessor`, i.e. use the pure `Parser` instance.
 Refer to [worker.ts](https://github.com/google/budoux/blob/main/demo/src/worker.ts)
 for a working demo.
