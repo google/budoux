@@ -29,7 +29,7 @@ def main():
   init_file = 'budoux/__init__.py'
   with open(init_file, 'r') as f:
     content = f.read()
-  new_content = re.sub(r'(__version__\s+=\s+[\'"])([\.\d]+)([\'"])',
+  new_content = re.sub(r'(__version__\s+=\s+[\'"])([\.\w]+)([\'"])',
                        rf'\g<1>{new_version}\g<3>', content)
   with open(init_file, 'w') as f:
     f.write(new_content)
