@@ -49,7 +49,7 @@ def main():
   cli_file = 'javascript/src/cli.ts'
   with open(cli_file, 'r') as f:
     content = f.read()
-  new_content = re.sub(r'(const\s+CLI_VERSION\s+=\s+[\'"])([\.\d]+)([\'"])',
+  new_content = re.sub(r'(const\s+CLI_VERSION\s+=\s+[\'"])([\.\-\w]+)([\'"])',
                        rf'\g<1>{new_version}\g<3>', content)
   with open(cli_file, 'w') as f:
     f.write(new_content)
