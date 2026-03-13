@@ -24,7 +24,7 @@ import {
   loadDefaultParsers,
 } from './index.js';
 
-const CLI_VERSION = '0.8.0-rc1';
+const CLI_VERSION = '0.8.0';
 const defaultParsers = loadDefaultParsers();
 
 /**
