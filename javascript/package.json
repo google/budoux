@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/google/budoux.git",
+    "url": "git+https://github.com/google/budoux.git",
     "directory": "javascript"
   },
   "main": "./dist/index.js",
@@ -40,7 +40,7 @@
     "./module/tests/testutils.js": "./module/tests/testutils-browser.js"
   },
   "bin": {
-    "budoux": "./bin/budoux.js"
+    "budoux": "bin/budoux.js"
   },
   "sideEffects": [
     "./module/webcomponents/*",
