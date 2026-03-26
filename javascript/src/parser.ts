@@ -28,7 +28,10 @@ export class Parser {
    */
   constructor(model: {[key: string]: {[key: string]: number}}) {
     this.model = new Map(
-      Object.entries(model).map(([k, v]: [string, {[key: string]: number}]) => [k, new Map(Object.entries(v))])
+      Object.entries(model).map(([k, v]: [string, {[key: string]: number}]) => [
+        k,
+        new Map(Object.entries(v)),
+      ])
     );
     this.baseScore =
       -0.5 *
