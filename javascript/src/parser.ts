@@ -28,13 +28,13 @@ export class Parser {
    */
   constructor(model: {[key: string]: {[key: string]: number}}) {
     this.model = new Map(
-      Object.entries(model).map(([k, v]) => [k, new Map(Object.entries(v))])
+      Object.entries(model).map(([k, v]: [string, {[key: string]: number}]) => [k, new Map(Object.entries(v))])
     );
     this.baseScore =
       -0.5 *
       [...this.model.values()]
-        .flatMap(group => [...group.values()])
-        .reduce((prev, curr) => prev + curr, 0);
+        .flatMap((group: Map<string, number>) => [...group.values()])
+        .reduce((prev: number, curr: number) => prev + curr, 0);
   }
 
   /**

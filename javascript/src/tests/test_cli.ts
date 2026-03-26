@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {type ExecFileException, execFile} from 'child_process';
+import {execFile} from 'child_process';
 import * as path from 'path';
 import stream from 'stream';
 import {describe, expect, it} from 'vitest';
@@ -22,7 +22,7 @@ import {cli} from '../cli.js';
 import {loadDefaultParsers} from '../index.js';
 
 type execFileCallBack = {
-  error: ExecFileException | null;
+  error: Error | null;
   stdout: string;
   stderr: string;
 };
@@ -33,7 +33,7 @@ const runCli = (args: string[], stdin?: string): Promise<execFileCallBack> => {
     const child = execFile(
       'node',
       [binPath, ...args],
-      (error, stdout, stderr) => {
+      (error: Error | null, stdout: string, stderr: string) => {
         resolve({
           error,
           stdout,
