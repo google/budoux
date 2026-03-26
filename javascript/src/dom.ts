@@ -21,9 +21,9 @@ import {DOMParser} from 'linkedom';
  * @param html An HTML string.
  * @return A Document.
  */
-export const parseFromString = (html: string) => {
+export const parseFromString = (html: string): Document => {
   return new DOMParser().parseFromString(
     `<!doctype html><html><body>${html}</body></html>`,
     'text/html'
-  );
+  ) as unknown as Document;
 };
