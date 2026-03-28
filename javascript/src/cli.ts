@@ -83,7 +83,7 @@ export const cli = (argv: string[]) => {
       });
 
       let stdin = '';
-      rl.on('line', line => {
+      rl.on('line', (line: string) => {
         stdin += line + '\n';
       });
       process.stdin.on('end', () => {
