@@ -13,24 +13,54 @@
   "module": "./module/index.js",
   "exports": {
     ".": {
-      "import": "./module/index.js",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./module/index.d.ts",
+        "default": "./module/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./module/webcomponents/budoux-ja": {
-      "import": "./module/webcomponents/budoux-ja.js",
-      "require": "./dist/webcomponents/budoux-ja.js"
+      "import": {
+        "types": "./module/webcomponents/budoux-ja.d.ts",
+        "default": "./module/webcomponents/budoux-ja.js"
+      },
+      "require": {
+        "types": "./dist/webcomponents/budoux-ja.d.ts",
+        "default": "./dist/webcomponents/budoux-ja.js"
+      }
     },
     "./module/webcomponents/budoux-th": {
-      "import": "./module/webcomponents/budoux-th.js",
-      "require": "./dist/webcomponents/budoux-th.js"
+      "import": {
+        "types": "./module/webcomponents/budoux-th.d.ts",
+        "default": "./module/webcomponents/budoux-th.js"
+      },
+      "require": {
+        "types": "./dist/webcomponents/budoux-th.d.ts",
+        "default": "./dist/webcomponents/budoux-th.js"
+      }
     },
     "./module/webcomponents/budoux-zh-hans": {
-      "import": "./module/webcomponents/budoux-zh-hans.js",
-      "require": "./dist/webcomponents/budoux-zh-hans.js"
+      "import": {
+        "types": "./module/webcomponents/budoux-zh-hans.d.ts",
+        "default": "./module/webcomponents/budoux-zh-hans.js"
+      },
+      "require": {
+        "types": "./dist/webcomponents/budoux-zh-hans.d.ts",
+        "default": "./dist/webcomponents/budoux-zh-hans.js"
+      }
     },
     "./module/webcomponents/budoux-zh-hant": {
-      "import": "./module/webcomponents/budoux-zh-hant.js",
-      "require": "./dist/webcomponents/budoux-zh-hant.js"
+      "import": {
+        "types": "./module/webcomponents/budoux-zh-hant.d.ts",
+        "default": "./module/webcomponents/budoux-zh-hant.js"
+      },
+      "require": {
+        "types": "./dist/webcomponents/budoux-zh-hant.d.ts",
+        "default": "./dist/webcomponents/budoux-zh-hant.js"
+      }
     }
   },
   "browser": {
@@ -49,7 +79,7 @@
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
     "build:cjs": "tsc && cp -r src/tests/models/ dist/tests/models/",
-    "build:esm": "tsc --outDir module --module ES2020 && cp -r src/tests/models/ module/tests/models/",
+    "build:esm": "tsc --outDir module --module ES2020 && cp -r src/tests/models/ module/tests/models/ && echo '{\"type\":\"module\"}' > module/package.json",
     "bundle": "npm run bundle:webcomponents",
     "bundle:webcomponents": "npm run bundle:webcomponents:ja && npm run bundle:webcomponents:zh-hans && npm run bundle:webcomponents:zh-hant && npm run bundle:webcomponents:th",
     "bundle:webcomponents:ja": "esbuild module/webcomponents/budoux-ja.js --bundle --minify --sourcemap --outfile=bundle/budoux-ja.min.js",
@@ -82,5 +112,6 @@
   },
   "overrides": {
     "tough-cookie": "^5.0.0-rc.4"
-  }
+  },
+  "type": "commonjs"
 }
