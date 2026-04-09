@@ -62,7 +62,7 @@ def extract_features(data_path: str, thres: int) -> typing.List[str]:
   Args:
     data_path (str): The path to the encoded data file that contains the
       features to be extracted, which is typically a training data file.
-    thres (int): A threshold to filter out features  whose number of occurrences
+    thres (int): A threshold to filter out features whose scaled number of occurrences
       does not exceed the threshold.
 
   Returns:
@@ -74,7 +74,9 @@ def extract_features(data_path: str, thres: int) -> typing.List[str]:
       cols = row.strip().split('\t')
       if len(cols) < 2:
         continue
-      counter.update(cols[1:])
+      scale = abs(int(cols[0]))
+      for feature in cols[1:]:
+        counter[feature] += scale
   return [item[0] for item in counter.most_common() if item[1] > thres]
 
 
