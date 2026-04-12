@@ -212,7 +212,7 @@ def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
   """
   N = w.shape[0]
   M = scores.shape[0]
-  # This is quivalent to w.dot(Y[:, None] ^ X). Note that y ^ x = y + x - 2yx,
+  # This is equivalent to w.dot(Y[:, None] ^ X). Note that y ^ x = y + x - 2yx,
   # hence w.dot(y ^ x) = w.dot(y) - w(2y - 1).dot(x).
   # `segment_sum` is used to implement sparse matrix-friendly dot products.
   res = w.dot(Y) - jax.ops.segment_sum((w * (2 * Y - 1)).take(rows), cols, M)
