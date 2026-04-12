@@ -3,6 +3,9 @@ name: Train Japanese Model (KNBC)
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   train:
     runs-on: macos-latest
