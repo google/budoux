@@ -41,6 +41,21 @@ class TestBreakBeforeSequence(unittest.TestCase):
     result = prepare_knbc.break_before_sequence(chunks, 'bc')
     self.assertListEqual(result, ['a', 'bca', 'bc', 'def'])
 
+  def test_leading_sequence(self) -> None:
+    chunks = ['abcdef', 'ghi']
+    result = prepare_knbc.break_before_sequence(chunks, 'ab')
+    self.assertListEqual(result, ['abcdef', 'ghi'])
+
+  def test_trailing_sequence(self) -> None:
+    chunks = ['abcdef', 'ghi']
+    result = prepare_knbc.break_before_sequence(chunks, 'hi')
+    self.assertListEqual(result, ['abcdef', 'g', 'hi'])
+
+  def test_empty_chunks(self) -> None:
+    chunks = ['', 'abcdef', '', 'ghi', '']
+    result = prepare_knbc.break_before_sequence(chunks, 'de')
+    self.assertListEqual(result, ['abc', 'def', 'ghi'])
+
 
 class TestKNBCHTMLParser(unittest.TestCase):
   example_html = '''
