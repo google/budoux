@@ -283,6 +283,15 @@ class TestExtractFeatures(unittest.TestCase):
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
+  def test_with_weighted_entries(self) -> None:
+    entries_file_path = tempfile.NamedTemporaryFile().name
+    with open(entries_file_path, 'w') as f:
+      f.write(('2\tfoo\n'
+               '-3\tbar\n'
+               '1\tbaz\n'))
+    result = train.extract_features(entries_file_path, 1)
+    self.assertEqual(result, ['bar', 'foo'])
+
 
 class TestLoadDataset(unittest.TestCase):
 
