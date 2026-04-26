@@ -24,7 +24,10 @@ import {
   loadDefaultParsers,
 } from './index.js';
 
-const CLI_VERSION = '0.8.1';
+const packageJson = JSON.parse(
+  readFileSync(path.resolve(__dirname, '../package.json'), 'utf8')
+);
+const CLI_VERSION = packageJson.version;
 const defaultParsers = loadDefaultParsers();
 
 /**
