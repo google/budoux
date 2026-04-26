@@ -70,7 +70,6 @@ jobs:
         with:
           args: "--replace"
           skip-commit: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Print diffs
         run: git --no-pager diff --exit-code
   markdown-style-check:
