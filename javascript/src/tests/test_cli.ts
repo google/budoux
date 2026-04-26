@@ -233,4 +233,16 @@ describe('cli', () => {
 
     expect(stderr).toBe("error: unknown option '-v'\n");
   });
+
+  it('should output the version number when execute budoux command with -V option.', async () => {
+    const {stdout} = await runCli(['-V']);
+    const packageJson = require('../../package.json');
+    expect(stdout.trim()).toBe(packageJson.version);
+  });
+
+  it('should output the version number when execute budoux command with --version option.', async () => {
+    const {stdout} = await runCli(['--version']);
+    const packageJson = require('../../package.json');
+    expect(stdout.trim()).toBe(packageJson.version);
+  });
 });
