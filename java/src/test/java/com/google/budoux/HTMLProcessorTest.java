@@ -152,4 +152,20 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(this.wrap("abc<wbr>def<wbr>ghi<wbr>jkl"), result);
   }
+
+  @Test
+  public void testResolveWithSpanBoundaries() {
+    List<String> phrases = Arrays.asList("あ", "い");
+    String html = "<span>あ</span><span>い</span>";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("<span>あ</span><span><wbr>い</span>"), result);
+  }
+
+  @Test
+  public void testResolveWithListItems() {
+    List<String> phrases = Arrays.asList("あ", "い");
+    String html = "<ul><li>あ</li><li>い</li></ul>";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("<ul><li>あ</li><li>い</li></ul>"), result);
+  }
 }

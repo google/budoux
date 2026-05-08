@@ -142,12 +142,17 @@ final class HTMLProcessor {
         output.append(String.format("<%s%s>", nodeName, attributesEncoded));
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
+        Node parent = node.parentNode();
+        boolean isFirstChild = parent != null && parent.childNode(0) == node;
+        boolean isInBlock = parent instanceof Element && ((Element) parent).isBlock();
         for (int i = 0; i < data.length(); i++) {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
             if (!toSkip) {
-              output.append(separator);
+              if (i > 0 || !isFirstChild || !isInBlock) {
+                output.append(separator);
+              }
             }
             scanIndex++;
           }
