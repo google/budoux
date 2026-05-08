@@ -152,4 +152,12 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(this.wrap("abc<wbr>def<wbr>ghi<wbr>jkl"), result);
   }
+
+  @Test
+  public void testResolveWithListItemsAndWhitespace() {
+    List<String> phrases = Arrays.asList("abc", "\ndef");
+    String html = "<ul><li>abc</li>\n<li>def</li></ul>";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("<ul><li>abc</li>\n<li>def</li></ul>"), result);
+  }
 }

@@ -146,7 +146,7 @@ final class HTMLProcessor {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
-            if (!toSkip) {
+            if (!toSkip && !Character.isWhitespace(c)) {
               output.append(separator);
             }
             scanIndex++;
