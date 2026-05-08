@@ -172,7 +172,7 @@ class TestStdin(unittest.TestCase):
 
     self.assertEqual(
         output, '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'これは<b>\u200bテスト</b>です。\u200b\n'
+        'これは<b>\u200bテスト</b>です。\n'
         '</span>')
 
 
