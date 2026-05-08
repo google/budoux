@@ -109,7 +109,7 @@ class HTMLChunkResolver(HTMLParser):
   def handle_data(self, data: str) -> None:
     for char in data:
       if not char == self.chunks_joined[self.scan_index]:
-        if not self.to_skip:
+        if not self.to_skip and not char.isspace():
           self.output += self.separator
         self.scan_index += 1
       self.output += char
