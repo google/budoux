@@ -115,3 +115,10 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abcdef</span>'
     self.assertEqual(result, expected)
+
+  def test_with_list_items_and_whitespace(self) -> None:
+    chunks = ['abc', '\ndef']
+    html = '<ul><li>abc</li>\n<li>def</li></ul>'
+    result = html_processor.resolve(chunks, html, '<wbr>')
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><ul><li>abc</li>\n<li>def</li></ul></span>'
+    self.assertEqual(result, expected)
