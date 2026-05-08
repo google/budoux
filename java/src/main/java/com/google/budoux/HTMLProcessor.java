@@ -145,12 +145,16 @@ final class HTMLProcessor {
         Node parent = node.parentNode();
         boolean isFirstChild = parent != null && parent.childNode(0) == node;
         boolean isInBlock = parent instanceof Element && ((Element) parent).isBlock();
+        boolean isWhitespaceOnly = data.trim().isEmpty();
+        boolean isListParent = parent != null && (parent.nodeName().equalsIgnoreCase("ul") || parent.nodeName().equalsIgnoreCase("ol"));
         for (int i = 0; i < data.length(); i++) {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
             if (!toSkip) {
-              if (i > 0 || !isFirstChild || !isInBlock) {
+              boolean skipIntro = i == 0 && isFirstChild && isInBlock;
+              boolean skipListWhitespace = isWhitespaceOnly && isListParent;
+              if (!skipIntro && !skipListWhitespace) {
                 output.append(separator);
               }
             }
