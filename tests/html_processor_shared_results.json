@@ -1,0 +1,32 @@
+[
+  {
+    "description": "Simple text",
+    "html": "今日は晴れです",
+    "expected": "今日は​晴れです"
+  },
+  {
+    "description": "With span (Inline)",
+    "html": "今日<span>は</span>晴れです",
+    "expected": "今日<span>は</span>​晴れです"
+  },
+  {
+    "description": "With code (Skip)",
+    "html": "今日<code>は</code>晴れです",
+    "expected": "今​日<code>は</code>​晴れです"
+  },
+  {
+    "description": "With nested skip",
+    "html": "abc<code>def</code>ghi",
+    "expected": "abc<code>def</code>ghi"
+  },
+  {
+    "description": "Void tag",
+    "html": "今日<img>晴れです",
+    "expected": "今​日<img>​晴れです"
+  },
+  {
+    "description": "Multiple chunks across tags",
+    "html": "今日は<b>晴れ</b>です",
+    "expected": "今日は<b>​晴れ</b>です"
+  }
+]
