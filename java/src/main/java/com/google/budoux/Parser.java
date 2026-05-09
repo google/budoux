@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * The BudouX parser that translates the input sentence into phrases.
@@ -119,9 +118,8 @@ public class Parser {
    * @return the contribution score to support a phrase break.
    */
   private int getScore(String featureKey, String sequence) {
-    return Optional.ofNullable(this.model.get(featureKey))
-        .map(group -> group.get(sequence))
-        .orElse(0);
+    Map<String, Integer> group = this.model.get(featureKey);
+    return group != null ? group.getOrDefault(sequence, 0) : 0;
   }
 
   /**
