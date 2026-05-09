@@ -64,6 +64,7 @@ final class HTMLProcessor {
    */
   private static class TextizeNodeVisitor implements NodeVisitor {
     private StringBuilder output = new StringBuilder();
+    private int skipStack = 0;
 
     public String getString() {
       return output.toString();
@@ -73,16 +74,28 @@ final class HTMLProcessor {
     public void head(Node node, int depth) {
       if (node instanceof Element) {
         final String nodeName = node.nodeName();
+        if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
+          skipStack++;
+        }
         if (nodeName.equals("br")) {
           output.append('\n');
         }
       } else if (node instanceof TextNode) {
-        output.append(((TextNode) node).getWholeText());
+        if (skipStack == 0) {
+          output.append(((TextNode) node).getWholeText());
+        }
       }
     }
 
     @Override
-    public void tail(Node node, int depth) {}
+    public void tail(Node node, int depth) {
+      if (node instanceof Element) {
+        final String nodeName = node.nodeName();
+        if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
+          skipStack--;
+        }
+      }
+    }
   }
 
   private static class PhraseResolvingNodeVisitor implements NodeVisitor {
@@ -131,22 +144,20 @@ final class HTMLProcessor {
           // Assume phrasesJoined.charAt(scanIndex) == '\n'.
           scanIndex++;
         } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
-          if (!toSkip
-              && scanIndex < phrasesJoined.length()
-              && phrasesJoined.charAt(scanIndex) == SEP) {
-            output.append(separator);
-            scanIndex++;
-          }
           toSkip = true;
         }
         output.append(String.format("<%s%s>", nodeName, attributesEncoded));
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
+        if (toSkip) {
+          output.append(data);
+          return;
+        }
         for (int i = 0; i < data.length(); i++) {
           char c = data.charAt(i);
-          if (c != phrasesJoined.charAt(scanIndex)) {
+          if (scanIndex < phrasesJoined.length() && c != phrasesJoined.charAt(scanIndex)) {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
-            if (!toSkip && !Character.isWhitespace(c)) {
+            if (!Character.isWhitespace(c)) {
               output.append(separator);
             }
             scanIndex++;

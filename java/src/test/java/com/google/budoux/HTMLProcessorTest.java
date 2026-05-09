@@ -68,34 +68,34 @@ public class HTMLProcessorTest {
 
   @Test
   public void testResolveWithNodesToSkip() {
-    List<String> phrases = Arrays.asList("abc", "def", "ghi");
+    List<String> phrases = Arrays.asList("a", "fghi");
     String html = "a<button>bcde</button>fghi";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
-    assertEquals(this.wrap("a<button>bcde</button>f<wbr>ghi"), result);
+    assertEquals(this.wrap("a<button>bcde</button><wbr>fghi"), result);
   }
 
   @Test
   public void testResolveWithNodesBreakBeforeSkip() {
-    List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
+    List<String> phrases = Arrays.asList("abc", "jkl");
     String html = "abc<nobr>defghi</nobr>jkl";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
-    assertEquals(this.wrap("abc<wbr><nobr>defghi</nobr><wbr>jkl"), result);
+    assertEquals(this.wrap("abc<nobr>defghi</nobr><wbr>jkl"), result);
   }
 
   @Test
   public void testResolveWithAfterSkip() {
-    List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
+    List<String> phrases = Arrays.asList("abc", "ghi", "jkl");
     String html = "abc<nobr>def</nobr>ghijkl";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
-    assertEquals(this.wrap("abc<wbr><nobr>def</nobr><wbr>ghi<wbr>jkl"), result);
+    assertEquals(this.wrap("abc<nobr>def</nobr><wbr>ghi<wbr>jkl"), result);
   }
 
   @Test
   public void testResolveWithAfterSkipWithImg() {
-    List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
+    List<String> phrases = Arrays.asList("abc", "ghi", "jkl");
     String html = "abc<nobr>d<img>ef</nobr>ghijkl";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
-    assertEquals(this.wrap("abc<wbr><nobr>d<img>ef</nobr><wbr>ghi<wbr>jkl"), result);
+    assertEquals(this.wrap("abc<nobr>d<img>ef</nobr><wbr>ghi<wbr>jkl"), result);
   }
 
   @Test
@@ -120,7 +120,7 @@ public class HTMLProcessorTest {
   public void testGetText() {
     String html = "Hello <button><b>W</b>orld</button>!";
     String result = HTMLProcessor.getText(html);
-    assertEquals("Hello World!", result);
+    assertEquals("Hello !", result);
   }
 
   @Test
