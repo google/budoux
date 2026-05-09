@@ -35,6 +35,15 @@ class TestTextContentExtractor(unittest.TestCase):
         extractor.output, expected,
         'Text content should be extacted from the given HTML string.')
 
+  def test_skip_nodes(self) -> None:
+    input = '<p>Hello, <code>ignored</code>World</p>'
+    expected = 'Hello, World'
+    extractor = html_processor.TextContentExtractor()
+    extractor.feed(input)
+    self.assertEqual(
+        extractor.output, expected,
+        'Text content inside skip nodes should be ignored.')
+
 
 class TestHTMLChunkResolver(unittest.TestCase):
 
@@ -57,7 +66,8 @@ class TestHTMLChunkResolver(unittest.TestCase):
   def test_nobr(self) -> None:
     input = '<p>ab<nobr>cde</nobr>f</p>'
     expected = '<p>ab<nobr>cde</nobr>f</p>'
-    resolver = html_processor.HTMLChunkResolver(['abc', 'def'], '<wbr>')
+    # Chunks are matched against the text excluding skip nodes ("abf")
+    resolver = html_processor.HTMLChunkResolver(['abf'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(resolver.output, expected,
                      'WBR tags should not be inserted if in NOBR.')
@@ -65,7 +75,8 @@ class TestHTMLChunkResolver(unittest.TestCase):
   def test_after_nobr(self) -> None:
     input = '<p>ab<nobr>xy</nobr>abcdef</p>'
     expected = '<p>ab<nobr>xy</nobr>abc<wbr>def</p>'
-    resolver = html_processor.HTMLChunkResolver(['abxyabc', 'def'], '<wbr>')
+    # Chunks are matched against the text excluding skip nodes ("ababcdef")
+    resolver = html_processor.HTMLChunkResolver(['ababc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(resolver.output, expected,
                      'WBR tags should be inserted if after NOBR.')
@@ -73,7 +84,10 @@ class TestHTMLChunkResolver(unittest.TestCase):
   def test_img_in_nobr(self) -> None:
     input = '<p>ab<nobr>x<img>y</nobr>abcdef</p>'
     expected = '<p>ab<nobr>x<img>y</nobr>abc<wbr>def</p>'
-    resolver = html_processor.HTMLChunkResolver(['abxyabc', 'def'], '<wbr>')
+    # Chunks are matched against the text excluding skip nodes ("ababcdef")
+    # Note: IMG is NOT a skip node by default in skip_nodes.json,
+    # but here it's inside NOBR which IS a skip node.
+    resolver = html_processor.HTMLChunkResolver(['ababc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(resolver.output, expected,
                      'IMG should not affect surrounding NOBR.')
@@ -96,17 +110,21 @@ class TestResolve(unittest.TestCase):
     self.assertEqual(result, expected)
 
   def test_with_nodes_to_skip(self) -> None:
-    chunks = ['abc', 'def', 'ghi']
+    # 'bcde' is inside <button> which is a skip node. 
+    # Text content for segmentation is 'afghi'.
+    chunks = ['a', 'fghi']
     html = "a<button>bcde</button>fghi"
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f\u200bghi</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>\u200bfghi</span>'
     self.assertEqual(result, expected)
 
   def test_with_break_before_skip(self) -> None:
-    chunks = ['abc', 'def', 'ghi', 'jkl']
+    # 'defghi' is inside <button> which is a skip node.
+    # Text content for segmentation is 'abcjkl'.
+    chunks = ['abc', 'jkl']
     html = "abc<button>defghi</button>jkl"
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200b<button>defghi</button>\u200bjkl</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<button>defghi</button>\u200bjkl</span>'
     self.assertEqual(result, expected)
 
   def test_with_nothing_to_split(self) -> None:

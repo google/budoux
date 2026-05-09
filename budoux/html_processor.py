@@ -48,19 +48,28 @@ class TextContentExtractor(HTMLParser):
   Attributes:
     output (str): Accumulated text content.
   """
-  output = ''
+
+  def __init__(self) -> None:
+    super().__init__()
+    self.output = ''
+    self.skip_stack: typing.List[str] = []
+
+  def handle_starttag(self, tag: str, attrs: HTMLAttr) -> None:
+    if tag.upper() in SKIP_NODES:
+      self.skip_stack.append(tag)
+
+  def handle_endtag(self, tag: str) -> None:
+    if self.skip_stack and self.skip_stack[-1] == tag:
+      self.skip_stack.pop()
 
   def handle_data(self, data: str) -> None:
-    self.output += data
+    if not self.skip_stack:
+      self.output += data
 
 
 class HTMLChunkResolver(HTMLParser):
   """An HTML parser to resolve the given HTML string and semantic chunks.
-
-  Attributes:
-    output (str): The HTML string to output.
   """
-  output = ''
 
   def __init__(self, chunks: typing.List[str], separator: str):
     """Initializes the parser.
@@ -70,6 +79,7 @@ class HTMLChunkResolver(HTMLParser):
       separator (str): The separator string.
     """
     HTMLParser.__init__(self)
+    self.output = ''
     self.chunks_joined = SEP.join(chunks)
     self.separator = separator
     self.to_skip = False
@@ -86,9 +96,6 @@ class HTMLChunkResolver(HTMLParser):
     encoded_attrs = ''.join(attr_pairs)
     self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
-      if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
-        self.scan_index += 1
-        self.output += self.separator
       self.to_skip = True
     self.output += '<%s%s>' % (tag, encoded_attrs)
 
@@ -108,8 +115,11 @@ class HTMLChunkResolver(HTMLParser):
 
   def handle_data(self, data: str) -> None:
     for char in data:
-      if not char == self.chunks_joined[self.scan_index]:
-        if not self.to_skip and not char.isspace():
+      if self.to_skip:
+        self.output += char
+        continue
+      if self.scan_index < len(self.chunks_joined) and not char == self.chunks_joined[self.scan_index]:
+        if not char.isspace():
           self.output += self.separator
         self.scan_index += 1
       self.output += char
