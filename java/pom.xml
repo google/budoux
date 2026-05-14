@@ -20,7 +20,7 @@
 
   <groupId>com.google.budoux</groupId>
   <artifactId>budoux</artifactId>
-  <version>0.8.3</version>
+  <version>0.8.4</version>
 
   <name>BudouX</name>
   <description>BudouX: A standalone, small, and language-neutral segmenter library</description>
