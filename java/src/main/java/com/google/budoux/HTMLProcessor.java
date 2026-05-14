@@ -146,7 +146,9 @@ final class HTMLProcessor {
           char c = data.charAt(i);
           if (c != phrasesJoined.charAt(scanIndex)) {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
-            if (!toSkip && !Character.isWhitespace(c)) {
+            boolean prevWasWhitespace =
+                scanIndex > 0 && Character.isWhitespace(phrasesJoined.charAt(scanIndex - 1));
+            if (!toSkip && !Character.isWhitespace(c) && !prevWasWhitespace) {
               output.append(separator);
             }
             scanIndex++;
@@ -162,7 +164,7 @@ final class HTMLProcessor {
       if (node.nodeName().equals("body") || node instanceof TextNode || node instanceof Comment) {
         return;
       }
-      // assume node instanceof Element;
+      // Assume node instanceof Element;
       toSkip = elementStack.pop();
       Element element = (Element) node;
       if (element.tag().isSelfClosing()) {
