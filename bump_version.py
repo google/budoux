@@ -21,16 +21,24 @@ import subprocess
 def main():
   parser = argparse.ArgumentParser(description='Bump the version number.')
   parser.add_argument(
-      'new_version', type=str, help='The new version number (e.g., 1.2.3)')
+      'new_version', type=str,
+      help='The new version number (e.g., 1.2.3, 1.2.3-rc4)')
   args = parser.parse_args()
   new_version = args.new_version
 
+  if not re.match(r'^\d+\.\d+\.\d+(?:-[\w.-]+)?$', new_version):
+    parser.error(f'Invalid version: {new_version}. '
+                 'Please use the semantic versioning (e.g., 1.2.3, 1.2.3-rc4).')
+
   # Updates Python port version number
+  # Normalizes the version string for Python (PEP 440)
+  # This turns "1.2.3-rc4" into "1.2.3rc4"
+  python_version = re.sub(r'-(rc|alpha|beta|preview)', r'\1', new_version)
   init_file = 'budoux/__init__.py'
   with open(init_file, 'r') as f:
     content = f.read()
-  new_content = re.sub(r'(__version__\s+=\s+[\'"])([\.\w]+)([\'"])',
-                       rf'\g<1>{new_version}\g<3>', content)
+  new_content = re.sub(r'(__version__\s+=\s+[\'"])([\.\-\w]+)([\'"])',
+                       rf'\g<1>{python_version}\g<3>', content)
   with open(init_file, 'w') as f:
     f.write(new_content)
 
