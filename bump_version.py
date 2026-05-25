@@ -25,6 +25,10 @@ def main():
   args = parser.parse_args()
   new_version = args.new_version
 
+  if not re.match(r'^\d+\.\d+\.\d+$', new_version):
+    parser.error(f'Invalid version: {new_version}. '
+                 'Please use the semantic versioning (e.g., 1.2.3).')
+
   # Updates Python port version number
   init_file = 'budoux/__init__.py'
   with open(init_file, 'r') as f:
