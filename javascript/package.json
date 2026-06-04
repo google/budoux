@@ -107,7 +107,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "commander": "^14.0.0",
+    "commander": "^15.0.0",
     "linkedom": "^0.18.7"
   },
   "type": "commonjs"
