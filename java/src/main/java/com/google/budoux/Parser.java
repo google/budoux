@@ -138,40 +138,59 @@ public class Parser {
         this.model.values().stream()
             .mapToInt(group -> group.values().stream().mapToInt(Integer::intValue).sum())
             .sum();
+    Map<String, Integer> uw1 = this.model.get("UW1");
+    Map<String, Integer> uw2 = this.model.get("UW2");
+    Map<String, Integer> uw3 = this.model.get("UW3");
+    Map<String, Integer> uw4 = this.model.get("UW4");
+    Map<String, Integer> uw5 = this.model.get("UW5");
+    Map<String, Integer> uw6 = this.model.get("UW6");
+    Map<String, Integer> bw1 = this.model.get("BW1");
+    Map<String, Integer> bw2 = this.model.get("BW2");
+    Map<String, Integer> bw3 = this.model.get("BW3");
+    Map<String, Integer> tw1 = this.model.get("TW1");
+    Map<String, Integer> tw2 = this.model.get("TW2");
+    Map<String, Integer> tw3 = this.model.get("TW3");
+    Map<String, Integer> tw4 = this.model.get("TW4");
     for (int i = 1; i < sentence.length(); i++) {
       int score = -totalScore;
-      if (i - 2 > 0) {
-        score += 2 * this.getScore("UW1", sentence.substring(i - 3, i - 2));
+      if (i - 2 > 0 && uw1 != null) {
+        score += 2 * uw1.getOrDefault(sentence.substring(i - 3, i - 2), 0);
       }
-      if (i - 1 > 0) {
-        score += 2 * this.getScore("UW2", sentence.substring(i - 2, i - 1));
+      if (i - 1 > 0 && uw2 != null) {
+        score += 2 * uw2.getOrDefault(sentence.substring(i - 2, i - 1), 0);
       }
-      score += 2 * this.getScore("UW3", sentence.substring(i - 1, i));
-      score += 2 * this.getScore("UW4", sentence.substring(i, i + 1));
-      if (i + 1 < sentence.length()) {
-        score += 2 * this.getScore("UW5", sentence.substring(i + 1, i + 2));
+      if (uw3 != null) {
+        score += 2 * uw3.getOrDefault(sentence.substring(i - 1, i), 0);
       }
-      if (i + 2 < sentence.length()) {
-        score += 2 * this.getScore("UW6", sentence.substring(i + 2, i + 3));
+      if (uw4 != null) {
+        score += 2 * uw4.getOrDefault(sentence.substring(i, i + 1), 0);
       }
-      if (i > 1) {
-        score += 2 * this.getScore("BW1", sentence.substring(i - 2, i));
+      if (i + 1 < sentence.length() && uw5 != null) {
+        score += 2 * uw5.getOrDefault(sentence.substring(i + 1, i + 2), 0);
       }
-      score += 2 * this.getScore("BW2", sentence.substring(i - 1, i + 1));
-      if (i + 1 < sentence.length()) {
-        score += 2 * this.getScore("BW3", sentence.substring(i, i + 2));
+      if (i + 2 < sentence.length() && uw6 != null) {
+        score += 2 * uw6.getOrDefault(sentence.substring(i + 2, i + 3), 0);
       }
-      if (i - 2 > 0) {
-        score += 2 * this.getScore("TW1", sentence.substring(i - 3, i));
+      if (i > 1 && bw1 != null) {
+        score += 2 * bw1.getOrDefault(sentence.substring(i - 2, i), 0);
       }
-      if (i - 1 > 0) {
-        score += 2 * this.getScore("TW2", sentence.substring(i - 2, i + 1));
+      if (bw2 != null) {
+        score += 2 * bw2.getOrDefault(sentence.substring(i - 1, i + 1), 0);
       }
-      if (i + 1 < sentence.length()) {
-        score += 2 * this.getScore("TW3", sentence.substring(i - 1, i + 2));
+      if (i + 1 < sentence.length() && bw3 != null) {
+        score += 2 * bw3.getOrDefault(sentence.substring(i, i + 2), 0);
       }
-      if (i + 2 < sentence.length()) {
-        score += 2 * this.getScore("TW4", sentence.substring(i, i + 3));
+      if (i - 2 > 0 && tw1 != null) {
+        score += 2 * tw1.getOrDefault(sentence.substring(i - 3, i), 0);
+      }
+      if (i - 1 > 0 && tw2 != null) {
+        score += 2 * tw2.getOrDefault(sentence.substring(i - 2, i + 1), 0);
+      }
+      if (i + 1 < sentence.length() && tw3 != null) {
+        score += 2 * tw3.getOrDefault(sentence.substring(i - 1, i + 2), 0);
+      }
+      if (i + 2 < sentence.length() && tw4 != null) {
+        score += 2 * tw4.getOrDefault(sentence.substring(i, i + 3), 0);
       }
       if (score > 0) {
         result.add("");
