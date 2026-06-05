@@ -67,30 +67,36 @@ export class Parser {
    */
   parseBoundaries(sentence: string): number[] {
     const result = [];
+    const uw1 = this.model.get('UW1');
+    const uw2 = this.model.get('UW2');
+    const uw3 = this.model.get('UW3');
+    const uw4 = this.model.get('UW4');
+    const uw5 = this.model.get('UW5');
+    const uw6 = this.model.get('UW6');
+    const bw1 = this.model.get('BW1');
+    const bw2 = this.model.get('BW2');
+    const bw3 = this.model.get('BW3');
+    const tw1 = this.model.get('TW1');
+    const tw2 = this.model.get('TW2');
+    const tw3 = this.model.get('TW3');
+    const tw4 = this.model.get('TW4');
 
     for (let i = 1; i < sentence.length; i++) {
       let score = this.baseScore;
       // NOTE: Score values in models may be negative.
-      score +=
-        this.model.get('UW1')?.get(sentence.substring(i - 3, i - 2)) || 0;
-      score +=
-        this.model.get('UW2')?.get(sentence.substring(i - 2, i - 1)) || 0;
-      score += this.model.get('UW3')?.get(sentence.substring(i - 1, i)) || 0;
-      score += this.model.get('UW4')?.get(sentence.substring(i, i + 1)) || 0;
-      score +=
-        this.model.get('UW5')?.get(sentence.substring(i + 1, i + 2)) || 0;
-      score +=
-        this.model.get('UW6')?.get(sentence.substring(i + 2, i + 3)) || 0;
-      score += this.model.get('BW1')?.get(sentence.substring(i - 2, i)) || 0;
-      score +=
-        this.model.get('BW2')?.get(sentence.substring(i - 1, i + 1)) || 0;
-      score += this.model.get('BW3')?.get(sentence.substring(i, i + 2)) || 0;
-      score += this.model.get('TW1')?.get(sentence.substring(i - 3, i)) || 0;
-      score +=
-        this.model.get('TW2')?.get(sentence.substring(i - 2, i + 1)) || 0;
-      score +=
-        this.model.get('TW3')?.get(sentence.substring(i - 1, i + 2)) || 0;
-      score += this.model.get('TW4')?.get(sentence.substring(i, i + 3)) || 0;
+      score += uw1?.get(sentence.substring(i - 3, i - 2)) || 0;
+      score += uw2?.get(sentence.substring(i - 2, i - 1)) || 0;
+      score += uw3?.get(sentence.substring(i - 1, i)) || 0;
+      score += uw4?.get(sentence.substring(i, i + 1)) || 0;
+      score += uw5?.get(sentence.substring(i + 1, i + 2)) || 0;
+      score += uw6?.get(sentence.substring(i + 2, i + 3)) || 0;
+      score += bw1?.get(sentence.substring(i - 2, i)) || 0;
+      score += bw2?.get(sentence.substring(i - 1, i + 1)) || 0;
+      score += bw3?.get(sentence.substring(i, i + 2)) || 0;
+      score += tw1?.get(sentence.substring(i - 3, i)) || 0;
+      score += tw2?.get(sentence.substring(i - 2, i + 1)) || 0;
+      score += tw3?.get(sentence.substring(i - 1, i + 2)) || 0;
+      score += tw4?.get(sentence.substring(i, i + 3)) || 0;
       if (score > 0) result.push(i);
     }
     return result;
