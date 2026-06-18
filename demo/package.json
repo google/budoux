@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "budoux": "file:../javascript",
-    "dompurify": "^3.4.9"
+    "dompurify": "^3.4.11"
   },
   "devDependencies": {
     "concurrently": "^10.0.3",
