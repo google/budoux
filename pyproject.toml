@@ -25,7 +25,7 @@ dependencies = []
 
 [project.optional-dependencies]
 jaxcpu = [
-    "jax>=0.9.0; python_version >= '3.11'",
+    "jax>=0.9.0; python_version >= '3.12'",
 ]
 dev = [
     "build",
@@ -39,7 +39,7 @@ dev = [
     "types-regex",
     "types-setuptools",
     "yapf",
-    "jax>=0.9.0; python_version >= '3.11'",
+    "jax>=0.9.0; python_version >= '3.12'",
 ]
 
 [project.scripts]
@@ -68,7 +68,7 @@ dev = [
     "types-regex",
     "types-setuptools",
     "yapf",
-    "jax>=0.9.0; python_version >= '3.11'",
+    "jax>=0.9.0; python_version >= '3.12'",
 ]
 
 [tool.yapf]
@@ -76,7 +76,7 @@ based_on_style = "yapf"
 
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 pretty = true
 strict = true
 allow_untyped_calls = true
