@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "concurrently": "^10.0.3",
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "serve": "^14.2.6",
     "typescript": "^6.0.2"
   }
