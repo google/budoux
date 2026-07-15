@@ -16,9 +16,6 @@ flowchart
     build --> model[\Model file - JSON\]
     model --> translate[translate_model.py]
     translate --> modelx[\Model file - Other formats\]
-    encoded --> finetune[finetune.py]
-    model --> finetune
-    finetune --> weights
 ```
 
 ## Preparing a source text
@@ -336,76 +333,10 @@ python scripts/translate_model.py model.json --format=icu > icu_bundle.txt
 
 This script is where to add code when we need to support other formats.
 
-## Fine-tuning a model
+## Remediating and updating model weights
 
-If a model file does not work with some specific cases, you can fine-tune the
-model using [`finetune.py`](https://github.com/google/budoux/tree/main/scripts/finetune.py).
-The fine-tuning script takes a base model JSON file (`base_model.json`) and an additional
-encoded data file (`another_encodewd.txt`) as inputs, and outputs an updated
-weight file (`new_weights.txt`).
+When a model file misclassifies character transition boundaries in specific edge cases (for example, missing phrase segmentations across newly observed character combinations), resolving the discrepancy requires performing full AdaBoost linear retraining using `train.py` across updated feature records (`encoded_data.txt`).
 
-```bash
-python scripts/finetune.py another_encoded.txt base_model.json -o new_weights.txt
-```
+Historically, partial gradient-descent fine-tuning over established base JSON models (`finetune.py`) was supported. However, because partial fine-tuning optimizes existing $n$-gram weights strictly across pre-established vocabulary keys, it cannot register or weight out-of-vocabulary character transition features across newly triaged phrases.
 
-The additional encoded data should cover specific cases that the base model
-file does not handle well. The script updates the weight scores saved in the
-base model to minimize the error over the additional encoded data, and outputs
-the updated weight scores to a weight file.
-
-Here's an overview of the algorithm behind the fine-tuning script.
-As mentioned earlier, BudouX is essentially a binary classification model
-represented as $y = \text{sgn}(\mathbf{w}^\top \mathbf{x})$ where $\mathbf{x}$
-is an input vector, $\mathbf{w}$ is a weight vector, and $\text{sgn}$ is a sign
-function.
-
-To make this model differentiable, we approximate the sign function with a
-sigmoid function, which represent the model as:
-
-$$y = \text{sigmoid}(\mathbf{w}^\top \mathbf{x}), \ \text{sigmoid}(x) = (1 + \exp(-x))^{-1}$$
-
-Then we can define a cross entropy loss over the model, where $t$ represents the
-actual output.
-
-$$L(t, y) = -t \log y -(1 - t) \log(1 - y)$$
-
-The fine-tuning script updates the weight $\mathbf{w}$ to minimize the mean cross
-entropy loss with gradient descent with a learning rate of $\alpha > 0$ (the
-`--learning-rate` arg):
-
-```math
-\mathbf{w} \leftarrow \mathbf{w} - \alpha \frac{d}{d\mathbf{w}}\{
-    \frac{1}{N}\sum_{t_n, \mathbf{x}_n \in D} L(
-        t_n, \text{sigmoid}(\mathbf{w}^\top \mathbf{x}_n))\}
-```
-
-where:
-
-- $D$ denotes a training dataset
-- $N$ denotes the number of examples included in $D$
-- $`\mathbf{x}_n`$ denotes the input of the $n$-th example.
-- $t_n$ denotes the target output of the $n$-th example.
-
-Please note that the weight vector reconstructed from the base model file doesn't
-necessarily have the same shape as the one used in generating the base model initially.
-Practically, the reconstructed weight vector is expected to have a much smaller
-number of dimensions because the initial training process should have assigned a
-weight of zero to most of the features, and such features have been filtered out
-in the exporting process.
-The fine-tuning script only updates the existing weights in the base model, and
-does not add new features even if there were new features extracted from the
-additional encoded data.
-Therefore, the output model should have almost the same file size as the base model.
-
-The source text files for fine-tuning should be recorded in the [`data/finetuning`](https://github.com/google/budoux/tree/main/data/finetuning)
-directory.
-For example, we can fine-tine a Japanese model with the base model trained on
-the KNBC corpus [`budoux/models/ja_knbc.json`](https://github.com/google/budoux/tree/main/budoux/models/ja_knbc.json)
-with the following commands.
-
-```bash
-python scripts/encode_data.py data/finetuning/ja/train.txt -o encoded_train.txt
-python scripts/encode_data.py data/finetuning/ja/val.txt -o encoded_val.txt
-python scripts/finetunel.py encoded_train.txt budoux/models/ja_knbc.json --val-data=encoded_val.txt -o new_weights.txt
-python scripts/build_model.py new_weights.txt -o budoux/models/ja.json
-```
+Therefore, full AdaBoost model optimization via `train.py` paired with statistical conflict resolution (`find_conflicts.py -t 0.8`) and model building (`build_model.py`) is the sole canonical methodology for updating and tuning BudouX segmentation models.
