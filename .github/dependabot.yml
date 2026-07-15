@@ -23,6 +23,9 @@ updates:
     schedule:
       interval: weekly
     groups:
+      codeql:
+        patterns:
+          - "github/codeql-action*"
       patch:
         patterns:
           - "*"
