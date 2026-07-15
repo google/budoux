@@ -161,10 +161,10 @@ Following this rule, the snippet above can be read as a list of inputs
 $\mathbf{x}$ and outputs $y$ as follows:
 
 | $y$  | $(x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8, x_9, x_{10}, x_{11})$ |
-|------|------------------------------------------------|
-| $-1$ | $(-1, -1, +1, +1, -1, -1, -1, +1, +1, +1, -1)$ |
-| $-1$ | $(+1, -1, -1, -1, +1, -1, -1, +1, +1, +1, -1)$ |
-| $+1$ | $(-1, +1, -1, -1, -1, +1, +1, -1, +1, -1, +1)$ |
+|------|-----------------------------------------------------------------|
+| $-1$ | $(-1, -1, +1, +1, -1, -1, -1, +1, +1, +1, -1)$                  |
+| $-1$ | $(+1, -1, -1, -1, +1, -1, -1, +1, +1, +1, -1)$                  |
+| $+1$ | $(-1, +1, -1, -1, -1, +1, +1, -1, +1, -1, +1)$                  |
 
 The goal of our model training is to design a good function $f$ that predicts
 the output from the input, i.e. $y = f(\mathbf{x})$ with generalization ability.
@@ -335,8 +335,19 @@ This script is where to add code when we need to support other formats.
 
 ## Remediating and updating model weights
 
-When a model file misclassifies character transition boundaries in specific edge cases (for example, missing phrase segmentations across newly observed character combinations), resolving the discrepancy requires performing full AdaBoost linear retraining using `train.py` across updated feature records (`encoded_data.txt`).
+When a model file misclassifies character transition boundaries in specific edge
+cases (for example, missing phrase segmentations across newly observed character
+combinations), resolving the discrepancy requires performing full AdaBoost
+linear retraining using `train.py` across updated feature records
+(`encoded_data.txt`).
 
-Historically, partial gradient-descent fine-tuning over established base JSON models (`finetune.py`) was supported. However, because partial fine-tuning optimizes existing $n$-gram weights strictly across pre-established vocabulary keys, it cannot register or weight out-of-vocabulary character transition features across newly triaged phrases.
+Historically, partial gradient-descent fine-tuning over established base JSON
+models (`finetune.py`) was supported. However, because partial fine-tuning
+optimizes existing $n$-gram weights strictly across pre-established vocabulary
+keys, it cannot register or weight out-of-vocabulary character transition
+features across newly triaged phrases.
 
-Therefore, full AdaBoost model optimization via `train.py` paired with statistical conflict resolution (`find_conflicts.py -t 0.8`) and model building (`build_model.py`) is the sole canonical methodology for updating and tuning BudouX segmentation models.
+Therefore, full AdaBoost model optimization via `train.py` paired with
+statistical conflict resolution (`find_conflicts.py -t 0.8`) and model building
+(`build_model.py`) is the sole canonical methodology for updating and tuning
+BudouX segmentation models.
