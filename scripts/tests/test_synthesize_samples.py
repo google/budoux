@@ -17,6 +17,7 @@ import os
 import sys
 import tempfile
 import unittest
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 # Module hack to allow importing scripts and budoux from workspace root
@@ -31,7 +32,7 @@ SEP = budoux.utils.SEP  # Canonical character separator '▁'
 
 class TestAlignToBaseParserSplits(unittest.TestCase):
 
-  def test_align_to_base_parser_splits_negative_phrase(self):
+  def test_align_to_base_parser_splits_negative_phrase(self) -> None:
     target = synthesize_samples.IntentTarget(
         target_phrase="もはや",
         expected_split="もはや",
@@ -48,7 +49,7 @@ class TestAlignToBaseParserSplits(unittest.TestCase):
     expected_sentence = f"彼の{SEP}才能は{SEP}もはや{SEP}誰にも{SEP}超えられない。"
     self.assertEqual(result[0], expected_sentence)
 
-  def test_align_to_base_parser_splits_positive_phrase(self):
+  def test_align_to_base_parser_splits_positive_phrase(self) -> None:
     target = synthesize_samples.IntentTarget(
         target_phrase="いよいよはじまる",
         expected_split=f"いよいよ{SEP}はじまる",
@@ -66,7 +67,7 @@ class TestAlignToBaseParserSplits(unittest.TestCase):
     expected_sentence = f"いよいよ{SEP}はじまる{SEP}決戦だ。"
     self.assertEqual(result[0], expected_sentence)
 
-  def test_align_to_base_parser_splits_discards_missing_target(self):
+  def test_align_to_base_parser_splits_discards_missing_target(self) -> None:
     target = synthesize_samples.IntentTarget(
         target_phrase="もはや",
         expected_split="もはや",
@@ -81,14 +82,14 @@ class TestAlignToBaseParserSplits(unittest.TestCase):
 
 class TestParseDirectInput(unittest.TestCase):
 
-  def test_parse_direct_input_positive(self):
+  def test_parse_direct_input_positive(self) -> None:
     target = synthesize_samples.parse_direct_input("いよいよ/はじまる")
     self.assertEqual(target.target_phrase, "いよいよはじまる")
     self.assertEqual(target.expected_split, f"いよいよ{SEP}はじまる")
     self.assertTrue(target.is_positive)
     self.assertTrue(target.is_reproducible)
 
-  def test_parse_direct_input_negative(self):
+  def test_parse_direct_input_negative(self) -> None:
     target = synthesize_samples.parse_direct_input("もはや")
     self.assertEqual(target.target_phrase, "もはや")
     self.assertEqual(target.expected_split, "もはや")
@@ -98,7 +99,7 @@ class TestParseDirectInput(unittest.TestCase):
 
 class TestVerifyBugReproduction(unittest.TestCase):
 
-  def test_verify_bug_reproduction_detects_bug(self):
+  def test_verify_bug_reproduction_detects_bug(self) -> None:
     target = synthesize_samples.IntentTarget(
         target_phrase="いよいよはじまる",
         expected_split=f"いよいよ{SEP}はじまる",
@@ -111,7 +112,7 @@ class TestVerifyBugReproduction(unittest.TestCase):
         synthesize_samples.verify_bug_reproduction(target, mock_parser))
     mock_parser.parse.assert_called_once_with("いよいよはじまる")
 
-  def test_verify_bug_reproduction_no_bug(self):
+  def test_verify_bug_reproduction_no_bug(self) -> None:
     target = synthesize_samples.IntentTarget(
         target_phrase="もはや", expected_split="もはや", is_positive=False)
     mock_parser = MagicMock(spec=budoux.Parser)
@@ -122,7 +123,7 @@ class TestVerifyBugReproduction(unittest.TestCase):
 
 class TestRunAgenticSynthesisPipeline(unittest.TestCase):
 
-  def test_run_pipeline_raises_without_env_or_client(self):
+  def test_run_pipeline_raises_without_env_or_client(self) -> None:
     mock_parser = MagicMock(spec=budoux.Parser)
     with patch.dict(os.environ, {"GEMINI_API_KEY": ""}, clear=True):
       with self.assertRaises(RuntimeError):
@@ -131,8 +132,8 @@ class TestRunAgenticSynthesisPipeline(unittest.TestCase):
 
   @patch("scripts.synthesize_samples.generate_oversample_candidates")
   @patch("scripts.synthesize_samples.prune_linguistic_anomalies")
-  def test_run_agentic_synthesis_pipeline_end_to_end(self, mock_prune,
-                                                     mock_generate):
+  def test_run_agentic_synthesis_pipeline_end_to_end(
+      self, mock_prune: Any, mock_generate: Any) -> None:
     mock_client = MagicMock()
     mock_parser = MagicMock(spec=budoux.Parser)
     mock_parser.parse.return_value = ["いよいよ", "はじまる", "決戦だ。"]
@@ -155,11 +156,11 @@ class TestRunAgenticSynthesisPipeline(unittest.TestCase):
     self.assertEqual(lines, [expected_overlay])
     self.assertTrue(os.path.exists(outfile))
 
-  def setUp(self):
+  def setUp(self) -> None:
     self.temp_dir_obj = tempfile.TemporaryDirectory()
     self.test_dir = self.temp_dir_obj.name
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     self.temp_dir_obj.cleanup()
 
 
