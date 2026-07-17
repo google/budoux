@@ -310,7 +310,8 @@ class TestSynthesize(unittest.TestCase):
     mock_client = MagicMock()
     mock_response = MagicMock()
     mock_response.parsed = synthesize_samples.SynthesisResponse(
-        analysis=synthesize_samples.Analysis(negative_phrases=[], positive_phrases=[]),
+        analysis=synthesize_samples.Analysis(
+            negative_phrases=[], positive_phrases=[]),
         negative_sentences=[],
         positive_sentences=[],
     )

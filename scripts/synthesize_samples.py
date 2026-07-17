@@ -376,9 +376,8 @@ def synthesize(
     parser: budoux.Parser,
     num_samples: int = 15,
     model: str = 'gemini-3.1-flash-lite',
-) -> typing.Tuple[
-    typing.List[str], typing.List[str], typing.List[str], typing.List[str]
-]:
+) -> typing.Tuple[typing.List[str], typing.List[str], typing.List[str],
+                  typing.List[str]]:
   """Generates positive and negative Japanese training sentences using Gemini based on a GitHub issue.
 
   Args:
