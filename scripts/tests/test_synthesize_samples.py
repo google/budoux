@@ -38,9 +38,7 @@ class TestAlignToBaseParserSplits(unittest.TestCase):
         is_positive=False,
         is_reproducible=True)
     mock_parser = MagicMock(spec=budoux.Parser)
-    mock_parser.parse.return_value = [
-        "彼の", "才能は", "もは", "や", "誰にも", "超えられない。"
-    ]
+    mock_parser.parse.return_value = ["彼の", "才能は", "もは", "や", "誰にも", "超えられない。"]
 
     cands = [f"彼の{SEP}才能は{SEP}もはや{SEP}誰にも超えられない。"]
     result = synthesize_samples.align_to_base_parser_splits(
