@@ -29,6 +29,7 @@ jaxcpu = [
 ]
 dev = [
     "build",
+    "google-genai",
     "flake8",
     "isort",
     "mypy>=1.0.0",
