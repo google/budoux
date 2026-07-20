@@ -30,8 +30,10 @@ jaxcpu = [
 dev = [
     "build",
     "flake8",
+    "google-genai",
     "isort",
     "mypy>=1.0.0",
+    "pydantic",
     "pytest",
     "regex",
     "toml",
@@ -59,8 +61,10 @@ budoux = ["models/*.json", "skip_nodes.json", "py.typed"]
 dev = [
     "build",
     "flake8",
+    "google-genai",
     "isort",
     "mypy>=1.0.0",
+    "pydantic",
     "pytest",
     "regex",
     "toml",
