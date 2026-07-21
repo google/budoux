@@ -59,20 +59,7 @@ budoux = ["models/*.json", "skip_nodes.json", "py.typed"]
 
 [dependency-groups]
 dev = [
-    "build",
-    "flake8",
-    "google-genai",
-    "isort",
-    "mypy>=1.0.0",
-    "pydantic",
-    "pytest",
-    "regex",
-    "toml",
-    "twine",
-    "types-regex",
-    "types-setuptools",
-    "yapf",
-    "jax>=0.9.0; python_version >= '3.12'",
+    "budoux[dev]",
 ]
 
 [tool.yapf]
