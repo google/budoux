@@ -7,11 +7,7 @@
     "build:app": "esbuild src/app.ts --bundle --minify --outfile=static/app.js",
     "build:worker": "esbuild src/worker.ts --bundle --minify --outfile=static/worker.js",
     "build": "npm run build:app && npm run build:worker",
-    "watch:app": "esbuild src/app.ts --watch --bundle --minify --outfile=static/app.js",
-    "watch:worker": "esbuild src/worker.ts --watch --bundle --minify --outfile=static/worker.js",
-    "watch": "concurrently \"npm run watch:app\" \"npm run watch:worker\"",
-    "serve": "serve static",
-    "dev": "concurrently \"npm run serve\" \"npm run watch\"",
+    "dev": "node scripts/dev.mjs",
     "start": "npm run dev"
   },
   "keywords": [],
@@ -22,9 +18,7 @@
     "dompurify": "^3.4.12"
   },
   "devDependencies": {
-    "concurrently": "^10.0.3",
     "esbuild": "^0.28.1",
-    "serve": "^14.2.6",
-    "typescript": "^6.0.2"
+    "typescript": "^7.0.2"
   }
 }
