@@ -117,6 +117,22 @@ class TestEvaluateModel(unittest.TestCase):
     self.assertAlmostEqual(metrics['recall'], 1.0)
     self.assertAlmostEqual(metrics['fscore'], 1.0)
 
+  def test_evaluate_model_tsv_format(self) -> None:
+    tsv_path = os.path.join(self.temp_dir.name, 'test_data.tsv')
+    test_content = (
+        '# comment line\n'
+        f'gh123\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+        f'gh124\tmeta_info\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+    )
+    with open(tsv_path, 'w', encoding='utf-8') as f:
+      f.write(test_content)
+
+    metrics = evaluate_model.evaluate(self.model_path, tsv_path)
+    self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
+    self.assertAlmostEqual(metrics['precision'], 1.0)
+    self.assertAlmostEqual(metrics['recall'], 2 / 3)
+    self.assertAlmostEqual(metrics['fscore'], 0.8)
+
 
 if __name__ == '__main__':
   unittest.main()

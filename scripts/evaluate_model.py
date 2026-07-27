@@ -34,7 +34,10 @@ def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
 
   Args:
     model_path (str): Path to the compiled model JSON file.
-    test_data_path (str): Path to the raw test dataset.
+    test_data_path (str): Path to the test dataset file. Each line must contain
+      one sentence split by '▁' (U+2581). For '.tsv' files, comment lines
+      starting with '#' are ignored, and only the last column after tab
+      splitting is evaluated.
 
   Returns:
     Dict[str, float]: A dictionary containing precision, recall, accuracy,
@@ -49,13 +52,21 @@ def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
   fp = 0
   fn = 0
 
+  is_tsv = test_data_path.endswith('.tsv')
   with open(test_data_path, encoding='utf-8') as f:
     for line in f:
       line = line.strip()
-      if not line:
+      if not line or line.startswith('#'):
         continue
+      if is_tsv or '\t' in line:
+        parts = line.split('\t')
+        if len(parts) >= 2:
+          line = parts[-1].strip()
+        if not line:
+          continue
 
       # Parse raw characters and ground truth break positions
+
       raw_chars: typing.List[str] = []
       ground_truth_breaks: typing.List[bool] = []
       next_is_break = False
@@ -106,7 +117,7 @@ def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
       'accuracy': accuracy,
       'precision': precision,
       'recall': recall,
-      'fscore': fscore
+      'fscore': fscore,
   }
 
 
@@ -121,9 +132,10 @@ def main() -> None:
       '-t',
       '--test-data',
       required=True,
-      help=('Path to the test dataset file. The file must contain one sentence '
-            'per line, with target segmentations split by the canonical '
-            'separator character "▁".'),
+      help=('Path to the test dataset file. Each line must contain one '
+            'sentence split by "▁". For .tsv files, lines starting with "#" '
+            'are ignored and only the last column after tab splitting is '
+            'evaluated.'),
   )
   args = parser.parse_args()
 
