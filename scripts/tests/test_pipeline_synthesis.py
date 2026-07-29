@@ -20,11 +20,11 @@ import unittest
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 # Module hack to allow importing scripts and budoux from workspace root
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
-
-import pytest
 
 pytest.importorskip("google.genai")
 
