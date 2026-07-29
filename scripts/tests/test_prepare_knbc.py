@@ -75,3 +75,31 @@ class TestKNBCHTMLParser(unittest.TestCase):
     parser = prepare_knbc.KNBCHTMLParser('word')
     parser.feed(self.example_html)
     self.assertListEqual(parser.chunks, ['abc', 'de', 'fgh', 'ijkl', 'mn'])
+
+
+class TestMainSplit(unittest.TestCase):
+
+  def test_main_split(self) -> None:
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      html_dir = os.path.join(tmp_dir, 'html')
+      os.makedirs(html_dir, exist_ok=True)
+      with open(os.path.join(html_dir, 'sample-morph.html'), 'w') as f:
+        f.write(TestKNBCHTMLParser.example_html)
+
+      out_file = os.path.join(tmp_dir, 'source_knbc.txt')
+      split_dir = os.path.join(tmp_dir, 'splits')
+
+      sys_argv_orig = sys.argv
+      try:
+        sys.argv = [
+            'prepare_knbc.py', tmp_dir, '-o', out_file, '--split-dir', split_dir
+        ]
+        prepare_knbc.main()
+      finally:
+        sys.argv = sys_argv_orig
+
+      self.assertTrue(os.path.exists(out_file))
+      self.assertTrue(os.path.exists(os.path.join(split_dir, 'knbc_train.txt')))
+      self.assertTrue(os.path.exists(os.path.join(split_dir, 'knbc_val.txt')))
+      self.assertTrue(os.path.exists(os.path.join(split_dir, 'knbc_test.txt')))
