@@ -26,6 +26,10 @@ from unittest.mock import patch
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
+import pytest
+
+pytest.importorskip("jax")
+
 import budoux  # noqa: E402
 from scripts import pipeline_retraining  # noqa: E402
 

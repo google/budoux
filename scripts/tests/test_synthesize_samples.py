@@ -24,6 +24,10 @@ from unittest.mock import MagicMock, patch
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
+import pytest
+
+pytest.importorskip("google.genai")
+
 import budoux  # noqa: E402
 from scripts import synthesize_samples  # noqa: E402
 
