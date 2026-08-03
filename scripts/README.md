@@ -269,7 +269,8 @@ can tune, and they are what we call *weights*.
 A good nature of this algorithm is that it iteratively updates the weights from
 the most important features to the least ones.
 The training script appends the weight diffs to the output file, which is
-specified by the `-o` / `--output` arg, at a frequency specified by the `--out-span` arg.
+specified by the `-o` / `--output` arg, at a frequency specified by the
+`--out-span` arg.
 Hence, you can build a model file from the output weight file even if you needed
 to interrupt the program before it ends (cf. [Anytime algorithm](https://en.wikipedia.org/wiki/Anytime_algorithm)).
 
@@ -429,6 +430,7 @@ To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
 
 1. **Synthesize Candidate Sentences:**
    Generate candidate training sentences into a staging file:
+
    ```bash
    python scripts/synthesize_samples.py --issue=468 --lang=ja --output=staging_468.txt
    ```
@@ -441,6 +443,7 @@ To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
 
 3. **Save to Fine-Tuning Corpus:**
    Save the reviewed file into `data/finetuning/ja/issue_468.txt`:
+
    ```bash
    mkdir -p data/finetuning/ja
    cp staging_468.txt data/finetuning/ja/issue_468.txt
@@ -450,7 +453,7 @@ To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
    Execute `run_training_pipeline.py`. It automatically merges all datasets
    under `data/finetuning/ja/*.txt` (with 100x weighting), retrains the JAX
    model, and verifies quality benchmarks:
+
    ```bash
    python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
    ```
-
