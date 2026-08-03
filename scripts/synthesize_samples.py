@@ -278,6 +278,8 @@ def run_agentic_synthesis_pipeline(
     max_keep: int = 15,
     lang: str = "ja",
     outfile: str = "staging_raw.txt",
+    save_dataset: bool = False,
+    append_quality: bool = False,
     client: Optional[genai.Client] = None,
     parser: Optional[budoux.Parser] = None,
 ) -> List[str]:
@@ -332,6 +334,29 @@ def run_agentic_synthesis_pipeline(
       f.write("\n".join(output_lines) + "\n")
     print(f"[Staging] Saved {len(output_lines)} lines directly to {outfile}.")
 
+  if save_dataset and issue_id and output_lines:
+    dataset_dir = os.path.join(
+        os.path.dirname(__file__), "..", "data", "finetuning", lang
+    )
+    os.makedirs(dataset_dir, exist_ok=True)
+    dataset_file = os.path.join(dataset_dir, f"issue_{issue_id}.txt")
+    with open(dataset_file, "w", encoding="utf-8") as f:
+      f.write("\n".join(output_lines) + "\n")
+    print(f"[Dataset] Saved dataset to {dataset_file}.")
+
+  if append_quality and issue_id and output_lines:
+    quality_file = os.path.join(
+        os.path.dirname(__file__), "..", "tests", "quality", f"{lang}.tsv"
+    )
+    if os.path.exists(quality_file):
+      entry = f"gh{issue_id}\t{output_lines[0]}\n"
+      with open(quality_file, "r", encoding="utf-8") as f:
+        existing = f.read()
+      if entry.strip() not in existing:
+        with open(quality_file, "a", encoding="utf-8") as f:
+          f.write(entry)
+        print(f"[Quality Suite] Appended representative test to {quality_file}.")
+
   return output_lines
 
 
@@ -340,28 +365,44 @@ def build_parser() -> argparse.ArgumentParser:
   p = argparse.ArgumentParser(description="Agentic candidate sample synthesis.")
   group = p.add_mutually_exclusive_group(required=True)
   group.add_argument(
-      "--input", "-i", type=str, help="Target string (e.g. 'いよいよ/はじまる')")
+      "--input", "-i", type=str, help="Target string (e.g. 'いよいよ/はじまる')"
+  )
   group.add_argument(
-      "--issue", type=str, help="GitHub bug report number or URL ID")
+      "--issue", type=str, help="GitHub bug report number or URL ID"
+  )
   p.add_argument(
       "--lang",
       type=str,
       default="ja",
-      help="Target model language (default: ja)")
+      help="Target model language (default: ja)",
+  )
   p.add_argument(
       "--num-samples",
       "-n",
       type=int,
       default=30,
-      help="Initial generation count")
+      help="Initial generation count",
+  )
   p.add_argument(
-      "--max-keep", type=int, default=15, help="Pruned final row target")
+      "--max-keep", type=int, default=15, help="Pruned final row target"
+  )
   p.add_argument(
       "--output",
       "-o",
       type=str,
       default="staging_raw.txt",
-      help="Staging destination file")
+      help="Staging destination file",
+  )
+  p.add_argument(
+      "--save-dataset",
+      action="store_true",
+      help="Save output into data/finetuning/<lang>/issue_<issue>.txt",
+  )
+  p.add_argument(
+      "--append-quality",
+      action="store_true",
+      help="Append representative sample into tests/quality/<lang>.tsv",
+  )
   return p
 
 
@@ -374,6 +415,8 @@ def main() -> None:
       max_keep=args.max_keep,
       lang=args.lang,
       outfile=args.output,
+      save_dataset=args.save_dataset,
+      append_quality=args.append_quality,
   )
 
 

@@ -26,9 +26,10 @@ $ python scripts/prepare_knbc.py KNBC_v1.0_090925_utf8 -o source_knbc.txt
 
 import argparse
 import os
+import random
 import sys
-import typing
 from html.parser import HTMLParser
+from typing import Literal, Optional
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
@@ -37,7 +38,7 @@ sys.path.insert(0, os.path.abspath(LIB_PATH))
 from budoux import utils  # noqa (module hack)
 
 GRANULARITY_OPTIONS = {'phrase', 'tag', 'word'}
-Granularity = typing.Literal['phrase', 'tag', 'word']
+Granularity = Literal['phrase', 'tag', 'word']
 
 
 class KNBCHTMLParser(HTMLParser):
@@ -71,7 +72,7 @@ class KNBCHTMLParser(HTMLParser):
 
   def handle_starttag(
       self, tag: str,
-      attributes: typing.List[typing.Tuple[str, typing.Optional[str]]]) -> None:
+      attributes: list[tuple[str, Optional[str]]]) -> None:
     if tag == 'tr':
       self.row += 1
       self.col = 0
@@ -103,8 +104,8 @@ class KNBCHTMLParser(HTMLParser):
       self.current_word = data
 
 
-def break_before_sequence(chunks: typing.List[str],
-                          sequence: str) -> typing.List[str]:
+def break_before_sequence(chunks: list[str],
+                          sequence: str) -> list[str]:
   """Breaks chunks before a specified character sequence appears.
 
   Args:
@@ -120,7 +121,7 @@ def break_before_sequence(chunks: typing.List[str],
   return chunks
 
 
-def postprocess(chunks: typing.List[str]) -> typing.List[str]:
+def postprocess(chunks: list[str]) -> list[str]:
   """Applies some processes to modify the extracted chunks.
 
   Args:
@@ -160,28 +161,107 @@ word: 携帯 / ユーザー / の / 仲間 / 入り / を / する / か / で�
 ''',
       choices=GRANULARITY_OPTIONS,
       default=DEFAULT_GRANULARITY)
+  parser.add_argument(
+      '--split-dir',
+      help='Directory to output 3-way split datasets (knbc_train.txt, knbc_val.txt, knbc_test.txt).',
+      default=None)
+  parser.add_argument(
+      '--val-ratio',
+      type=float,
+      help='Ratio of validation partition (default: 0.10).',
+      default=0.10)
+  parser.add_argument(
+      '--test-ratio',
+      type=float,
+      help='Ratio of test partition (default: 0.10).',
+      default=0.10)
+  parser.add_argument(
+      '--seed',
+      type=int,
+      help='Random seed for deterministic split (default: 42).',
+      default=42)
   return parser.parse_args()
+
+
+def process_knbc(
+    source_dir: str,
+    outfile: str,
+    granularity: Granularity = 'phrase',
+    split_dir: Optional[str] = None,
+    val_ratio: float = 0.10,
+    test_ratio: float = 0.10,
+    seed: int = 42,
+) -> None:
+  """Processes KNBC HTML archives into segmented text files and optional splits."""
+  html_dir = os.path.join(source_dir, 'html')
+  sentences: list[str] = []
+  for file in sorted(os.listdir(html_dir)):
+    if file[-11:] != '-morph.html':
+      continue
+    parser = KNBCHTMLParser(granularity)
+    data = open(os.path.join(html_dir, file)).read()
+    parser.feed(data)
+    chunks = parser.chunks
+    chunks = postprocess(chunks)
+    if len(chunks) < 2:
+      continue
+    sentences.append(utils.SEP.join(chunks))
+
+  with open(outfile, 'w', encoding='utf-8') as f:
+    for s in sentences:
+      f.write(s + '\n')
+  print('\033[92mFull training data is output to: %s\033[0m' % (outfile))
+
+  if split_dir:
+    valid_ratios = (0.0 <= val_ratio <= 1.0) and (
+        0.0 <= test_ratio <= 1.0) and (val_ratio + test_ratio < 1.0)
+    if not valid_ratios:
+      raise ValueError(
+          "Invalid split ratios: val_ratio + test_ratio must be less than 1.0.")
+    os.makedirs(split_dir, exist_ok=True)
+    shuffled = sentences.copy()
+    random.seed(seed)
+    random.shuffle(shuffled)
+
+    num_total = len(shuffled)
+    num_val = int(num_total * val_ratio)
+    num_test = int(num_total * test_ratio)
+    num_train = num_total - num_val - num_test
+
+    train_sentences = shuffled[:num_train]
+    val_sentences = shuffled[num_train:num_train + num_val]
+    test_sentences = shuffled[num_train + num_val:]
+
+    train_path = os.path.join(split_dir, 'knbc_train.txt')
+    val_path = os.path.join(split_dir, 'knbc_val.txt')
+    test_path = os.path.join(split_dir, 'knbc_test.txt')
+
+    for path, split_lines in [
+        (train_path, train_sentences),
+        (val_path, val_sentences),
+        (test_path, test_sentences),
+    ]:
+      with open(path, 'w', encoding='utf-8') as f:
+        for line in split_lines:
+          f.write(line + '\n')
+
+    print(
+        '\033[92m3-Way split dataset written to %s:\n  Train: %s (%d lines)\n  Val:   %s (%d lines)\n  Test:  %s (%d lines)\033[0m'
+        % (split_dir, train_path, len(train_sentences), val_path,
+           len(val_sentences), test_path, len(test_sentences)))
 
 
 def main() -> None:
   args = parse_args()
-  source_dir = args.source_dir
-  outfile = args.outfile
-  granularity = args.granularity
-  html_dir = os.path.join(source_dir, 'html')
-  with open(outfile, 'w') as f:
-    for file in sorted(os.listdir(html_dir)):
-      if file[-11:] != '-morph.html':
-        continue
-      parser = KNBCHTMLParser(granularity)
-      data = open(os.path.join(html_dir, file)).read()
-      parser.feed(data)
-      chunks = parser.chunks
-      chunks = postprocess(chunks)
-      if len(chunks) < 2:
-        continue
-      f.write(utils.SEP.join(chunks) + '\n')
-  print('\033[92mTraining data is output to: %s\033[0m' % (outfile))
+  process_knbc(
+      source_dir=args.source_dir,
+      outfile=args.outfile,
+      granularity=args.granularity,
+      split_dir=args.split_dir,
+      val_ratio=args.val_ratio,
+      test_ratio=args.test_ratio,
+      seed=args.seed,
+  )
 
 
 if __name__ == '__main__':

@@ -2,20 +2,71 @@
 
 This directory is a collection of scripts to generate BudouX model files.
 The figure below provides an overview of how each script transforms data files,
-from corpora to machine learning models.
+from corpora and synthetic sample generation to compiled machine learning models.
 
 ```mermaid
-flowchart
-    corpus[(Corpus)] --> prepare[prepare_*.py]
-    prepare --> source[\Source text file\]
-    source --> encode[encode_data.py]
-    encode --> encoded[\Encoded data file\]
-    encoded --> train[train.py]
-    train --> weights[\Weight file\]
-    weights --> build[build_model.py]
-    build --> model[\Model file - JSON\]
-    model --> translate[translate_model.py]
-    translate --> modelx[\Model file - Other formats\]
+flowchart TB
+    %% Phase 1: External KNBC Corpus Preparation
+    subgraph P1 ["1. KNBC External Corpus Preparation"]
+        direction TB
+        KNBC_RAW["curl Download<br>KNBC_v1.0_090925_utf8.tar.bz2"] --> KNBC_PREP["prepare_knbc.py"]
+        KNBC_PREP --> KNBC_SRC["source_knbc.txt<br>(Full Unsplit Corpus)"]
+        
+        KNBC_PREP -->|"80% Train Split (--split-dir)"| KNBC_TRAIN["knbc_train.txt"]
+        KNBC_PREP -->|"10% Val Split (--split-dir)"| KNBC_VAL["knbc_val.txt"]
+        KNBC_PREP -->|"10% Test Split (--split-dir)"| KNBC_TEST["knbc_test.txt<br>(Generalization Benchmark)"]
+    end
+
+    %% Phase 2: Agentic Synthetic Sample Generation
+    subgraph P2 ["2. Agentic Synthetic Sample Generation (synthesize_samples.py)"]
+        direction TB
+        CLI_IN["CLI Inputs: --issue=468<br>or --input='...'"] --> AGENT1["Agent 1: Intent Understanding"]
+        AGENT1 --> AGENT2["Agent 2: Example Generator"]
+        AGENT2 --> OVERLAY["Deterministic Alignment Utility"]
+        OVERLAY --> AGENT3["Agent 3: Linguistic Expert Polisher"]
+        AGENT3 --> OUTPUT_FLAGS["Output Persistence Flags<br>(--save-dataset / --append-quality)"]
+    end
+
+    %% Phase 3: Dataset & Test Suite Persistence
+    subgraph P3 ["3. Dataset & Quality Suite Persistence"]
+        direction TB
+        OUTPUT_FLAGS -->|"(--save-dataset)"| SYNTH_STORE["data/finetuning/ja/issue_*.txt<br>(Issue-specific Samples)"]
+        OUTPUT_FLAGS -->|"(--append-quality)"| REG_TSV["tests/quality/ja.tsv<br>(Canonical Test Suite)"]
+    end
+
+    %% Phase 4: Data Merging & Training Loop
+    subgraph P4 ["4. Data Merging & JAX Training Loop (run_training_pipeline.py)"]
+        direction TB
+        KNBC_TRAIN --> MERGE_DATA["Data Merging & Weighting<br>(1x base corpus, 100x fine-tuning samples)"]
+        SYNTH_STORE --> MERGE_DATA
+        
+        MERGE_DATA --> COMBINED_TXT["tmp/weighted_train.txt"]
+        COMBINED_TXT --> ENCODE_PY["Feature Encoding<br>(encode_data.py)"]
+        ENCODE_PY --> CONFLICT_PY["Conflict Resolution<br>(find_conflicts.py -t 0.8)"]
+        CONFLICT_PY --> TRAIN_PY["JAX AdaBoost Training<br>(train.py --iter=200000)"]
+        
+        TRAIN_PY --> BUILD_PY["Model Compilation<br>(build_model.py)"]
+    end
+
+    %% Phase 5: Unified QA & Output Artifacts
+    subgraph P5 ["5. Unified QA Benchmark & Output Model"]
+        direction TB
+        BUILD_PY --> TEMP_MODEL["budoux/models/ja.json"]
+        TEMP_MODEL --> EVAL_PY["Model Benchmark Evaluation<br>(evaluate_model.py)"]
+        
+        REG_TSV -->|"1. Quality Suite Regression Check"| EVAL_PY
+        KNBC_TEST -->|"2. Generalization F-score Measurement"| EVAL_PY
+        
+        EVAL_PY --> FINAL_JSON["budoux/models/ja.json<br>(Verified Production Model)"]
+    end
+
+    %% Direct Connections (Validation Feature Encoding)
+    KNBC_VAL -->|"encode_data.py"| VAL_ENCODED["tmp/val_encoded.txt"]
+    VAL_ENCODED -->|"Validation Loss Monitoring"| TRAIN_PY
+
+    %% Border Styles
+    style REG_TSV stroke-width:2px
+    style FINAL_JSON stroke-width:2px
 ```
 
 ## Preparing a source text
@@ -47,10 +98,13 @@ We picked these segmentations to provide a satisfactory reading experience in
 those languages, but you can apply another segmentation method that works best
 for your purpose when you build a custom model.
 
-You can make a source data file by hand or running data preparation scripts (`prepare_*.py`)
-that extracts segmented sentences from a corpus.
-Currently, this directory has one data preparation script, [`prepare_knbc.py`](https://github.com/google/budoux/tree/main/scripts/prepare_knbc.py),
-which generates a source text file from [Kyoto University and NTT Blog (KNBC) Corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/),
+You can make a source data file by hand or running data preparation scripts
+(`prepare_*.py`) that extracts segmented sentences from a corpus.
+Currently, this directory provides data preparation scripts such as
+[`prepare_knbc.py`](https://github.com/google/budoux/tree/main/scripts/prepare_knbc.py)
+and [`prepare_wisesight.py`](https://github.com/google/budoux/tree/main/scripts/prepare_wisesight.py).
+For Japanese, `prepare_knbc.py` generates a source text file from
+[Kyoto University and NTT Blog (KNBC) Corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/),
 which segments Japanese sentences by phrase.
 When we support other corpora as data sources, we should add the data
 preparation scripts for them in this directory with the `prepare_` prefix.
@@ -215,7 +269,7 @@ can tune, and they are what we call *weights*.
 A good nature of this algorithm is that it iteratively updates the weights from
 the most important features to the least ones.
 The training script appends the weight diffs to the output file, which is
-specified by the `--out` arg, at a frequency specified by the `--out-span` arg.
+specified by the `-o` / `--output` arg, at a frequency specified by the `--out-span` arg.
 Hence, you can build a model file from the output weight file even if you needed
 to interrupt the program before it ends (cf. [Anytime algorithm](https://en.wikipedia.org/wiki/Anytime_algorithm)).
 
@@ -304,7 +358,7 @@ Notice that the features are separated between the colon mark, and the latters
 are grouped by the former.
 The scores are summed up if there are multiple items that belong to the same group.
 Also, the scores are scaled and round to integers.
-We apply these conversations to make the output model file smaller and the
+We apply these conversions to make the output model file smaller and the
 inference faster.
 
 The keys in the first layer (e.g. `UW1` and `UW2`) are the feature types that
@@ -323,7 +377,7 @@ python scripts/build_model.py weights.txt -o model.json
 
 JSON is the primary format for the BudouX models, but some libraries (e.g. [ICU](https://icu.unicode.org/))
 may want to use another serialization format to store  model data.
-You can translate a model JSON file to another format with [`translate.py`](https://github.com/google/budoux/tree/main/scripts/translate.py)
+You can translate a model JSON file to another format with [`translate_model.py`](https://github.com/google/budoux/tree/main/scripts/translate_model.py)
 if it's more useful for your specific purpose.
 For example, you can convert a model file to an ICU Resource Bundle by running:
 
@@ -339,7 +393,7 @@ When a model file misclassifies character transition boundaries in specific edge
 cases (for example, missing phrase segmentations across newly observed character
 combinations), resolving the discrepancy requires performing full AdaBoost
 linear retraining using `train.py` across updated feature records
-(`encoded_data.txt`).
+(`encoded.txt`).
 
 Historically, partial gradient-descent fine-tuning over established base JSON
 models (`finetune.py`) was supported. However, because partial fine-tuning
@@ -351,3 +405,47 @@ Therefore, full AdaBoost model optimization via `train.py` paired with
 statistical conflict resolution (`find_conflicts.py -t 0.8`) and model building
 (`build_model.py`) is the sole canonical methodology for updating and tuning
 BudouX segmentation models.
+
+### End-to-End Retraining & Data Synthesis
+
+To automate dataset partitioning (80:10:10 train/val/test splits), oversampled fine-tuning data merging, JAX model fitting, and holdout quality benchmarking, run:
+
+```bash
+python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
+```
+
+To synthesize bug-fix training samples from GitHub issue reports and persist them directly to fine-tuning datasets and quality benchmarks:
+
+```bash
+python scripts/synthesize_samples.py --issue=123 --save-dataset --append-quality
+```
+
+### Typical Workflow: Synthesizing, Editing, and Retraining
+
+To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
+
+1. **Synthesize Candidate Sentences:**
+   Generate candidate training sentences into a staging file:
+   ```bash
+   python scripts/synthesize_samples.py --issue=468 --lang=ja --output=staging_468.txt
+   ```
+
+2. **Review and Edit Candidates:**
+   Open `staging_468.txt` in a text editor to:
+   - Remove any unsatisfactory candidate lines.
+   - Adjust `▁` (U+2581) phrase boundary markers where needed.
+   - Add custom sentences if desired.
+
+3. **Save to Fine-Tuning Corpus:**
+   Save the reviewed file into `data/finetuning/ja/issue_468.txt`:
+   ```bash
+   mkdir -p data/finetuning/ja
+   cp staging_468.txt data/finetuning/ja/issue_468.txt
+   ```
+
+4. **Run Retraining Pipeline:**
+   Execute `run_training_pipeline.py`. It automatically merges all datasets under `data/finetuning/ja/*.txt` (with 100x weighting), retrains the JAX model, and verifies quality benchmarks:
+   ```bash
+   python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
+   ```
+
