@@ -70,9 +70,8 @@ class KNBCHTMLParser(HTMLParser):
     self.on_split_row = False
     self.granularity = granularity
 
-  def handle_starttag(
-      self, tag: str,
-      attributes: list[tuple[str, Optional[str]]]) -> None:
+  def handle_starttag(self, tag: str,
+                      attributes: list[tuple[str, Optional[str]]]) -> None:
     if tag == 'tr':
       self.row += 1
       self.col = 0
@@ -104,8 +103,7 @@ class KNBCHTMLParser(HTMLParser):
       self.current_word = data
 
 
-def break_before_sequence(chunks: list[str],
-                          sequence: str) -> list[str]:
+def break_before_sequence(chunks: list[str], sequence: str) -> list[str]:
   """Breaks chunks before a specified character sequence appears.
 
   Args:

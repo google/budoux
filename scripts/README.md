@@ -408,13 +408,16 @@ BudouX segmentation models.
 
 ### End-to-End Retraining & Data Synthesis
 
-To automate dataset partitioning (80:10:10 train/val/test splits), oversampled fine-tuning data merging, JAX model fitting, and holdout quality benchmarking, run:
+To automate dataset partitioning (80:10:10 train/val/test splits), oversampled
+fine-tuning data merging, JAX model fitting, and holdout quality benchmarking,
+run:
 
 ```bash
 python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
 ```
 
-To synthesize bug-fix training samples from GitHub issue reports and persist them directly to fine-tuning datasets and quality benchmarks:
+To synthesize bug-fix training samples from GitHub issue reports and persist
+them directly to fine-tuning datasets and quality benchmarks:
 
 ```bash
 python scripts/synthesize_samples.py --issue=123 --save-dataset --append-quality
@@ -444,7 +447,9 @@ To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
    ```
 
 4. **Run Retraining Pipeline:**
-   Execute `run_training_pipeline.py`. It automatically merges all datasets under `data/finetuning/ja/*.txt` (with 100x weighting), retrains the JAX model, and verifies quality benchmarks:
+   Execute `run_training_pipeline.py`. It automatically merges all datasets
+   under `data/finetuning/ja/*.txt` (with 100x weighting), retrains the JAX
+   model, and verifies quality benchmarks:
    ```bash
    python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
    ```

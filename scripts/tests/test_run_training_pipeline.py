@@ -16,21 +16,24 @@
 import json
 import os
 import sys
-import unittest
 import tempfile
+import typing
+import unittest
+from unittest.mock import patch
 
 import pytest
 
 LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, LIB_PATH)
 
-from scripts import run_training_pipeline
+from scripts import run_training_pipeline  # noqa: E402
 
 
 class TestRunTrainingPipeline(unittest.TestCase):
 
-  @unittest.mock.patch("subprocess.run")
-  def test_run_retraining_pipeline_subprocess(self, mock_run) -> None:
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_subprocess(self,
+                                              mock_run: typing.Any) -> None:
     with tempfile.TemporaryDirectory() as tmp_dir:
       split_dir = os.path.join(tmp_dir, "splits")
       os.makedirs(split_dir, exist_ok=True)
@@ -39,8 +42,7 @@ class TestRunTrainingPipeline(unittest.TestCase):
 
       out_model = os.path.join(tmp_dir, "model.json")
       run_training_pipeline.run_retraining_pipeline(
-          lang="ja", iterations=10, split_dir=split_dir, out_model=out_model
-      )
+          lang="ja", iterations=10, split_dir=split_dir, out_model=out_model)
 
       self.assertGreaterEqual(mock_run.call_count, 4)
 
@@ -49,15 +51,21 @@ class TestRunTrainingPipeline(unittest.TestCase):
     with tempfile.TemporaryDirectory() as tmp_dir:
       split_dir = os.path.join(tmp_dir, "splits")
       os.makedirs(split_dir, exist_ok=True)
-      with open(os.path.join(split_dir, "knbc_train.txt"), "w", encoding="utf-8") as f:
+      with open(
+          os.path.join(split_dir, "knbc_train.txt"), "w",
+          encoding="utf-8") as f:
         f.write("今日▁は▁良い▁天気▁です。\n")
-      with open(os.path.join(split_dir, "knbc_val.txt"), "w", encoding="utf-8") as f:
+      with open(
+          os.path.join(split_dir, "knbc_val.txt"), "w", encoding="utf-8") as f:
         f.write("明日▁も▁晴れ▁です。\n")
 
       out_model = os.path.join(tmp_dir, "model.json")
       run_training_pipeline.run_retraining_pipeline(
-          lang="ja", iterations=5, split_dir=split_dir, out_model=out_model, weight_factor=1
-      )
+          lang="ja",
+          iterations=5,
+          split_dir=split_dir,
+          out_model=out_model,
+          weight_factor=1)
 
       self.assertTrue(os.path.exists(out_model))
       with open(out_model, "r", encoding="utf-8") as f:

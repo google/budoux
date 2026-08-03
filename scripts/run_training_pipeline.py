@@ -90,7 +90,10 @@ def run_retraining_pipeline(
 
     print("[Encode] Encoding feature boundaries...")
     subprocess.run(
-        [sys.executable, "scripts/encode_data.py", weighted_train, "-o", encoded_train],
+        [
+            sys.executable, "scripts/encode_data.py", weighted_train, "-o",
+            encoded_train
+        ],
         check=True,
     )
 
@@ -111,7 +114,10 @@ def run_retraining_pipeline(
     val_split = os.path.join(split_dir, "knbc_val.txt")
     if os.path.exists(val_split):
       subprocess.run(
-          [sys.executable, "scripts/encode_data.py", val_split, "-o", val_encoded],
+          [
+              sys.executable, "scripts/encode_data.py", val_split, "-o",
+              val_encoded
+          ],
           check=True,
       )
 
@@ -133,7 +139,10 @@ def run_retraining_pipeline(
 
     print(f"[Export] Exporting compact JSON model to {out_model}...")
     subprocess.run(
-        [sys.executable, "scripts/build_model.py", weights_path, "-o", out_model],
+        [
+            sys.executable, "scripts/build_model.py", weights_path, "-o",
+            out_model
+        ],
         check=True,
     )
 
@@ -170,11 +179,9 @@ def run_retraining_pipeline(
 
 def main() -> None:
   parser = argparse.ArgumentParser(
-      description="Streamlined retraining meta-pipeline for BudouX models."
-  )
+      description="Streamlined retraining meta-pipeline for BudouX models.")
   parser.add_argument(
-      "--lang", type=str, default="ja", help="Language code (default: ja)"
-  )
+      "--lang", type=str, default="ja", help="Language code (default: ja)")
   parser.add_argument(
       "--iter",
       type=int,

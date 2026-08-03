@@ -336,8 +336,7 @@ def run_agentic_synthesis_pipeline(
 
   if save_dataset and issue_id and output_lines:
     dataset_dir = os.path.join(
-        os.path.dirname(__file__), "..", "data", "finetuning", lang
-    )
+        os.path.dirname(__file__), "..", "data", "finetuning", lang)
     os.makedirs(dataset_dir, exist_ok=True)
     dataset_file = os.path.join(dataset_dir, f"issue_{issue_id}.txt")
     with open(dataset_file, "w", encoding="utf-8") as f:
@@ -346,8 +345,7 @@ def run_agentic_synthesis_pipeline(
 
   if append_quality and issue_id and output_lines:
     quality_file = os.path.join(
-        os.path.dirname(__file__), "..", "tests", "quality", f"{lang}.tsv"
-    )
+        os.path.dirname(__file__), "..", "tests", "quality", f"{lang}.tsv")
     if os.path.exists(quality_file):
       entry = f"gh{issue_id}\t{output_lines[0]}\n"
       with open(quality_file, "r", encoding="utf-8") as f:
@@ -355,7 +353,8 @@ def run_agentic_synthesis_pipeline(
       if entry.strip() not in existing:
         with open(quality_file, "a", encoding="utf-8") as f:
           f.write(entry)
-        print(f"[Quality Suite] Appended representative test to {quality_file}.")
+        print(
+            f"[Quality Suite] Appended representative test to {quality_file}.")
 
   return output_lines
 
@@ -365,11 +364,9 @@ def build_parser() -> argparse.ArgumentParser:
   p = argparse.ArgumentParser(description="Agentic candidate sample synthesis.")
   group = p.add_mutually_exclusive_group(required=True)
   group.add_argument(
-      "--input", "-i", type=str, help="Target string (e.g. 'いよいよ/はじまる')"
-  )
+      "--input", "-i", type=str, help="Target string (e.g. 'いよいよ/はじまる')")
   group.add_argument(
-      "--issue", type=str, help="GitHub bug report number or URL ID"
-  )
+      "--issue", type=str, help="GitHub bug report number or URL ID")
   p.add_argument(
       "--lang",
       type=str,
@@ -384,8 +381,7 @@ def build_parser() -> argparse.ArgumentParser:
       help="Initial generation count",
   )
   p.add_argument(
-      "--max-keep", type=int, default=15, help="Pruned final row target"
-  )
+      "--max-keep", type=int, default=15, help="Pruned final row target")
   p.add_argument(
       "--output",
       "-o",
