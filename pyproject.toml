@@ -23,6 +23,10 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = []
 
+[tool.pyrefly.errors]
+no-any-return = "error"
+redundant-cast = "warn"
+
 [project.optional-dependencies]
 jaxcpu = [
     "jax>=0.9.0; python_version >= '3.12'",
@@ -32,7 +36,6 @@ dev = [
     "flake8",
     "google-genai",
     "isort",
-    "mypy>=1.0.0",
     "pydantic",
     "pytest",
     "regex",
@@ -42,6 +45,7 @@ dev = [
     "types-setuptools",
     "yapf",
     "jax>=0.9.0; python_version >= '3.12'",
+    "pyrefly>=1.2.0",
 ]
 
 [project.scripts]
@@ -66,8 +70,6 @@ dev = [
 based_on_style = "yapf"
 
 
-[tool.mypy]
-python_version = "3.12"
-pretty = true
-strict = true
-allow_untyped_calls = true
+[tool.pyrefly]
+python-version = "3.12"
+preset = "legacy"
