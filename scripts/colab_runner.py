@@ -151,7 +151,6 @@ class ColabRunner:
     )
     self._run_cmd(cmd)
 
-
   def stop_session(self) -> None:
     """Terminates and cleans up the remote Colab session."""
     if self._is_active:
