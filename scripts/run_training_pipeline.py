@@ -15,7 +15,6 @@
 
 import argparse
 import glob
-import json
 import os
 import shutil
 import subprocess
@@ -134,12 +133,10 @@ def run_retraining_pipeline(
     if colab:
       sess = session_name or f"budoux-train-{accelerator}"
       with colab_runner.ColabRunner(
-          session_name=sess, accelerator=accelerator
-      ) as runner:
+          session_name=sess, accelerator=accelerator) as runner:
         runner.upload_file(cleaned_train, "/content/cleaned.txt")
         runner.upload_file(
-            os.path.join(LIB_PATH, "scripts", "train.py"), "/content/train.py"
-        )
+            os.path.join(LIB_PATH, "scripts", "train.py"), "/content/train.py")
         if os.path.exists(val_encoded):
           runner.upload_file(val_encoded, "/content/val_encoded.txt")
 
@@ -163,7 +160,6 @@ def run_retraining_pipeline(
         if os.path.exists(val_encoded):
           remote_args.extend(["--val-data", "/content/val_encoded.txt"])
 
-
         with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
           f.write("import subprocess\n")
           f.write(f"subprocess.run({remote_args!r}, check=True)\n")
@@ -175,7 +171,6 @@ def run_retraining_pipeline(
         finally:
           if os.path.exists(launcher_path):
             os.remove(launcher_path)
-
 
     else:
       train_cmd = [
@@ -291,7 +286,6 @@ def main() -> None:
       accelerator=args.accelerator,
       session_name=args.session_name,
   )
-
 
 
 if __name__ == "__main__":

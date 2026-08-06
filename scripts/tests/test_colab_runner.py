@@ -39,13 +39,11 @@ class TestGetColabBinary(unittest.TestCase):
     binary = colab_runner.get_colab_binary()
     self.assertEqual(binary, "/usr/local/bin/colab")
 
-
   @patch.dict(os.environ, {}, clear=True)
   @patch("shutil.which", return_value=None)
   @patch("os.path.exists", return_value=False)
-  def test_not_found_raises(
-      self, mock_which: MagicMock, mock_exists: MagicMock
-  ) -> None:
+  def test_not_found_raises(self, mock_which: MagicMock,
+                            mock_exists: MagicMock) -> None:
     with self.assertRaises(FileNotFoundError):
       colab_runner.get_colab_binary()
 
@@ -110,7 +108,6 @@ class TestColabRunner(unittest.TestCase):
     # 4. download_file
     # 5. stop (cleanup session on context exit)
     self.assertEqual(mock_run.call_count, 5)
-
 
 
 if __name__ == "__main__":

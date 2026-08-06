@@ -75,8 +75,7 @@ class TestRunTrainingPipeline(unittest.TestCase):
   @patch("scripts.colab_runner.ColabRunner")
   @patch("subprocess.run")
   def test_run_retraining_pipeline_colab(
-      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock
-  ) -> None:
+      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock) -> None:
     mock_runner = MagicMock()
     mock_colab_runner_cls.return_value.__enter__.return_value = mock_runner
 
@@ -105,8 +104,7 @@ class TestRunTrainingPipeline(unittest.TestCase):
       )
 
       mock_colab_runner_cls.assert_called_once_with(
-          session_name="budoux-train-T4", accelerator="T4"
-      )
+          session_name="budoux-train-T4", accelerator="T4")
       self.assertTrue(mock_runner.exec_script.called)
 
       uploaded_remote_paths = [
@@ -115,16 +113,14 @@ class TestRunTrainingPipeline(unittest.TestCase):
       self.assertIn("/content/cleaned.txt", uploaded_remote_paths)
       self.assertIn("/content/train.py", uploaded_remote_paths)
 
-
   @patch("scripts.colab_runner.ColabRunner")
   @patch("subprocess.run")
   def test_colab_download_failure_does_not_mask_error(
-      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock
-  ) -> None:
+      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock) -> None:
     mock_runner = MagicMock()
     mock_colab_runner_cls.return_value.__enter__.return_value = mock_runner
-    mock_runner.exec_script.side_effect = RuntimeError("Remote execution failed")
-
+    mock_runner.exec_script.side_effect = RuntimeError(
+        "Remote execution failed")
 
     with tempfile.TemporaryDirectory() as tmp_dir:
       split_dir = os.path.join(tmp_dir, "splits")
@@ -146,4 +142,3 @@ class TestRunTrainingPipeline(unittest.TestCase):
 
 if __name__ == "__main__":
   unittest.main()
-

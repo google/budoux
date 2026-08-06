@@ -17,7 +17,6 @@ Implements binary resolution (env var -> PATH), remote session provisioning,
 file transfer, script execution, and auto-cleanup via Python context managers.
 """
 
-
 import os
 import shutil
 import subprocess
@@ -48,8 +47,7 @@ def get_colab_binary() -> str:
       "Colab CLI binary not found. Please install the PyPI package "
       "'google-colab-cli' (providing the 'colab' CLI executable for managing "
       "remote Colab runtimes) via: pip install google-colab-cli "
-      "or set the COLAB_CLI_PATH environment variable."
-  )
+      "or set the COLAB_CLI_PATH environment variable.")
 
 
 class ColabRunner:
@@ -73,9 +71,9 @@ class ColabRunner:
     self.binary_path = binary_path or get_colab_binary()
     self._is_active = False
 
-  def _run_cmd(
-      self, args: List[str], check: bool = True
-  ) -> subprocess.CompletedProcess[str]:
+  def _run_cmd(self,
+               args: List[str],
+               check: bool = True) -> subprocess.CompletedProcess[str]:
     """Executes a colab CLI command subprocess.
 
     Args:
@@ -98,7 +96,6 @@ class ColabRunner:
     else:
       cmd.extend(["--gpu", self.accelerator])
 
-
     print(
         f"[Colab CLI] Provisioning remote session '{self.session_name}' "
         f"with accelerator '{self.accelerator}'...",
@@ -107,9 +104,9 @@ class ColabRunner:
     self._run_cmd(cmd)
     self._is_active = True
 
-  def upload_file(
-      self, local_path: str, remote_path: Optional[str] = None
-  ) -> None:
+  def upload_file(self,
+                  local_path: str,
+                  remote_path: Optional[str] = None) -> None:
     """Uploads a local file to the remote VM."""
     cmd = ["upload", "-s", self.session_name, local_path]
     if remote_path:
@@ -126,9 +123,9 @@ class ColabRunner:
     )
     self._run_cmd(cmd)
 
-  def exec_script(
-      self, script_path: str, output_image: Optional[str] = None
-  ) -> None:
+  def exec_script(self,
+                  script_path: str,
+                  output_image: Optional[str] = None) -> None:
     """Executes a local Python script remotely on the Colab VM.
 
     Args:
