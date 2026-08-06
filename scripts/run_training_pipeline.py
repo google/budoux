@@ -21,10 +21,13 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import typing
 import urllib.request
 
 LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, LIB_PATH)
+
+from scripts import colab_runner  # noqa: E402
 
 KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
 
@@ -32,11 +35,16 @@ KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
 def run_retraining_pipeline(
     lang: str = "ja",
     iterations: int = 200000,
+    feature_thres: int = 2,
     split_dir: str = "tmp/splits",
     out_model: str = "",
     weight_factor: int = 100,
+    colab: bool = False,
+    accelerator: str = "T4",
+    session_name: typing.Optional[str] = None,
 ) -> None:
   """Executes end-to-end dataset preparation, JAX fitting, and validation."""
+
   if not out_model:
     out_model = os.path.join("budoux", "models", f"{lang}.json")
 
@@ -122,20 +130,65 @@ def run_retraining_pipeline(
       )
 
     print(f"[Train] Fitting JAX model ({iterations} iterations)...")
-    train_cmd = [
-        sys.executable,
-        "scripts/train.py",
-        cleaned_train,
-        "-o",
-        weights_path,
-        "--iter",
-        str(iterations),
-        "--feature-thres",
-        "2",
-    ]
-    if os.path.exists(val_encoded):
-      train_cmd.extend(["--val-data", val_encoded])
-    subprocess.run(train_cmd, check=True)
+    if colab:
+      sess = session_name or f"budoux-train-{accelerator}"
+      with colab_runner.ColabRunner(
+          session_name=sess, accelerator=accelerator) as runner:
+        runner.upload_file(cleaned_train, "/content/cleaned.txt")
+        runner.upload_file(
+            os.path.join(LIB_PATH, "scripts", "train.py"), "/content/train.py")
+        if os.path.exists(val_encoded):
+          runner.upload_file(val_encoded, "/content/val_encoded.txt")
+
+        # Outputs training metrics and weights regularly across total iterations.
+        out_span = min(5000, max(1, iterations // 10))
+        remote_args = [
+            "python3",
+            "-u",
+            "/content/train.py",
+            "/content/cleaned.txt",
+            "-o",
+            "/content/weights.txt",
+            "--log",
+            "/content/train.log",
+            "--iter",
+            str(iterations),
+            "--feature-thres",
+            str(feature_thres),
+            "--out-span",
+            str(out_span),
+        ]
+
+        if os.path.exists(val_encoded):
+          remote_args.extend(["--val-data", "/content/val_encoded.txt"])
+
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+          f.write("import subprocess\n")
+          f.write(f"subprocess.run({remote_args!r}, check=True)\n")
+          launcher_path = f.name
+
+        try:
+          runner.exec_script(launcher_path)
+          runner.download_file("/content/weights.txt", weights_path)
+        finally:
+          if os.path.exists(launcher_path):
+            os.remove(launcher_path)
+
+    else:
+      train_cmd = [
+          sys.executable,
+          "scripts/train.py",
+          cleaned_train,
+          "-o",
+          weights_path,
+          "--iter",
+          str(iterations),
+          "--feature-thres",
+          str(feature_thres),
+      ]
+      if os.path.exists(val_encoded):
+        train_cmd.extend(["--val-data", val_encoded])
+      subprocess.run(train_cmd, check=True)
 
     print(f"[Export] Exporting compact JSON model to {out_model}...")
     subprocess.run(
@@ -189,6 +242,12 @@ def main() -> None:
       help="Number of training iterations (default: 200000)",
   )
   parser.add_argument(
+      "--feature-thres",
+      type=int,
+      default=2,
+      help="Threshold value of minimum feature frequency (default: 2)",
+  )
+  parser.add_argument(
       "--split-dir",
       type=str,
       default="tmp/splits",
@@ -200,12 +259,34 @@ def main() -> None:
       default="",
       help="Output model JSON path (default: budoux/models/<lang>.json)",
   )
+  parser.add_argument(
+      "--colab",
+      action="store_true",
+      help="Offload JAX AdaBoost training step to remote Colab VM.",
+  )
+  parser.add_argument(
+      "--accelerator",
+      type=str,
+      default="T4",
+      help="Accelerator type for Colab VM (default: T4)",
+  )
+
+  parser.add_argument(
+      "--session-name",
+      type=str,
+      default=None,
+      help="Remote Colab session identifier",
+  )
   args = parser.parse_args()
   run_retraining_pipeline(
       lang=args.lang,
       iterations=args.iter,
+      feature_thres=args.feature_thres,
       split_dir=args.split_dir,
       out_model=args.out_model,
+      colab=args.colab,
+      accelerator=args.accelerator,
+      session_name=args.session_name,
   )
 
 

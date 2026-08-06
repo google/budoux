@@ -19,7 +19,7 @@ import sys
 import tempfile
 import typing
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -71,6 +71,73 @@ class TestRunTrainingPipeline(unittest.TestCase):
       with open(out_model, "r", encoding="utf-8") as f:
         model_data = json.load(f)
       self.assertIsInstance(model_data, dict)
+
+  @patch("scripts.colab_runner.ColabRunner")
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_colab(
+      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock) -> None:
+    mock_runner = MagicMock()
+    mock_colab_runner_cls.return_value.__enter__.return_value = mock_runner
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      os.makedirs(split_dir, exist_ok=True)
+      with open(os.path.join(split_dir, "knbc_train.txt"), "w") as f:
+        f.write("test sentence\n")
+      out_model = os.path.join(tmp_dir, "model.json")
+
+      def fake_download(remote_path: str, local_path: str) -> None:
+
+        if remote_path == "/content/weights.txt":
+          with open(local_path, "w") as f:
+            f.write("foo\t1.0\n")
+
+      mock_runner.download_file.side_effect = fake_download
+
+      run_training_pipeline.run_retraining_pipeline(
+          lang="ja",
+          iterations=10,
+          split_dir=split_dir,
+          out_model=out_model,
+          colab=True,
+          accelerator="T4",
+      )
+
+      mock_colab_runner_cls.assert_called_once_with(
+          session_name="budoux-train-T4", accelerator="T4")
+      self.assertTrue(mock_runner.exec_script.called)
+
+      uploaded_remote_paths = [
+          call[0][1] for call in mock_runner.upload_file.call_args_list
+      ]
+      self.assertIn("/content/cleaned.txt", uploaded_remote_paths)
+      self.assertIn("/content/train.py", uploaded_remote_paths)
+
+  @patch("scripts.colab_runner.ColabRunner")
+  @patch("subprocess.run")
+  def test_colab_download_failure_does_not_mask_error(
+      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock) -> None:
+    mock_runner = MagicMock()
+    mock_colab_runner_cls.return_value.__enter__.return_value = mock_runner
+    mock_runner.exec_script.side_effect = RuntimeError(
+        "Remote execution failed")
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      os.makedirs(split_dir, exist_ok=True)
+      with open(os.path.join(split_dir, "knbc_train.txt"), "w") as f:
+        f.write("test sentence\n")
+
+      out_model = os.path.join(tmp_dir, "model.json")
+      with self.assertRaises(RuntimeError) as cm:
+        run_training_pipeline.run_retraining_pipeline(
+            lang="ja",
+            iterations=10,
+            split_dir=split_dir,
+            out_model=out_model,
+            colab=True,
+        )
+      self.assertEqual(str(cm.exception), "Remote execution failed")
 
 
 if __name__ == "__main__":
