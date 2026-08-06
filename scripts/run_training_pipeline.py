@@ -140,10 +140,11 @@ def run_retraining_pipeline(
         if os.path.exists(val_encoded):
           runner.upload_file(val_encoded, "/content/val_encoded.txt")
 
-        # Outputs training metrics and weights at 10 evenly-spaced checkpoints across total iterations.
-        out_span = max(1, iterations // 10)
+        # Outputs training metrics and weights regularly across total iterations.
+        out_span = min(5000, max(1, iterations // 10))
         remote_args = [
             "python3",
+            "-u",
             "/content/train.py",
             "/content/cleaned.txt",
             "-o",
@@ -157,6 +158,7 @@ def run_retraining_pipeline(
             "--out-span",
             str(out_span),
         ]
+
         if os.path.exists(val_encoded):
           remote_args.extend(["--val-data", "/content/val_encoded.txt"])
 

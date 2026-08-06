@@ -125,14 +125,24 @@ class ColabRunner:
 
   def exec_script(self,
                   script_path: str,
-                  output_image: Optional[str] = None) -> None:
+                  output_image: Optional[str] = None,
+                  timeout: float = 43200.0) -> None:
     """Executes a local Python script remotely on the Colab VM.
 
     Args:
       script_path: Path to the local Python script.
       output_image: Optional local path for intercepted Matplotlib plots.
+      timeout: Execution timeout in seconds (default: 43200.0).
     """
-    cmd = ["exec", "-s", self.session_name, "-f", script_path]
+    cmd = [
+        "exec",
+        "-s",
+        self.session_name,
+        "-f",
+        script_path,
+        "--timeout",
+        str(timeout),
+    ]
     if output_image:
       cmd.extend(["--output-image", output_image])
     print(
@@ -140,6 +150,7 @@ class ColabRunner:
         flush=True,
     )
     self._run_cmd(cmd)
+
 
   def stop_session(self) -> None:
     """Terminates and cleans up the remote Colab session."""
