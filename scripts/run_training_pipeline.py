@@ -205,7 +205,8 @@ def run_retraining_pipeline(
       subprocess.run(
           [
               sys.executable,
-              "scripts/evaluate_model.py",
+              "-m",
+              "budoux.evaluate_model",
               "-m",
               out_model,
               "-t",
@@ -220,7 +221,8 @@ def run_retraining_pipeline(
       subprocess.run(
           [
               sys.executable,
-              "scripts/evaluate_model.py",
+              "-m",
+              "budoux.evaluate_model",
               "-m",
               out_model,
               "-t",
