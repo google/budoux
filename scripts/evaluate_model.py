@@ -26,10 +26,16 @@ sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux  # noqa: E402
 
-EPS = 1e-9
+
+class EvaluationMetrics(typing.TypedDict):
+  accuracy: float
+  precision: float
+  recall: float
+  fscore: float
+  errors: typing.List[typing.Tuple[str, str]]
 
 
-def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
+def evaluate(model_path: str, test_data_path: str) -> EvaluationMetrics:
   """Loads the JSON model and evaluates it against the test dataset.
 
   Args:
@@ -40,8 +46,8 @@ def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
       splitting is evaluated.
 
   Returns:
-    Dict[str, float]: A dictionary containing precision, recall, accuracy,
-      and fscore.
+    EvaluationMetrics: A dictionary containing precision, recall, accuracy,
+      fscore, and errors.
   """
   with open(model_path, encoding='utf-8') as f:
     model = json.load(f)
@@ -51,6 +57,7 @@ def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
   tn = 0
   fp = 0
   fn = 0
+  errors: typing.List[typing.Tuple[str, str]] = []
 
   is_tsv = test_data_path.endswith('.tsv')
   with open(test_data_path, encoding='utf-8') as f:
@@ -84,6 +91,9 @@ def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
 
       raw_sentence = ''.join(raw_chars)
       predicted_chunks = parser.parse(raw_sentence)
+      predicted_sentence = budoux.utils.SEP.join(predicted_chunks)
+      if predicted_sentence != line:
+        errors.append((line, predicted_sentence))
 
       # Build set of chunk start character indices in raw_sentence
       chunk_start_indices = set()
@@ -108,16 +118,19 @@ def evaluate(model_path: str, test_data_path: str) -> typing.Dict[str, float]:
         elif not p and g:
           fn += 1
 
-  accuracy = (tp + tn) / (tp + tn + fp + fn + EPS)
-  precision = tp / (tp + fp + EPS)
-  recall = tp / (tp + fn + EPS)
-  fscore = 2 * precision * recall / (precision + recall + EPS)
+  total = tp + tn + fp + fn
+  accuracy = (tp + tn) / total if total > 0 else 0.0
+  precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+  recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+  fscore = (2 * precision * recall / (precision + recall) if
+            (precision + recall) > 0 else 0.0)
 
   return {
       'accuracy': accuracy,
       'precision': precision,
       'recall': recall,
       'fscore': fscore,
+      'errors': errors,
   }
 
 
@@ -127,7 +140,8 @@ def main() -> None:
       '-m',
       '--model',
       required=True,
-      help='Path to the compiled model JSON file.')
+      help='Path to the compiled model JSON file.',
+  )
   parser.add_argument(
       '-t',
       '--test-data',

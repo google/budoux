@@ -112,10 +112,11 @@ class TestEvaluateModel(unittest.TestCase):
 
     metrics = evaluate_model.evaluate(self.model_path, self.test_data_path)
 
-    self.assertAlmostEqual(metrics['accuracy'], 1.0)
-    self.assertAlmostEqual(metrics['precision'], 1.0)
-    self.assertAlmostEqual(metrics['recall'], 1.0)
-    self.assertAlmostEqual(metrics['fscore'], 1.0)
+    self.assertEqual(metrics['accuracy'], 1.0)
+    self.assertEqual(metrics['precision'], 1.0)
+    self.assertEqual(metrics['recall'], 1.0)
+    self.assertEqual(metrics['fscore'], 1.0)
+    self.assertEqual(len(metrics['errors']), 0)
 
   def test_evaluate_model_tsv_format(self) -> None:
     tsv_path = os.path.join(self.temp_dir.name, 'test_data.tsv')
@@ -129,9 +130,10 @@ class TestEvaluateModel(unittest.TestCase):
 
     metrics = evaluate_model.evaluate(self.model_path, tsv_path)
     self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
-    self.assertAlmostEqual(metrics['precision'], 1.0)
+    self.assertEqual(metrics['precision'], 1.0)
     self.assertAlmostEqual(metrics['recall'], 2 / 3)
     self.assertAlmostEqual(metrics['fscore'], 0.8)
+    self.assertEqual(len(metrics['errors']), 2)
 
 
 if __name__ == '__main__':
