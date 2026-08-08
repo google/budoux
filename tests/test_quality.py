@@ -28,7 +28,8 @@ from budoux.evaluate_model import evaluate  # noqa (module hack)
 class TestQuality(unittest.TestCase):
 
   def test_ja(self) -> None:
-    model_path = os.path.join(os.path.dirname(budoux.__file__), 'models', 'ja.json')
+    model_path = os.path.join(
+        os.path.dirname(budoux.__file__), 'models', 'ja.json')
     quality_path = os.path.join(os.path.dirname(__file__), 'quality', 'ja.tsv')
     res = evaluate(model_path, quality_path)
     errors = res['errors']

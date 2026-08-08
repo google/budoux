@@ -78,8 +78,7 @@ class TestEvaluateModel(unittest.TestCase):
       f.write(test_content)
 
     metrics = evaluate(
-        pathlib.Path(self.model_path), pathlib.Path(self.test_data_path)
-    )
+        pathlib.Path(self.model_path), pathlib.Path(self.test_data_path))
 
     self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
 
