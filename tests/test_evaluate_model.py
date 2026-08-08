@@ -11,20 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests the model evaluation script."""
+"""Tests the model evaluation module."""
 
 import json
 import os
+import pathlib
 import sys
 import tempfile
 import unittest
 
-# module hack to allow importing scripts and budoux from workspace root
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
+# module hack to allow importing budoux from workspace root
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux  # noqa: E402
-from scripts import evaluate_model  # noqa (module hack)
+from budoux.evaluate_model import evaluate  # noqa: E402
 
 
 class TestEvaluateModel(unittest.TestCase):
@@ -64,12 +65,22 @@ class TestEvaluateModel(unittest.TestCase):
     with open(self.test_data_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
-    metrics = evaluate_model.evaluate(self.model_path, self.test_data_path)
+    metrics = evaluate(self.model_path, self.test_data_path)
 
     self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
     self.assertAlmostEqual(metrics['precision'], 1.0)
     self.assertAlmostEqual(metrics['recall'], 2 / 3)
     self.assertAlmostEqual(metrics['fscore'], 0.8)
+
+  def test_evaluate_model_pathlike(self) -> None:
+    test_content = f'B{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+    with open(self.test_data_path, 'w', encoding='utf-8') as f:
+      f.write(test_content)
+
+    metrics = evaluate(
+        pathlib.Path(self.model_path), pathlib.Path(self.test_data_path))
+
+    self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
 
   def test_evaluate_model_literal_slashes(self) -> None:
     # Verify that literal slashes are treated strictly as text characters
@@ -90,7 +101,7 @@ class TestEvaluateModel(unittest.TestCase):
     with open(self.test_data_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
-    metrics = evaluate_model.evaluate(self.model_path, self.test_data_path)
+    metrics = evaluate(self.model_path, self.test_data_path)
 
     self.assertAlmostEqual(metrics['accuracy'], 0.4)
     self.assertAlmostEqual(metrics['precision'], 0.0)
@@ -110,7 +121,7 @@ class TestEvaluateModel(unittest.TestCase):
     with open(self.test_data_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
-    metrics = evaluate_model.evaluate(self.model_path, self.test_data_path)
+    metrics = evaluate(self.model_path, self.test_data_path)
 
     self.assertEqual(metrics['accuracy'], 1.0)
     self.assertEqual(metrics['precision'], 1.0)
@@ -128,7 +139,7 @@ class TestEvaluateModel(unittest.TestCase):
     with open(tsv_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
-    metrics = evaluate_model.evaluate(self.model_path, tsv_path)
+    metrics = evaluate(self.model_path, tsv_path)
     self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
     self.assertEqual(metrics['precision'], 1.0)
     self.assertAlmostEqual(metrics['recall'], 2 / 3)
