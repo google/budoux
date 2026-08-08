@@ -46,6 +46,7 @@ dev = [
     "yapf",
     "jax>=0.9.0; python_version >= '3.12'",
     "pyrefly>=1.2.0",
+    "ruff>=0.16.2",
 ]
 
 [project.scripts]
@@ -73,3 +74,33 @@ based_on_style = "yapf"
 [tool.pyrefly]
 python-version = "3.12"
 preset = "legacy"
+
+[tool.ruff.lint]
+ignore = [
+    "C401", # Unnecessary generator (rewrite as a set comprehension)
+    "C402", # Unnecessary generator (rewrite as a dict comprehension)
+    "C408", # Unnecessary `dict()` call (rewrite as a literal)
+    "C419", # Unnecessary list comprehension
+    "EXE001", # Shebang is present but file is not executable
+    "FURB122", # [*] Use of `f.write` in a for loop
+    "PIE804", # [*] Unnecessary `dict` kwargs
+    "PLR1722", # Use `sys.exit()` instead of `exit`
+    "PYI034", # `__enter__` methods in classes like `ColabRunner` usually return `self` at runtime
+    "PYI036", # The argument in `__exit__` should be annotated with `object` or `type[BaseException] | None`
+    "RUF012", # Mutable default value for class attribute
+    "RUF100", # [*] Unused `noqa` directive
+    "SIM115", # Use a context manager for opening files
+    "SIM117", # [*] Use a single `with` statement with multiple contexts instead of nested `with` statements
+    "SIM118", # Use `key in dict` instead of `key in dict.keys()`
+    "SIM201", # Use `...` instead of `...`
+    "TRY002", # Create your own exception
+    "TRY004", # Prefer `TypeError` exception for invalid type
+    "UP004", # [*] Class `ElementState` inherits from `object`
+    "UP006", # [*] Use `dict` instead of `Dict` for type annotation
+    "UP007", # [*] Use `X | Y` for type annotations
+    "UP031", # Use format specifiers instead of percent format
+    "UP032", # [*] Use f-string instead of `format` call
+    "UP034", # [*] Avoid extraneous parentheses
+    "UP035", # `typing.List` is deprecated, use `list` instead
+    "UP045", # [*] Use `X | None` for type annotations
+]
