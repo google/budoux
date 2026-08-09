@@ -36,6 +36,9 @@ jobs:
           checkName: python-style-check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run ruff check
+        run: |
+          ruff check
   typescript-style-check:
     runs-on: ubuntu-latest
     steps:
