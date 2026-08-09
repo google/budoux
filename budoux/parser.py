@@ -15,7 +15,6 @@
 
 import json
 import os
-import typing
 
 from .html_processor import get_text, resolve
 
@@ -32,7 +31,7 @@ class Parser:
     _model: A dict mapping a feature (str) and its score (int).
   """
 
-  def __init__(self, model: typing.Dict[str, typing.Dict[str, int]]):
+  def __init__(self, model: dict[str, dict[str, int]]):
     """Initializes the parser.
 
     Args:
@@ -42,10 +41,10 @@ class Parser:
     self._base_score = -sum(sum(g.values()) for g in self._model.values()) * 0.5
 
   @property
-  def model(self) -> typing.Dict[str, typing.Dict[str, int]]:
+  def model(self) -> dict[str, dict[str, int]]:
     return self._model
 
-  def parse(self, sentence: str) -> typing.List[str]:
+  def parse(self, sentence: str) -> list[str]:
     """Parses the input sentence and returns a list of semantic chunks.
 
     Args:

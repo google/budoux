@@ -20,22 +20,12 @@ jobs:
           pip install --upgrade pip
           pip install ".[dev]"
           pip install ".[jaxcpu]"
-      - name: Run isort
-        run: |
-          isort --diff --check .
       - name: Run yapf
         run: |
           yapf --diff --recursive budoux tests scripts
       - name: Run pyrefly
         run: |
           pyrefly check
-      - name: Run flake8
-        if: ${{ always() }}
-        uses: suo/flake8-github-action@3e87882219642e01aa8a6bbd03b4b0adb8542c2a
-        with:
-          checkName: python-style-check
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run ruff check
         run: |
           ruff check

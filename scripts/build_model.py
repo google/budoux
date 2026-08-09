@@ -19,11 +19,9 @@ output by the `train.py` script.
 
 import argparse
 import json
-import typing
 
 
-def aggregate_scores(
-    weights: typing.List[str]) -> typing.Dict[str, typing.Dict[str, float]]:
+def aggregate_scores(weights: list[str]) -> dict[str, dict[str, float]]:
   """Exports the model by aggregating the weight scores.
 
   Args:
@@ -32,7 +30,7 @@ def aggregate_scores(
   Returns:
     model (Dict[string, Dict[string, float]]) The exported model.
   """
-  decision_trees: typing.Dict[str, typing.Dict[str, float]] = dict()
+  decision_trees: dict[str, dict[str, float]] = dict()
   for row in weights:
     row = row.strip()
     if not row:
@@ -46,8 +44,8 @@ def aggregate_scores(
   return decision_trees
 
 
-def round_model(model: typing.Dict[str, typing.Dict[str, float]],
-                scale: int) -> typing.Dict[str, typing.Dict[str, int]]:
+def round_model(model: dict[str, dict[str, float]],
+                scale: int) -> dict[str, dict[str, int]]:
   """Rounds the scores in the model to integer after scaling.
 
   Args:
@@ -57,7 +55,7 @@ def round_model(model: typing.Dict[str, typing.Dict[str, float]],
   Returns:
     model_rounded (Dict[str, Dict[str, int]]) The rounded model.
   """
-  model_rounded: typing.Dict[str, typing.Dict[str, int]] = dict()
+  model_rounded: dict[str, dict[str, int]] = dict()
   for feature_group, features in model.items():
     for feature_content, score in features.items():
       scaled_score = int(score * scale)
@@ -67,8 +65,7 @@ def round_model(model: typing.Dict[str, typing.Dict[str, float]],
   return model_rounded
 
 
-def parse_args(
-    test: typing.Optional[typing.List[str]] = None) -> argparse.Namespace:
+def parse_args(test: list[str] | None = None) -> argparse.Namespace:
   """Parses commandline arguments.
 
   Args:

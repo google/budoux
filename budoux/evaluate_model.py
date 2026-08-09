@@ -28,12 +28,12 @@ class EvaluationMetrics(typing.TypedDict):
   precision: float
   recall: float
   fscore: float
-  errors: typing.List[typing.Tuple[str, str]]
+  errors: list[tuple[str, str]]
 
 
 def evaluate(
-    model_path: typing.Union[str, os.PathLike],
-    test_data_path: typing.Union[str, os.PathLike],
+    model_path: str | os.PathLike,
+    test_data_path: str | os.PathLike,
 ) -> EvaluationMetrics:
   """Loads the JSON model and evaluates it against the test dataset.
 
@@ -59,7 +59,7 @@ def evaluate(
   tn = 0
   fp = 0
   fn = 0
-  errors: typing.List[typing.Tuple[str, str]] = []
+  errors: list[tuple[str, str]] = []
 
   is_tsv = test_data_path_str.endswith('.tsv')
   with open(test_data_path_str, encoding='utf-8') as f:
@@ -76,8 +76,8 @@ def evaluate(
 
       # Parse raw characters and ground truth break positions
 
-      raw_chars: typing.List[str] = []
-      ground_truth_breaks: typing.List[bool] = []
+      raw_chars: list[str] = []
+      ground_truth_breaks: list[bool] = []
       next_is_break = False
       for char in line:
         if char == utils.SEP:

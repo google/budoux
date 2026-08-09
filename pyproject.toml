@@ -33,9 +33,7 @@ jaxcpu = [
 ]
 dev = [
     "build",
-    "flake8",
     "google-genai",
-    "isort",
     "pydantic",
     "pytest",
     "regex",
@@ -76,7 +74,24 @@ python-version = "3.12"
 preset = "legacy"
 
 [tool.ruff.lint]
+extend-select = [
+    "I",
+    "E",
+    "W",
+    "F",
+    "UP",
+    "RUF",
+]
 ignore = [
+    "E402", # Module level import not at top of file (module hack)
+    "E501", # Line too long (handled by yapf)
+    "RUF001", # String contains ambiguous character (e.g. fullwidth punctuation in test data)
+    "RUF005", # Consider iterable unpacking instead of concatenation
+    "RUF012", # Mutable default value for class attribute
+    "UP015", # Unnecessary mode argument (e.g. open(..., 'r'))
+    "UP031", # Use format specifiers instead of percent format
+    "UP032", # [*] Use f-string instead of `format` call
+    "UP034", # [*] Avoid extraneous parentheses
     "C401", # Unnecessary generator (rewrite as a set comprehension)
     "C402", # Unnecessary generator (rewrite as a dict comprehension)
     "C408", # Unnecessary `dict()` call (rewrite as a literal)
@@ -87,20 +102,10 @@ ignore = [
     "PLR1722", # Use `sys.exit()` instead of `exit`
     "PYI034", # `__enter__` methods in classes like `ColabRunner` usually return `self` at runtime
     "PYI036", # The argument in `__exit__` should be annotated with `object` or `type[BaseException] | None`
-    "RUF012", # Mutable default value for class attribute
-    "RUF100", # [*] Unused `noqa` directive
     "SIM115", # Use a context manager for opening files
     "SIM117", # [*] Use a single `with` statement with multiple contexts instead of nested `with` statements
     "SIM118", # Use `key in dict` instead of `key in dict.keys()`
     "SIM201", # Use `...` instead of `...`
     "TRY002", # Create your own exception
     "TRY004", # Prefer `TypeError` exception for invalid type
-    "UP004", # [*] Class `ElementState` inherits from `object`
-    "UP006", # [*] Use `dict` instead of `Dict` for type annotation
-    "UP007", # [*] Use `X | Y` for type annotations
-    "UP031", # Use format specifiers instead of percent format
-    "UP032", # [*] Use f-string instead of `format` call
-    "UP034", # [*] Avoid extraneous parentheses
-    "UP035", # `typing.List` is deprecated, use `list` instead
-    "UP045", # [*] Use `X | None` for type annotations
 ]

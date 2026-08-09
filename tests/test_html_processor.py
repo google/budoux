@@ -21,7 +21,7 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import html_processor  # noqa (module hack)
+from budoux import html_processor
 
 
 class TestTextContentExtractor(unittest.TestCase):

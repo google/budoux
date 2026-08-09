@@ -26,7 +26,7 @@ import pytest
 LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, LIB_PATH)
 
-from scripts import run_training_pipeline  # noqa: E402
+from scripts import run_training_pipeline
 
 
 class TestRunTrainingPipeline(unittest.TestCase):

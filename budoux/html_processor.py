@@ -16,20 +16,19 @@
 import json
 import os
 import queue
-import typing
 from html.parser import HTMLParser
 
 from .utils import SEP
 
-HTMLAttr = typing.List[typing.Tuple[str, typing.Union[str, None]]]
+HTMLAttr = list[tuple[str, str | None]]
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: anywhere;'
 with open(
     os.path.join(os.path.dirname(__file__), 'skip_nodes.json'),
     encoding='utf-8') as f:
-  SKIP_NODES: typing.Set[str] = set(json.load(f))
+  SKIP_NODES: set[str] = set(json.load(f))
 
 
-class ElementState(object):
+class ElementState:
   """Represents the state for an element.
 
   Attributes:
@@ -62,7 +61,7 @@ class HTMLChunkResolver(HTMLParser):
   """
   output = ''
 
-  def __init__(self, chunks: typing.List[str], separator: str):
+  def __init__(self, chunks: list[str], separator: str):
     """Initializes the parser.
 
     Args:
@@ -132,9 +131,7 @@ def get_text(html: str) -> str:
   return text_content_extractor.output
 
 
-def resolve(phrases: typing.List[str],
-            html: str,
-            separator: str = '\u200b') -> str:
+def resolve(phrases: list[str], html: str, separator: str = '\u200b') -> str:
   """Wraps phrases in the HTML string with non-breaking markup.
 
   Args:

@@ -15,15 +15,14 @@
 
 import os
 import sys
-import typing
 import unittest
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import utils  # noqa (module hack)
-from scripts import encode_data  # noqa (module hack)
+from budoux import utils
+from scripts import encode_data
 
 
 class TestGetFeature(unittest.TestCase):
@@ -56,7 +55,7 @@ class TestGetFeature(unittest.TestCase):
 
   def test_with_invalid(self) -> None:
 
-    def find_by_prefix(prefix: str, feature: typing.List[str]) -> bool:
+    def find_by_prefix(prefix: str, feature: list[str]) -> bool:
       for item in feature:
         if item.startswith(prefix):
           return True

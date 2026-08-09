@@ -24,8 +24,8 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-import budoux  # noqa: E402
-from budoux.evaluate_model import evaluate  # noqa: E402
+import budoux
+from budoux.evaluate_model import evaluate
 
 
 class TestEvaluateModel(unittest.TestCase):

@@ -24,11 +24,11 @@ from importlib import resources
 
 import budoux
 
-ArgList = typing.Optional[typing.List[str]]
+ArgList = list[str] | None
 # Using typing.Any for resource related objects to avoid complex conditional
 # imports for Traversable which varies across Python versions.
 models: typing.Any = resources.files('budoux') / "models"
-langs: typing.Dict[str, typing.Any] = {
+langs: dict[str, typing.Any] = {
     model.name[:-5]: model
     for model in models.iterdir()
     if model.name.endswith(".json")
