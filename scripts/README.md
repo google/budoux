@@ -52,7 +52,7 @@ flowchart TB
     subgraph P5 ["5. Unified QA Benchmark & Output Model"]
         direction TB
         BUILD_PY --> TEMP_MODEL["budoux/models/ja.json"]
-        TEMP_MODEL --> EVAL_PY["Model Benchmark Evaluation<br>(evaluate_model.py)"]
+        TEMP_MODEL --> EVAL_PY["Model Benchmark Evaluation<br>(python -m budoux.evaluate_model)"]
         
         REG_TSV -->|"1. Quality Suite Regression Check"| EVAL_PY
         KNBC_TEST -->|"2. Generalization F-score Measurement"| EVAL_PY

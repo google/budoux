@@ -17,14 +17,10 @@
 import argparse
 import json
 import os
-import sys
 import typing
 
-# module hack to allow importing budoux from parent directory
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
-
-import budoux  # noqa: E402
+from . import parser as parser_module
+from . import utils
 
 
 class EvaluationMetrics(typing.TypedDict):
@@ -35,23 +31,29 @@ class EvaluationMetrics(typing.TypedDict):
   errors: typing.List[typing.Tuple[str, str]]
 
 
-def evaluate(model_path: str, test_data_path: str) -> EvaluationMetrics:
+def evaluate(
+    model_path: typing.Union[str, os.PathLike],
+    test_data_path: typing.Union[str, os.PathLike],
+) -> EvaluationMetrics:
   """Loads the JSON model and evaluates it against the test dataset.
 
   Args:
-    model_path (str): Path to the compiled model JSON file.
-    test_data_path (str): Path to the test dataset file. Each line must contain
-      one sentence split by '▁' (U+2581). For '.tsv' files, comment lines
-      starting with '#' are ignored, and only the last column after tab
-      splitting is evaluated.
+    model_path (str | os.PathLike): Path to the compiled model JSON file.
+    test_data_path (str | os.PathLike): Path to the test dataset file. Each
+      line must contain one sentence split by '▁' (U+2581). For '.tsv' files,
+      comment lines starting with '#' are ignored, and only the last column
+      after tab splitting is evaluated.
 
   Returns:
     EvaluationMetrics: A dictionary containing precision, recall, accuracy,
       fscore, and errors.
   """
-  with open(model_path, encoding='utf-8') as f:
+  model_path_str = str(model_path)
+  test_data_path_str = str(test_data_path)
+
+  with open(model_path_str, encoding='utf-8') as f:
     model = json.load(f)
-  parser = budoux.Parser(model)
+  parser = parser_module.Parser(model)
 
   tp = 0
   tn = 0
@@ -59,8 +61,8 @@ def evaluate(model_path: str, test_data_path: str) -> EvaluationMetrics:
   fn = 0
   errors: typing.List[typing.Tuple[str, str]] = []
 
-  is_tsv = test_data_path.endswith('.tsv')
-  with open(test_data_path, encoding='utf-8') as f:
+  is_tsv = test_data_path_str.endswith('.tsv')
+  with open(test_data_path_str, encoding='utf-8') as f:
     for line in f:
       line = line.strip()
       if not line or line.startswith('#'):
@@ -78,7 +80,7 @@ def evaluate(model_path: str, test_data_path: str) -> EvaluationMetrics:
       ground_truth_breaks: typing.List[bool] = []
       next_is_break = False
       for char in line:
-        if char == budoux.utils.SEP:
+        if char == utils.SEP:
           next_is_break = True
         else:
           if raw_chars:
@@ -91,7 +93,7 @@ def evaluate(model_path: str, test_data_path: str) -> EvaluationMetrics:
 
       raw_sentence = ''.join(raw_chars)
       predicted_chunks = parser.parse(raw_sentence)
-      predicted_sentence = budoux.utils.SEP.join(predicted_chunks)
+      predicted_sentence = utils.SEP.join(predicted_chunks)
       if predicted_sentence != line:
         errors.append((line, predicted_sentence))
 
