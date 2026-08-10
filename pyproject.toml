@@ -88,9 +88,11 @@ extend-select = [
     "PLR1722",
     "EXE",
     "PYI",
-    "TRY",
+    "TRY002",
+    "TRY004",
 ]
 ignore = [
     "E402", # Module level import not at top of file (module hack)
     "E501", # Line too long (handled by yapf)
+    "RUF001", # String contains ambiguous character (e.g. fullwidth punctuation in test data)
 ]

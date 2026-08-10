@@ -122,7 +122,7 @@ def process(i: int, sentence: str, sep_indices: set[int], scale: int) -> str:
                         sentence[i + 1] if i + 1 < len(sentence) else INVALID,
                         sentence[i + 2] if i + 2 < len(sentence) else INVALID)
   positive = i in sep_indices
-  line = '\t'.join([f'{scale}' if positive else f'{-scale}'] + feature)
+  line = '\t'.join([f'{scale}' if positive else f'{-scale}', *feature])
   return line
 
 

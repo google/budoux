@@ -68,7 +68,7 @@ class TestRunTrainingPipeline(unittest.TestCase):
           weight_factor=1)
 
       self.assertTrue(os.path.exists(out_model))
-      with open(out_model, "r", encoding="utf-8") as f:
+      with open(out_model, encoding="utf-8") as f:
         model_data = json.load(f)
       self.assertIsInstance(model_data, dict)
 

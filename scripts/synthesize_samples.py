@@ -287,7 +287,7 @@ def run_agentic_synthesis_pipeline(
   if not parser:
     model_path = os.path.join(
         os.path.dirname(__file__), "..", "budoux", "models", f"{lang}.json")
-    with open(model_path, "r", encoding="utf-8") as f:
+    with open(model_path, encoding="utf-8") as f:
       parser = budoux.Parser(json.load(f))
 
   if not client and (issue_id or num_candidates > 0):
@@ -348,7 +348,7 @@ def run_agentic_synthesis_pipeline(
         os.path.dirname(__file__), "..", "tests", "quality", f"{lang}.tsv")
     if os.path.exists(quality_file):
       entry = f"gh{issue_id}\t{output_lines[0]}\n"
-      with open(quality_file, "r", encoding="utf-8") as f:
+      with open(quality_file, encoding="utf-8") as f:
         existing = f.read()
       if entry.strip() not in existing:
         with open(quality_file, "a", encoding="utf-8") as f:

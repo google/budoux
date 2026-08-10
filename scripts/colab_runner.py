@@ -83,7 +83,7 @@ class ColabRunner:
     Returns:
       CompletedProcess instance.
     """
-    cmd = [self.binary_path] + args
+    cmd = [self.binary_path, *args]
     print(f"[Colab CLI] Executing: {' '.join(cmd)}", flush=True)
     return subprocess.run(cmd, check=check, text=True, capture_output=False)
 
