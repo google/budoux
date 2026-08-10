@@ -14,7 +14,6 @@
 """Compiled model evaluation benchmark utility.
 """
 
-import argparse
 import json
 import os
 import typing
@@ -137,6 +136,8 @@ def evaluate(
 
 
 def main() -> None:
+  import argparse
+
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       '-m',
