@@ -80,8 +80,12 @@ class TestArgParse(unittest.TestCase):
 class TestPreprocess(unittest.TestCase):
 
   def test_standard_setup(self) -> None:
-    train_data_path = tempfile.NamedTemporaryFile().name
-    val_data_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      train_data_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      val_data_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(train_data_path, 'w') as f:
       f.write('1\tfoo\tbar\n'
               '-1\tfoo\n'
@@ -118,10 +122,12 @@ class TestPreprocess(unittest.TestCase):
       self.assertEqual(val_dataset.X_rows.tolist(), [0, 0, 2])
       self.assertEqual(val_dataset.X_cols.tolist(), [1, 2, 0])
     else:
-      raise ValueError('val_dataset is not an instance of Dataset.')
+      raise TypeError('val_dataset is not an instance of Dataset.')
 
   def test_no_val(self) -> None:
-    train_data_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      train_data_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(train_data_path, 'w') as f:
       f.write('1\tfoo\tbar\n'
               '-1\tfoo\n'
@@ -204,8 +210,12 @@ class TestUpdate(unittest.TestCase):
 class TestFit(unittest.TestCase):
 
   def test_fit(self) -> None:
-    weights_file_path = tempfile.NamedTemporaryFile().name
-    log_file_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
     X = jnp.array([
@@ -253,14 +263,14 @@ class TestFit(unittest.TestCase):
     self.assertEqual(scores.shape[0], len(features))
     loaded_scores = jnp.array([model.get(feature, 0) for feature in features])
     self.assertTrue(jnp.all(jnp.isclose(scores, loaded_scores)))
-    os.remove(weights_file_path)
-    os.remove(log_file_path)
 
 
 class TestExtractFeatures(unittest.TestCase):
 
   def test_with_standard_setup(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      entries_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
       f.write('1\tfoo\tbar\n'
               '-1\tfoo\n'
@@ -271,7 +281,9 @@ class TestExtractFeatures(unittest.TestCase):
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
   def test_with_redundant_breaks(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      entries_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
       f.write('1\tfoo\tbar\n'
               '-1\tfoo\n'
@@ -283,7 +295,9 @@ class TestExtractFeatures(unittest.TestCase):
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
   def test_with_weighted_entries(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      entries_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
       f.write('2\tfoo\n'
               '-3\tbar\n'
@@ -295,7 +309,9 @@ class TestExtractFeatures(unittest.TestCase):
 class TestLoadDataset(unittest.TestCase):
 
   def test_with_standard_setup(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      entries_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
       f.write('1\tfoo\tbar\n'
               '-1\tfoo\n'
@@ -312,7 +328,9 @@ class TestLoadDataset(unittest.TestCase):
     self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
 
   def test_with_redundant_breaks(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      entries_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
       f.write('1\tfoo\tbar\n'
               '-1\tfoo\n'
@@ -330,7 +348,9 @@ class TestLoadDataset(unittest.TestCase):
     self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
 
   def test_with_weighted_samples(self) -> None:
-    entries_file_path = tempfile.NamedTemporaryFile().name
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      entries_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
       f.write('1\tfoo\tbar\n'
               '-14\tfoo\n'

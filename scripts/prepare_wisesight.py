@@ -58,7 +58,7 @@ def main() -> None:
       line = re.sub(r'\|+', '|', line)  # Remove consecutive separators
       line = re.sub(r'(\|\s)*\|$', '', line)  # Remove redundant spaces
       outfile.write(line.replace('|', '▁') + '\n')  # Replace the separators.
-  print('\033[92mTraining data is output to: %s\033[0m' % (target_filepath))
+  print(f'\033[92mTraining data is output to: {target_filepath}\033[0m')
 
 
 if __name__ == '__main__':

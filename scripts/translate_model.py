@@ -79,7 +79,7 @@ def normalize(model: dict[str, typing.Any]) -> dict[str, dict[str, int]]:
         for groups in model.values()
         for v in groups.values())), 'Scores should be integers'
   except (AssertionError, AttributeError) as e:
-    raise Exception('Unsupported model format:', e)
+    raise ValueError(f'Unsupported model format: {e}')
   else:
     return model
 
