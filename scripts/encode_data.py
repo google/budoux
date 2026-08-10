@@ -158,8 +158,7 @@ def main(test: ArgList = None) -> None:
     lines = p.map(func, range(1, len(sentence) + 1))
 
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
-    for line in lines:
-      f.write(line + '\n')
+    f.writelines(line + '\n' for line in lines)
 
   print('\033[92mEncoded training data is out at: %s\033[0m' % entries_filename)
 

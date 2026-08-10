@@ -125,10 +125,11 @@ class TestRunAgenticSynthesisPipeline(unittest.TestCase):
 
   def test_run_pipeline_raises_without_env_or_client(self) -> None:
     mock_parser = MagicMock(spec=budoux.Parser)
-    with patch.dict(os.environ, {"GEMINI_API_KEY": ""}, clear=True):
-      with self.assertRaises(RuntimeError):
-        synthesize_samples.run_agentic_synthesis_pipeline(
-            input_str="いよいよ/はじまる", client=None, parser=mock_parser)
+    with patch.dict(
+        os.environ, {"GEMINI_API_KEY": ""},
+        clear=True), self.assertRaises(RuntimeError):
+      synthesize_samples.run_agentic_synthesis_pipeline(
+          input_str="いよいよ/はじまる", client=None, parser=mock_parser)
 
   @patch("scripts.synthesize_samples.generate_oversample_candidates")
   @patch("scripts.synthesize_samples.prune_linguistic_anomalies")

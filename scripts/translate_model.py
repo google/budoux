@@ -46,7 +46,7 @@ def translate_icu(model: dict[str, dict[str, int]]) -> str:
   output = 'jaml {\n'
   for group_name, members in sorted(model.items()):
     output += f'{indent}{group_name}Keys {{\n'
-    for key in members.keys():
+    for key in members:
       output += f'{indent}{indent}"{key}",\n'
     output += f'{indent}}}\n'
     output += f'{indent}{group_name}Values:intvector {{\n'
@@ -65,21 +65,19 @@ def normalize(model: dict[str, typing.Any]) -> dict[str, dict[str, int]]:
   Returns:
     An updated model.
   """
-  is_old_format = all([isinstance(v, int) for v in model.values()])
+  is_old_format = all(isinstance(v, int) for v in model.values())
   if is_old_format:
     output = {}
     sorted_items = sorted(model.items(), key=lambda x: x[0])
     groups = itertools.groupby(sorted_items, key=lambda x: x[0].split(':')[0])
     for group in groups:
-      output[group[0]] = dict(
-          (item[0].split(':')[-1], item[1]) for item in group[1])
+      output[group[0]] = {item[0].split(':')[-1]: item[1] for item in group[1]}
     return output
   try:
-    assert (all([
+    assert (all(
         isinstance(v, int)
         for groups in model.values()
-        for v in groups.values()
-    ])), 'Scores should be integers'
+        for v in groups.values())), 'Scores should be integers'
   except (AssertionError, AttributeError) as e:
     raise Exception('Unsupported model format:', e)
   else:

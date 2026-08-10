@@ -206,8 +206,7 @@ def process_knbc(
     sentences.append(utils.SEP.join(chunks))
 
   with open(outfile, 'w', encoding='utf-8') as f:
-    for s in sentences:
-      f.write(s + '\n')
+    f.writelines(s + '\n' for s in sentences)
   print('\033[92mFull training data is output to: %s\033[0m' % (outfile))
 
   if split_dir:
@@ -240,8 +239,7 @@ def process_knbc(
         (test_path, test_sentences),
     ]:
       with open(path, 'w', encoding='utf-8') as f:
-        for line in split_lines:
-          f.write(line + '\n')
+        f.writelines(line + '\n' for line in split_lines)
 
     print(
         '\033[92m3-Way split dataset written to %s:\n  Train: %s (%d lines)\n  Val:   %s (%d lines)\n  Test:  %s (%d lines)\033[0m'

@@ -48,17 +48,16 @@ def main() -> None:
   source_filepath = args.source_filepath
   target_filepath = args.outfile
 
-  with open(target_filepath, 'w') as outfile:
-    with open(source_filepath) as infile:
-      for line in infile:
-        line = line.strip()
-        line = re.sub(r'https?://[^ ]+', '', line)  # Remove URLs
-        line = re.sub(r'#[^ ]+', '', line)  # Remove hashtags
-        line = regex.compile(r'\p{Emoji_Presentation=Yes}+').sub(
-            '', line)  # Remove emojis
-        line = re.sub(r'\|+', '|', line)  # Remove consecutive separators
-        line = re.sub(r'(\|\s)*\|$', '', line)  # Remove redundant spaces
-        outfile.write(line.replace('|', '▁') + '\n')  # Replace the separators.
+  with open(target_filepath, 'w') as outfile, open(source_filepath) as infile:
+    for line in infile:
+      line = line.strip()
+      line = re.sub(r'https?://[^ ]+', '', line)  # Remove URLs
+      line = re.sub(r'#[^ ]+', '', line)  # Remove hashtags
+      line = regex.compile(r'\p{Emoji_Presentation=Yes}+').sub(
+          '', line)  # Remove emojis
+      line = re.sub(r'\|+', '|', line)  # Remove consecutive separators
+      line = re.sub(r'(\|\s)*\|$', '', line)  # Remove redundant spaces
+      outfile.write(line.replace('|', '▁') + '\n')  # Replace the separators.
   print('\033[92mTraining data is output to: %s\033[0m' % (target_filepath))
 
 
