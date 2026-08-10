@@ -160,10 +160,7 @@ def _main(test: ArgList = None) -> str:
 
   parser = budoux.Parser(model)
   if args.html:
-    if args.text is None:
-      inputs_html = sys.stdin.read()
-    else:
-      inputs_html = args.text
+    inputs_html = sys.stdin.read() if args.text is None else args.text
     res = parser.translate_html_string(inputs_html)
   else:
     if args.text is None:

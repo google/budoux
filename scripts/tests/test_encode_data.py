@@ -56,10 +56,7 @@ class TestGetFeature(unittest.TestCase):
   def test_with_invalid(self) -> None:
 
     def find_by_prefix(prefix: str, feature: list[str]) -> bool:
-      for item in feature:
-        if item.startswith(prefix):
-          return True
-      return False
+      return any(item.startswith(prefix) for item in feature)
 
     feature = encode_data.get_feature('a', 'a', encode_data.INVALID, 'a', 'a',
                                       'a')

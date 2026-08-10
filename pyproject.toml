@@ -75,25 +75,18 @@ preset = "legacy"
 
 [tool.ruff.lint]
 extend-select = [
-    "C401",
-    "C402",
-    "C408",
-    "C419",
-    "EXE001",
-    "FURB122",
-    "PIE804",
-    "PLR1722",
-    "SIM117",
-    "SIM118",
-    "SIM201",
-    "UP032",
-    "UP034",
     "I",
     "E",
     "W",
     "F",
     "UP",
     "RUF",
+    "C4",
+    "SIM",
+    "FURB",
+    "PIE",
+    "PLR1722",
+    "EXE",
 ]
 ignore = [
     "E402", # Module level import not at top of file (module hack)
