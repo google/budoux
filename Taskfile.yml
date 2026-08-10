@@ -1,0 +1,63 @@
+version: '3'
+
+tasks:
+  build-demo:
+    desc: Build the demo application
+    cmds:
+      - npm install
+      - cd ../demo && npm install
+      - cd ../demo && npm run build
+    dir: javascript
+
+  test-java:
+    desc: Run Java unit tests
+    cmds:
+      - mvn --batch-mode --update-snapshots -f ./java/pom.xml package
+
+  test-javascript:
+    desc: Run JavaScript unit tests
+    dir: javascript
+    cmds:
+      - npm install
+      - npm link
+      - npm run build --if-present
+      - npm test
+
+  test-python:
+    desc: Run Python unit tests
+    cmds:
+      - pytest ./tests
+
+  test-python-jax:
+    desc: Run Python unit tests with Jax
+    cmds:
+      - pytest ./scripts/tests
+
+  style-python:
+    desc: Run Python style checks
+    cmds:
+      - yapf --diff --recursive budoux tests scripts
+      - pyrefly check
+      - ruff check
+
+  style-typescript:
+    desc: Run TypeScript style checks
+    dir: javascript
+    cmds:
+      - npm install
+      - npm run lint
+
+  style-markdown:
+    desc: Run Markdown style check
+    cmds:
+      - npx markdownlint-cli '**/*.md' -c .markdownlint.yaml
+
+  train-ja-knbc:
+    desc: Train Japanese Model (KNBC)
+    cmds:
+      - curl -o knbc.tar.bz2 https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2
+      - tar -xf knbc.tar.bz2
+      - python scripts/prepare_knbc.py KNBC_v1.0_090925_utf8 -o source_knbc.txt
+      - python scripts/encode_data.py source_knbc.txt -o encoded_knbc.txt
+      - python scripts/train.py encoded_knbc.txt -o weights_knbc.txt --iter 100000
+      - python scripts/build_model.py weights_knbc.txt -o model.json

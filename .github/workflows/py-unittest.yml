@@ -26,6 +26,10 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
       - name: Setup python ${{ matrix.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -35,10 +39,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[dev]"
       - name: Run unittest
-        run: pytest ./tests
+        run: task test-python
       - name: Install Jax
         if:  ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.10' }}
         run: pip install ".[jaxcpu]"
       - name: Run unittest with Jax
         if:  ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.10' }}
-        run: pytest ./scripts/tests
+        run: task test-python-jax

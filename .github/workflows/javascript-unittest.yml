@@ -3,9 +3,11 @@ on:
   push:
     paths:
       - 'javascript/**'
+      - 'Taskfile.yml'
   pull_request:
     paths:
       - 'javascript/**'
+      - 'Taskfile.yml'
 permissions:
   contents: read
 
@@ -25,19 +27,13 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
       - name: Setup Node ${{ matrix.node-version }}
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Install Dependencies
-        run: npm install
-        working-directory: ./javascript
-      - name: Create symlink
-        run: npm link
-        working-directory: ./javascript
-      - name: Build package
-        run: npm run build --if-present
-        working-directory: ./javascript
       - name: Run testcases
-        run: npm test
-        working-directory: ./javascript
+        run: task test-javascript
