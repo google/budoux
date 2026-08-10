@@ -131,7 +131,7 @@ def preprocess(
         This becomes None if val_data_path is None.
   """
   features = extract_features(train_data_path, feature_thres)
-  feature_index = dict((feature, i) for i, feature in enumerate(features))
+  feature_index = {feature: i for i, feature in enumerate(features)}
   train_dataset = load_dataset(train_data_path, feature_index)
   val_dataset = load_dataset(val_data_path,
                              feature_index) if val_data_path else None

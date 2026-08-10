@@ -91,10 +91,8 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       prog="budoux",
       formatter_class=(lambda prog: BudouxHelpFormatter(
           prog,
-          **{
-              "width": shutil.get_terminal_size(fallback=(120, 50)).columns,
-              "max_help_position": 30,
-          },
+          width=shutil.get_terminal_size(fallback=(120, 50)).columns,
+          max_help_position=30,
       )),
       description=textwrap.dedent("""\
         BudouX is the successor to Budou,
@@ -145,7 +143,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       "-V",
       "--version",
       action="version",
-      version="%(prog)s {}".format(budoux.__version__),
+      version=f"%(prog)s {budoux.__version__}",
   )
   if test is not None:
     return parser.parse_args(test)
@@ -162,10 +160,7 @@ def _main(test: ArgList = None) -> str:
 
   parser = budoux.Parser(model)
   if args.html:
-    if args.text is None:
-      inputs_html = sys.stdin.read()
-    else:
-      inputs_html = args.text
+    inputs_html = sys.stdin.read() if args.text is None else args.text
     res = parser.translate_html_string(inputs_html)
   else:
     if args.text is None:
@@ -184,7 +179,7 @@ def main(test: ArgList = None) -> None:
   try:
     print(_main(test))
   except KeyboardInterrupt:
-    exit(0)
+    sys.exit(0)
 
 
 if __name__ == "__main__":

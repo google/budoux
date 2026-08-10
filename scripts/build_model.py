@@ -30,7 +30,7 @@ def aggregate_scores(weights: list[str]) -> dict[str, dict[str, float]]:
   Returns:
     model (Dict[string, Dict[string, float]]) The exported model.
   """
-  decision_trees: dict[str, dict[str, float]] = dict()
+  decision_trees: dict[str, dict[str, float]] = {}
   for row in weights:
     row = row.strip()
     if not row:
@@ -55,7 +55,7 @@ def round_model(model: dict[str, dict[str, float]],
   Returns:
     model_rounded (Dict[str, Dict[str, int]]) The rounded model.
   """
-  model_rounded: dict[str, dict[str, int]] = dict()
+  model_rounded: dict[str, dict[str, int]] = {}
   for feature_group, features in model.items():
     for feature_content, score in features.items():
       scaled_score = int(score * scale)

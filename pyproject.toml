@@ -81,6 +81,12 @@ extend-select = [
     "F",
     "UP",
     "RUF",
+    "C4",
+    "SIM",
+    "FURB",
+    "PIE",
+    "PLR1722",
+    "EXE",
 ]
 ignore = [
     "E402", # Module level import not at top of file (module hack)
@@ -90,22 +96,9 @@ ignore = [
     "RUF012", # Mutable default value for class attribute
     "UP015", # Unnecessary mode argument (e.g. open(..., 'r'))
     "UP031", # Use format specifiers instead of percent format
-    "UP032", # [*] Use f-string instead of `format` call
-    "UP034", # [*] Avoid extraneous parentheses
-    "C401", # Unnecessary generator (rewrite as a set comprehension)
-    "C402", # Unnecessary generator (rewrite as a dict comprehension)
-    "C408", # Unnecessary `dict()` call (rewrite as a literal)
-    "C419", # Unnecessary list comprehension
-    "EXE001", # Shebang is present but file is not executable
-    "FURB122", # [*] Use of `f.write` in a for loop
-    "PIE804", # [*] Unnecessary `dict` kwargs
-    "PLR1722", # Use `sys.exit()` instead of `exit`
     "PYI034", # `__enter__` methods in classes like `ColabRunner` usually return `self` at runtime
     "PYI036", # The argument in `__exit__` should be annotated with `object` or `type[BaseException] | None`
     "SIM115", # Use a context manager for opening files
-    "SIM117", # [*] Use a single `with` statement with multiple contexts instead of nested `with` statements
-    "SIM118", # Use `key in dict` instead of `key in dict.keys()`
-    "SIM201", # Use `...` instead of `...`
     "TRY002", # Create your own exception
     "TRY004", # Prefer `TypeError` exception for invalid type
 ]

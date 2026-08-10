@@ -29,7 +29,7 @@ def _reconstruct_text_from_unigram(features: str) -> str:
     if not feat.startswith('UW'):
       continue
     parts = feat.split(':', 1)
-    if not len(parts) == 2:
+    if len(parts) != 2:
       continue
     idx = int(parts[0][2:])
     unigrams[idx] = parts[1]

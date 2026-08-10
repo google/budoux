@@ -83,15 +83,15 @@ class TestPreprocess(unittest.TestCase):
     train_data_path = tempfile.NamedTemporaryFile().name
     val_data_path = tempfile.NamedTemporaryFile().name
     with open(train_data_path, 'w') as f:
-      f.write(('1\tfoo\tbar\n'
-               '-1\tfoo\n'
-               '1\tfoo\tbar\tbaz\n'
-               '1\tbar\tfoo\n'
-               '-1\tbaz\tqux\n'))
+      f.write('1\tfoo\tbar\n'
+              '-1\tfoo\n'
+              '1\tfoo\tbar\tbaz\n'
+              '1\tbar\tfoo\n'
+              '-1\tbaz\tqux\n')
     with open(val_data_path, 'w') as f:
-      f.write(('1\tbar\tbaz\n'
-               '-1\txyz\n'
-               '1\tabc\tqux\tfoo\n'))
+      f.write('1\tbar\tbaz\n'
+              '-1\txyz\n'
+              '1\tabc\tqux\tfoo\n')
     train_dataset, features, val_dataset = train.preprocess(
         train_data_path, 1, val_data_path)
 
@@ -123,11 +123,11 @@ class TestPreprocess(unittest.TestCase):
   def test_no_val(self) -> None:
     train_data_path = tempfile.NamedTemporaryFile().name
     with open(train_data_path, 'w') as f:
-      f.write(('1\tfoo\tbar\n'
-               '-1\tfoo\n'
-               '1\tfoo\tbar\tbaz\n'
-               '1\tbar\tfoo\n'
-               '-1\tbaz\tqux\n'))
+      f.write('1\tfoo\tbar\n'
+              '-1\tfoo\n'
+              '1\tfoo\tbar\tbaz\n'
+              '1\tbar\tfoo\n'
+              '-1\tbaz\tqux\n')
     train_dataset, features, val_dataset = train.preprocess(train_data_path, 1)
     self.assertEqual(features, ['foo', 'bar', 'baz'])
     self.assertEqual(train_dataset.Y.tolist(), [1, -1, 1, 1, -1])
@@ -242,7 +242,7 @@ class TestFit(unittest.TestCase):
         msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header'
     )
     self.assertEqual(
-        len(set(len(line) for line in log)),
+        len({len(line) for line in log}),
         1,
         msg='The header and the body should have the same number of columns.')
 
@@ -262,32 +262,32 @@ class TestExtractFeatures(unittest.TestCase):
   def test_with_standard_setup(self) -> None:
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
-      f.write(('1\tfoo\tbar\n'
-               '-1\tfoo\n'
-               '1\tfoo\tbar\tbaz\n'
-               '1\tbar\tfoo\n'
-               '-1\tbaz\tqux\n'))
+      f.write('1\tfoo\tbar\n'
+              '-1\tfoo\n'
+              '1\tfoo\tbar\tbaz\n'
+              '1\tbar\tfoo\n'
+              '-1\tbaz\tqux\n')
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
   def test_with_redundant_breaks(self) -> None:
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
-      f.write(('1\tfoo\tbar\n'
-               '-1\tfoo\n'
-               '1\tfoo\tbar\tbaz\n\n'
-               '1\tbar\tfoo\n'
-               '\n'
-               '-1\tbaz\tqux\n'))
+      f.write('1\tfoo\tbar\n'
+              '-1\tfoo\n'
+              '1\tfoo\tbar\tbaz\n\n'
+              '1\tbar\tfoo\n'
+              '\n'
+              '-1\tbaz\tqux\n')
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
   def test_with_weighted_entries(self) -> None:
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
-      f.write(('2\tfoo\n'
-               '-3\tbar\n'
-               '1\tbaz\n'))
+      f.write('2\tfoo\n'
+              '-3\tbar\n'
+              '1\tbaz\n')
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['bar', 'foo'])
 
@@ -297,11 +297,11 @@ class TestLoadDataset(unittest.TestCase):
   def test_with_standard_setup(self) -> None:
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
-      f.write(('1\tfoo\tbar\n'
-               '-1\tfoo\n'
-               '1\tfoo\tbar\tbaz\n'
-               '1\tbar\tfoo\n'
-               '-1\tbaz\tqux\n'))
+      f.write('1\tfoo\tbar\n'
+              '-1\tfoo\n'
+              '1\tfoo\tbar\tbaz\n'
+              '1\tbar\tfoo\n'
+              '-1\tbaz\tqux\n')
     result = train.load_dataset(entries_file_path, {
         'foo': 0,
         'bar': 1,
@@ -314,12 +314,12 @@ class TestLoadDataset(unittest.TestCase):
   def test_with_redundant_breaks(self) -> None:
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
-      f.write(('1\tfoo\tbar\n'
-               '-1\tfoo\n'
-               '1\tfoo\tbar\tbaz\n\n'
-               '1\tbar\tfoo\n'
-               '\n'
-               '-1\tbaz\tqux\n'))
+      f.write('1\tfoo\tbar\n'
+              '-1\tfoo\n'
+              '1\tfoo\tbar\tbaz\n\n'
+              '1\tbar\tfoo\n'
+              '\n'
+              '-1\tbaz\tqux\n')
     result = train.load_dataset(entries_file_path, {
         'foo': 0,
         'bar': 1,
@@ -332,11 +332,11 @@ class TestLoadDataset(unittest.TestCase):
   def test_with_weighted_samples(self) -> None:
     entries_file_path = tempfile.NamedTemporaryFile().name
     with open(entries_file_path, 'w') as f:
-      f.write(('1\tfoo\tbar\n'
-               '-14\tfoo\n'
-               '10\tfoo\tbar\tbaz\n'
-               '-11\tbar\tfoo\n'
-               '-1\tbaz\tqux\n'))
+      f.write('1\tfoo\tbar\n'
+              '-14\tfoo\n'
+              '10\tfoo\tbar\tbaz\n'
+              '-11\tbar\tfoo\n'
+              '-1\tbaz\tqux\n')
     result = train.load_dataset(entries_file_path, {
         'foo': 0,
         'bar': 1,
