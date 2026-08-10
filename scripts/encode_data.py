@@ -19,15 +19,14 @@ import itertools
 import multiprocessing
 import os
 import sys
-import typing
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import utils  # noqa (module hack)
+from budoux import utils
 
-ArgList = typing.Optional[typing.List[str]]
+ArgList = list[str] | None
 DEFAULT_OUTPUT_FILENAME = 'encoded_data.txt'
 
 INVALID = '▔'
@@ -35,7 +34,7 @@ INVALID = '▔'
 
 
 def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str,
-                w6: str) -> typing.List[str]:
+                w6: str) -> list[str]:
   """Generates a feature from characters around (w1-6).
 
   Args:
@@ -108,8 +107,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
     return parser.parse_args(test)
 
 
-def process(i: int, sentence: str, sep_indices: typing.Set[int],
-            scale: int) -> str:
+def process(i: int, sentence: str, sep_indices: set[int], scale: int) -> str:
   """Outputs an encoded line of features from the given index.
 
   Args:
@@ -128,7 +126,7 @@ def process(i: int, sentence: str, sep_indices: typing.Set[int],
   return line
 
 
-def normalize_input(data: str) -> typing.Tuple[str, typing.Set[int]]:
+def normalize_input(data: str) -> tuple[str, set[int]]:
   """Normalizes the input to one line with separators.
 
   Args:

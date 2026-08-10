@@ -22,7 +22,7 @@ from os.path import abspath, dirname, join
 LIB_PATH = join(dirname(__file__), '..')
 sys.path.insert(0, abspath(LIB_PATH))
 
-from budoux import main  # noqa (module hack)
+from budoux import main
 
 if isinstance(sys.stdin, io.TextIOWrapper):
   sys.stdin.reconfigure(encoding='utf-8')

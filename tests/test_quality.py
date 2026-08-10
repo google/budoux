@@ -21,8 +21,8 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-import budoux  # noqa (module hack)
-from budoux.evaluate_model import evaluate  # noqa (module hack)
+import budoux
+from budoux.evaluate_model import evaluate
 
 
 class TestQuality(unittest.TestCase):

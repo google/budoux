@@ -29,7 +29,7 @@ DEFAULT_LOG_NAME = 'train.log'
 DEFAULT_FEATURE_THRES = 10
 DEFAULT_ITERATION = 10000
 DEFAULT_OUT_SPAN = 100
-ArgList = typing.Optional[typing.List[str]]
+ArgList = list[str] | None
 
 
 class Result(NamedTuple):
@@ -55,7 +55,7 @@ class Dataset(NamedTuple):
   Y: jax.Array
 
 
-def extract_features(data_path: str, thres: int) -> typing.List[str]:
+def extract_features(data_path: str, thres: int) -> list[str]:
   """Extracts a features list from the given encoded data file. This filters out
      features whose number of occurrences does not exceed the threshold.
 
@@ -80,7 +80,7 @@ def extract_features(data_path: str, thres: int) -> typing.List[str]:
   return [item[0] for item in counter.most_common() if item[1] > thres]
 
 
-def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
+def load_dataset(data_path: str, findex: dict[str, int]) -> Dataset:
   """Loads a dataset from the given encoded data file.
 
   Args:
@@ -110,8 +110,8 @@ def load_dataset(data_path: str, findex: typing.Dict[str, int]) -> Dataset:
 def preprocess(
     train_data_path: str,
     feature_thres: int,
-    val_data_path: typing.Optional[str] = None,
-) -> typing.Tuple[Dataset, typing.List[str], typing.Optional[Dataset]]:
+    val_data_path: str | None = None,
+) -> tuple[Dataset, list[str], Dataset | None]:
   """Loads entries and translates them into JAX arrays. The boolean matrix of
   the input data is represented by row indices and column indices of True values
   instead of the matrix itself for memory efficiency, assuming the matrix is
@@ -192,7 +192,7 @@ def get_metrics(pred: jax.Array, actual: jax.Array) -> Result:
 
 @jax.jit
 def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
-           Y: jax.Array) -> typing.Tuple[jax.Array, jax.Array, int, float]:
+           Y: jax.Array) -> tuple[jax.Array, jax.Array, int, float]:
   """Calculates the new weight vector and the contribution scores.
 
   Args:
@@ -233,8 +233,8 @@ def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
   return w, scores, best_feature_index, score
 
 
-def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
-        features: typing.List[str], iters: int, weights_filename: str,
+def fit(dataset_train: Dataset, dataset_val: Dataset | None,
+        features: list[str], iters: int, weights_filename: str,
         log_filename: str, out_span: int) -> jax.Array:
   """Trains an AdaBoost binary classifier.
 
@@ -261,7 +261,7 @@ def fit(dataset_train: Dataset, dataset_val: typing.Optional[Dataset],
 
   M = len(features)
   scores = jnp.zeros(M)
-  feature_score_buffer: typing.List[typing.Tuple[str, float]] = []
+  feature_score_buffer: list[tuple[str, float]] = []
   N_train = dataset_train.Y.shape[0]
   N_test = dataset_val.Y.shape[0] if dataset_val else 0
   Y_train = dataset_train.Y > 0
@@ -380,7 +380,7 @@ def main() -> None:
   feature_thres = int(args.feature_thres)
   iterations = int(args.iter)
   out_span = int(args.out_span)
-  val_data: typing.Optional[str] = args.val_data
+  val_data: str | None = args.val_data
 
   dataset_train, features, dataset_val = preprocess(data_filename,
                                                     feature_thres, val_data)

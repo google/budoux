@@ -17,19 +17,18 @@ import math
 import os
 import sys
 import tempfile
-import typing
 import unittest
 
 import pytest
 
 pytest.importorskip("jax")
-from jax import numpy as jnp  # noqa: E402
+from jax import numpy as jnp
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from scripts import train  # noqa (module hack)
+from scripts import train
 
 
 class TestArgParse(unittest.TestCase):
@@ -247,7 +246,7 @@ class TestFit(unittest.TestCase):
         1,
         msg='The header and the body should have the same number of columns.')
 
-    model: typing.Dict[str, float] = {}
+    model: dict[str, float] = {}
     for weight in weights:
       model.setdefault(weight[0], 0)
       model[weight[0]] += float(weight[1])

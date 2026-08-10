@@ -21,13 +21,12 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-import typing
 import urllib.request
 
 LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, LIB_PATH)
 
-from scripts import colab_runner  # noqa: E402
+from scripts import colab_runner
 
 KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
 
@@ -41,7 +40,7 @@ def run_retraining_pipeline(
     weight_factor: int = 100,
     colab: bool = False,
     accelerator: str = "T4",
-    session_name: typing.Optional[str] = None,
+    session_name: str | None = None,
 ) -> None:
   """Executes end-to-end dataset preparation, JAX fitting, and validation."""
 

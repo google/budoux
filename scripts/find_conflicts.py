@@ -19,7 +19,6 @@ but different labels.
 
 import argparse
 from collections import defaultdict
-from typing import Dict
 
 
 def _reconstruct_text_from_unigram(features: str) -> str:
@@ -53,10 +52,10 @@ def find_conflicts(data_path: str,
       threshold: The minimum ratio to keep the majority label (default 1.0 = unanimity).
     """
 
-  features_to_pos_weight: Dict[str, int] = defaultdict(int)
-  features_to_neg_weight: Dict[str, int] = defaultdict(int)
-  features_to_pos_count: Dict[str, int] = defaultdict(int)
-  features_to_neg_count: Dict[str, int] = defaultdict(int)
+  features_to_pos_weight: dict[str, int] = defaultdict(int)
+  features_to_neg_weight: dict[str, int] = defaultdict(int)
+  features_to_pos_count: dict[str, int] = defaultdict(int)
+  features_to_neg_count: dict[str, int] = defaultdict(int)
   total_data_points = 0
 
   # First pass: identify conflicts

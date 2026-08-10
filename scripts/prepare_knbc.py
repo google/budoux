@@ -29,13 +29,13 @@ import os
 import random
 import sys
 from html.parser import HTMLParser
-from typing import Literal, Optional
+from typing import Literal
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import utils  # noqa (module hack)
+from budoux import utils
 
 GRANULARITY_OPTIONS = {'phrase', 'tag', 'word'}
 Granularity = Literal['phrase', 'tag', 'word']
@@ -71,7 +71,7 @@ class KNBCHTMLParser(HTMLParser):
     self.granularity = granularity
 
   def handle_starttag(self, tag: str,
-                      attributes: list[tuple[str, Optional[str]]]) -> None:
+                      attributes: list[tuple[str, str | None]]) -> None:
     if tag == 'tr':
       self.row += 1
       self.col = 0
@@ -185,7 +185,7 @@ def process_knbc(
     source_dir: str,
     outfile: str,
     granularity: Granularity = 'phrase',
-    split_dir: Optional[str] = None,
+    split_dir: str | None = None,
     val_ratio: float = 0.10,
     test_ratio: float = 0.10,
     seed: int = 42,

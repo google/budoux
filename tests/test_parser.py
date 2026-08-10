@@ -21,7 +21,7 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from budoux import parser  # noqa (module hack)
+from budoux import parser
 
 
 class TestParser(unittest.TestCase):

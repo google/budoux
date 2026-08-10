@@ -20,7 +20,7 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-from scripts import find_conflicts  # noqa (module hack)
+from scripts import find_conflicts
 
 
 class TestFindConflicts(unittest.TestCase):

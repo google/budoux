@@ -28,10 +28,10 @@ import itertools
 import json
 import typing
 
-ArgList = typing.Optional[typing.List[str]]
+ArgList = list[str] | None
 
 
-def translate_icu(model: typing.Dict[str, typing.Dict[str, int]]) -> str:
+def translate_icu(model: dict[str, dict[str, int]]) -> str:
   """Translates a model to the ICU Resource Bundle format.
 
   The output is intended to update the data in:
@@ -57,9 +57,7 @@ def translate_icu(model: typing.Dict[str, typing.Dict[str, int]]) -> str:
   return output
 
 
-def normalize(
-    model: typing.Dict[str,
-                       typing.Any]) -> typing.Dict[str, typing.Dict[str, int]]:
+def normalize(model: dict[str, typing.Any]) -> dict[str, dict[str, int]]:
   """Updates a model to the latest format. Does nothing if it's updated already.
 
   Args:
