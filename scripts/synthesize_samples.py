@@ -32,7 +32,7 @@ import sys
 from typing import Any
 
 # Module hack to allow importing budoux from repository root when run from CLI
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..")
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import requests
@@ -51,13 +51,15 @@ SEP = budoux.utils.SEP
 class IntentTarget(BaseModel):
   """Target bug remediation boundaries identified by Intent Understanding."""
 
-  target_phrase: str = Field(..., description="Raw target phrase string.")
-  expected_split: str = Field(..., description="Expected string separated with ▁.")
+  target_phrase: str = Field(..., description='Raw target phrase string.')
+  expected_split: str = Field(..., description='Expected string separated with ▁.')
   is_positive: bool = Field(
-    ..., description="True if forced break across slash, False if cohesive word."
+    ...,
+    description='True if forced break across slash, False if cohesive word.',
   )
   is_reproducible: bool = Field(
-    default=True, description="Whether current runtime model exhibits the reported bug."
+    default=True,
+    description='Whether current runtime model exhibits the reported bug.',
   )
 
 
@@ -70,15 +72,15 @@ class CandidateBatch(BaseModel):
 class ExpertEvaluation(BaseModel):
   """Evaluation assessment and local boundary polish for a candidate sentence."""
 
-  sentence: str = Field(..., description="Candidate sentence string under audit.")
+  sentence: str = Field(..., description='Candidate sentence string under audit.')
   is_fluent: bool = Field(
-    ..., description="True if candidate can be polished/retained naturally."
+    ..., description='True if candidate can be polished/retained naturally.'
   )
   corrected_sentence: str = Field(
-    "",
-    description="The polished candidate string with proper native boundary splits applied.",
+    '',
+    description='The polished candidate string with proper native boundary splits applied.',
   )
-  rejection_reason: str = Field("", description="Explanation if rejected.")
+  rejection_reason: str = Field('', description='Explanation if rejected.')
 
 
 class EvaluationBatch(BaseModel):
@@ -94,9 +96,9 @@ class EvaluationBatch(BaseModel):
 
 def parse_direct_input(input_str: str) -> IntentTarget:
   """Parses a direct --input parameter into an IntentTarget representation."""
-  normalized = input_str.strip().replace(" / ", SEP).replace("/", SEP)
+  normalized = input_str.strip().replace(' / ', SEP).replace('/', SEP)
   is_positive = SEP in normalized
-  raw = normalized.replace(SEP, "")
+  raw = normalized.replace(SEP, '')
   return IntentTarget(
     target_phrase=raw,
     expected_split=normalized,
@@ -107,14 +109,14 @@ def parse_direct_input(input_str: str) -> IntentTarget:
 
 def fetch_github_issue_context(issue_id: str, requests_mod: Any = requests) -> str:
   """Safely retrieves public GitHub issue description content."""
-  issue_num = re.sub(r"[^\d]", "", str(issue_id))
+  issue_num = re.sub(r'[^\d]', '', str(issue_id))
   if not issue_num:
-    raise ValueError(f"Invalid issue parameter value: {issue_id}")
-  url = f"https://api.github.com/repos/google/budoux/issues/{issue_num}"
+    raise ValueError(f'Invalid issue parameter value: {issue_id}')
+  url = f'https://api.github.com/repos/google/budoux/issues/{issue_num}'
   response = requests_mod.get(url, timeout=10)
   response.raise_for_status()
   data = response.json()
-  raw_body = str(data.get("body") or data.get("title") or "")
+  raw_body = str(data.get('body') or data.get('title') or '')
   return raw_body.strip()
 
 
@@ -124,7 +126,7 @@ def verify_bug_reproduction(target: IntentTarget, parser: budoux.Parser) -> bool
   Returns True if the current model segments the string improperly (bug confirmed).
   Returns False if the current model already achieves expected_split.
   """
-  clean_text = target.target_phrase.replace(SEP, "")
+  clean_text = target.target_phrase.replace(SEP, '')
   current_splits = parser.parse(clean_text)
   actual_output = SEP.join(current_splits)
   return actual_output != target.expected_split
@@ -146,20 +148,20 @@ def align_to_base_parser_splits(
     List of valid candidate strings aligned to base model segmentations outside the target interval.
   """
   surviving: list[str] = []
-  raw_target = target.target_phrase.replace(SEP, "")
+  raw_target = target.target_phrase.replace(SEP, '')
   if not raw_target:
     return surviving
 
   # Build the regex pattern once outside the loop to locate the target phrase in the parsed string
   char_patterns = [re.escape(char) for char in raw_target]
-  target_pattern = re.compile(f"[{SEP}]*".join(char_patterns))
+  target_pattern = re.compile(f'[{SEP}]*'.join(char_patterns))
 
   for sentence in candidates:
     if target.expected_split not in sentence:
       continue  # Filter: Discard if the targeted split sequence is missing
 
     # Align: Parse sentence with base model to get default production splits
-    clean_sentence = sentence.replace(SEP, "")
+    clean_sentence = sentence.replace(SEP, '')
     base_parsed = SEP.join(parser.parse(clean_sentence))
 
     # Overlay: Replace the target phrase region in base splits with the corrected split
@@ -179,7 +181,7 @@ def align_to_base_parser_splits(
 def extract_intent_target(
   issue_text: str,
   client: genai.Client,
-  model_name: str = "gemini-3.1-flash-lite",
+  model_name: str = 'gemini-3.1-flash-lite',
 ) -> IntentTarget:
   """Intent Understanding Agent: diagnoses target bug parameters from issue text."""
   prompt = f"""You are an expert BudouX segmentation analyst.
@@ -192,22 +194,22 @@ If a phrase was mistakenly split internally and should stay unbroken (e.g., 'も
 If a phrase needed a boundary across separate words that was missing or shifted (e.g., 'いよいよ/はじまる'), format expected_split inserting '▁' at the intended break location and set is_positive=True.
 """
   config = genai.types.GenerateContentConfig(
-    response_mime_type="application/json",
+    response_mime_type='application/json',
     response_schema=IntentTarget,
     temperature=0.1,
   )
   resp = client.models.generate_content(
     model=model_name, contents=prompt, config=config
   )
-  return IntentTarget.model_validate_json(resp.text or "")
+  return IntentTarget.model_validate_json(resp.text or '')
 
 
 def generate_oversample_candidates(
   target: IntentTarget,
   client: genai.Client,
   num_candidates: int = 30,
-  lang: str = "ja",
-  model_name: str = "gemini-3.1-flash-lite",
+  lang: str = 'ja',
+  model_name: str = 'gemini-3.1-flash-lite',
 ) -> list[str]:
   """Example Generator Agent: synthesizes diverse natural sentences cleanly across target lang."""
   prompt = f"""You are a skilled corpus synthesizer for target language code '{lang}'.
@@ -218,14 +220,14 @@ CRITICAL CONSTRAINTS:
 2. Maintain natural grammatical structures and standard Bunsetsu word boundaries across language '{lang}'.
 """
   config = genai.types.GenerateContentConfig(
-    response_mime_type="application/json",
+    response_mime_type='application/json',
     response_schema=CandidateBatch,
     temperature=0.4,
   )
   resp = client.models.generate_content(
     model=model_name, contents=prompt, config=config
   )
-  batch = CandidateBatch.model_validate_json(resp.text or "")
+  batch = CandidateBatch.model_validate_json(resp.text or '')
   return batch.candidates
 
 
@@ -233,14 +235,14 @@ def prune_linguistic_anomalies(
   candidates: list[str],
   client: genai.Client,
   max_keep: int = 15,
-  lang: str = "ja",
-  model_name: str = "gemini-3.1-flash-lite",
+  lang: str = 'ja',
+  model_name: str = 'gemini-3.1-flash-lite',
 ) -> list[str]:
   """Linguistic Expert Agent: polishes boundary alignment across candidates and audits fluency."""
   if not candidates:
     return []
 
-  lines_summary = [f"{i}. {s}" for i, s in enumerate(candidates)]
+  lines_summary = [f'{i}. {s}' for i, s in enumerate(candidates)]
   prompt = f"""You are an expert linguistic polisher and boundary arbiter for language '{lang}'.
 Review these candidate training sentences containing existing boundary splits marked by '▁':
 {chr(10).join(lines_summary)}
@@ -253,14 +255,14 @@ Your critical mission across three synthesized layers (existing base parser beha
    - Never alter or remove the canonical splits established inside the targeted phrase itself.
 """
   config = genai.types.GenerateContentConfig(
-    response_mime_type="application/json",
+    response_mime_type='application/json',
     response_schema=EvaluationBatch,
     temperature=0.1,
   )
   resp = client.models.generate_content(
     model=model_name, contents=prompt, config=config
   )
-  eval_batch = EvaluationBatch.model_validate_json(resp.text or "")
+  eval_batch = EvaluationBatch.model_validate_json(resp.text or '')
 
   kept: list[str] = []
   for e in eval_batch.evaluations:
@@ -281,8 +283,8 @@ def run_agentic_synthesis_pipeline(
   issue_id: str | None = None,
   num_candidates: int = 30,
   max_keep: int = 15,
-  lang: str = "ja",
-  outfile: str = "staging_raw.txt",
+  lang: str = 'ja',
+  outfile: str = 'staging_raw.txt',
   save_dataset: bool = False,
   append_quality: bool = False,
   client: genai.Client | None = None,
@@ -291,15 +293,15 @@ def run_agentic_synthesis_pipeline(
   """Orchestrates Intent Understanding, Oversample Generation, and Expert Pruning."""
   if not parser:
     model_path = os.path.join(
-      os.path.dirname(__file__), "..", "budoux", "models", f"{lang}.json"
+      os.path.dirname(__file__), '..', 'budoux', 'models', f'{lang}.json'
     )
-    with open(model_path, encoding="utf-8") as f:
+    with open(model_path, encoding='utf-8') as f:
       parser = budoux.Parser(json.load(f))
 
   if not client and (issue_id or num_candidates > 0):
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    api_key = os.environ.get('GEMINI_API_KEY', '').strip()
     if not api_key:
-      raise RuntimeError("GEMINI_API_KEY environment variable not set or empty.")
+      raise RuntimeError('GEMINI_API_KEY environment variable not set or empty.')
     client = genai.Client(api_key=api_key)
 
   # Step 1: Intent & Bug Verification
@@ -331,78 +333,81 @@ def run_agentic_synthesis_pipeline(
   final_candidates = prune_linguistic_anomalies(
     aligned_candidates, client, max_keep=max_keep, lang=lang
   )
-  print(f"[Expert Agent] Pruned to {len(final_candidates)} high-confidence rows.")
+  print(f'[Expert Agent] Pruned to {len(final_candidates)} high-confidence rows.')
 
   output_lines = final_candidates
   if outfile:
-    with open(outfile, "w", encoding="utf-8") as f:
-      f.write("\n".join(output_lines) + "\n")
-    print(f"[Staging] Saved {len(output_lines)} lines directly to {outfile}.")
+    with open(outfile, 'w', encoding='utf-8') as f:
+      f.write('\n'.join(output_lines) + '\n')
+    print(f'[Staging] Saved {len(output_lines)} lines directly to {outfile}.')
 
   if save_dataset and issue_id and output_lines:
     dataset_dir = os.path.join(
-      os.path.dirname(__file__), "..", "data", "finetuning", lang
+      os.path.dirname(__file__), '..', 'data', 'finetuning', lang
     )
     os.makedirs(dataset_dir, exist_ok=True)
-    dataset_file = os.path.join(dataset_dir, f"issue_{issue_id}.txt")
-    with open(dataset_file, "w", encoding="utf-8") as f:
-      f.write("\n".join(output_lines) + "\n")
-    print(f"[Dataset] Saved dataset to {dataset_file}.")
+    dataset_file = os.path.join(dataset_dir, f'issue_{issue_id}.txt')
+    with open(dataset_file, 'w', encoding='utf-8') as f:
+      f.write('\n'.join(output_lines) + '\n')
+    print(f'[Dataset] Saved dataset to {dataset_file}.')
 
   if append_quality and issue_id and output_lines:
     quality_file = os.path.join(
-      os.path.dirname(__file__), "..", "tests", "quality", f"{lang}.tsv"
+      os.path.dirname(__file__), '..', 'tests', 'quality', f'{lang}.tsv'
     )
     if os.path.exists(quality_file):
-      entry = f"gh{issue_id}\t{output_lines[0]}\n"
-      with open(quality_file, encoding="utf-8") as f:
+      entry = f'gh{issue_id}\t{output_lines[0]}\n'
+      with open(quality_file, encoding='utf-8') as f:
         existing = f.read()
       if entry.strip() not in existing:
-        with open(quality_file, "a", encoding="utf-8") as f:
+        with open(quality_file, 'a', encoding='utf-8') as f:
           f.write(entry)
-        print(f"[Quality Suite] Appended representative test to {quality_file}.")
+        print(f'[Quality Suite] Appended representative test to {quality_file}.')
 
   return output_lines
 
 
 def build_parser() -> argparse.ArgumentParser:
   """Constructs command-line flags for agentic candidate sample synthesis."""
-  p = argparse.ArgumentParser(description="Agentic candidate sample synthesis.")
+  p = argparse.ArgumentParser(description='Agentic candidate sample synthesis.')
   group = p.add_mutually_exclusive_group(required=True)
   group.add_argument(
-    "--input", "-i", type=str, help="Target string (e.g. 'いよいよ/はじまる')"
-  )
-  group.add_argument("--issue", type=str, help="GitHub bug report number or URL ID")
-  p.add_argument(
-    "--lang",
+    '--input',
+    '-i',
     type=str,
-    default="ja",
-    help="Target model language (default: ja)",
+    help="Target string (e.g. 'いよいよ/はじまる')",
+  )
+  group.add_argument('--issue', type=str, help='GitHub bug report number or URL ID')
+  p.add_argument(
+    '--lang',
+    type=str,
+    default='ja',
+    help='Target model language (default: ja)',
   )
   p.add_argument(
-    "--num-samples",
-    "-n",
+    '--num-samples',
+    '-n',
     type=int,
     default=30,
-    help="Initial generation count",
+    help='Initial generation count',
   )
-  p.add_argument("--max-keep", type=int, default=15, help="Pruned final row target")
+  p.add_argument('--max-keep', type=int, default=15, help='Pruned final row target')
   p.add_argument(
-    "--output",
-    "-o",
+    '--output',
+    '-o',
     type=str,
-    default="staging_raw.txt",
-    help="Staging destination file",
+    default='staging_raw.txt',
+    help='Staging destination file',
   )
   p.add_argument(
-    "--save-dataset",
-    action="store_true",
-    help="Save output into data/finetuning/<lang>/issue_<issue>.txt",
+    '--save-dataset',
+    action='store_true',
+    help='Save output into data/finetuning/<lang>/issue_<issue>.txt',
   )
   p.add_argument(
-    "--append-quality",
-    action="store_true",
-    help="Append representative sample into tests/quality/<lang>.tsv",
+    '--append-quality',
+    action='store_true',
+    help='Append representative sample into tests/quality/<lang>.tsv',
   )
   return p
 
@@ -421,5 +426,5 @@ def main() -> None:
   )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

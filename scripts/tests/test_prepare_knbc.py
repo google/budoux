@@ -18,7 +18,7 @@ import sys
 import unittest
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import prepare_knbc
@@ -26,19 +26,19 @@ from scripts import prepare_knbc
 
 class TestBreakBeforeSequence(unittest.TestCase):
   def test_standard(self) -> None:
-    chunks = ["abcdef", "ghi"]
-    result = prepare_knbc.break_before_sequence(chunks, "de")
-    self.assertListEqual(result, ["abc", "def", "ghi"])
+    chunks = ['abcdef', 'ghi']
+    result = prepare_knbc.break_before_sequence(chunks, 'de')
+    self.assertListEqual(result, ['abc', 'def', 'ghi'])
 
   def test_sequence_on_top(self) -> None:
-    chunks = ["abcdef", "ghi"]
-    result = prepare_knbc.break_before_sequence(chunks, "gh")
-    self.assertListEqual(result, ["abcdef", "ghi"])
+    chunks = ['abcdef', 'ghi']
+    result = prepare_knbc.break_before_sequence(chunks, 'gh')
+    self.assertListEqual(result, ['abcdef', 'ghi'])
 
   def test_multiple_hit(self) -> None:
-    chunks = ["abcabc", "def"]
-    result = prepare_knbc.break_before_sequence(chunks, "bc")
-    self.assertListEqual(result, ["a", "bca", "bc", "def"])
+    chunks = ['abcabc', 'def']
+    result = prepare_knbc.break_before_sequence(chunks, 'bc')
+    self.assertListEqual(result, ['a', 'bca', 'bc', 'def'])
 
 
 class TestKNBCHTMLParser(unittest.TestCase):
@@ -61,16 +61,16 @@ class TestKNBCHTMLParser(unittest.TestCase):
   """
 
   def test_parse_phrase(self) -> None:
-    parser = prepare_knbc.KNBCHTMLParser("phrase")
+    parser = prepare_knbc.KNBCHTMLParser('phrase')
     parser.feed(self.example_html)
-    self.assertListEqual(parser.chunks, ["abcdefghijkl", "mn"])
+    self.assertListEqual(parser.chunks, ['abcdefghijkl', 'mn'])
 
   def test_parse_tag(self) -> None:
-    parser = prepare_knbc.KNBCHTMLParser("tag")
+    parser = prepare_knbc.KNBCHTMLParser('tag')
     parser.feed(self.example_html)
-    self.assertListEqual(parser.chunks, ["abcde", "fghijkl", "mn"])
+    self.assertListEqual(parser.chunks, ['abcde', 'fghijkl', 'mn'])
 
   def test_parse_word(self) -> None:
-    parser = prepare_knbc.KNBCHTMLParser("word")
+    parser = prepare_knbc.KNBCHTMLParser('word')
     parser.feed(self.example_html)
-    self.assertListEqual(parser.chunks, ["abc", "de", "fgh", "ijkl", "mn"])
+    self.assertListEqual(parser.chunks, ['abc', 'de', 'fgh', 'ijkl', 'mn'])

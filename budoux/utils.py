@@ -13,5 +13,5 @@
 # limitations under the License.
 """Utilities for BudouX."""
 
-SEP = "▁"
+SEP = '▁'
 """The separator string to specify breakpoints."""

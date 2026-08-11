@@ -28,9 +28,9 @@ import budoux
 ArgList = list[str] | None
 # Using typing.Any for resource related objects to avoid complex conditional
 # imports for Traversable which varies across Python versions.
-models: typing.Any = resources.files("budoux") / "models"
+models: typing.Any = resources.files('budoux') / 'models'
 langs: dict[str, typing.Any] = {
-  model.name[:-5]: model for model in models.iterdir() if model.name.endswith(".json")
+  model.name[:-5]: model for model in models.iterdir() if model.name.endswith('.json')
 }
 
 
@@ -88,7 +88,7 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       argparse.Namespace: Parsed data of args.
   """
   parser = argparse.ArgumentParser(
-    prog="budoux",
+    prog='budoux',
     formatter_class=(
       lambda prog: BudouxHelpFormatter(
         prog,
@@ -99,53 +99,53 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
     description=textwrap.dedent("""\
         BudouX is the successor to Budou,
         the machine learning powered line break organizer tool."""),
-    epilog="\n- ".join(["supported languages of `-l`, `--lang`:", *langs.keys()]),
+    epilog='\n- '.join(['supported languages of `-l`, `--lang`:', *langs.keys()]),
   )
 
-  parser.add_argument("text", metavar="TXT", nargs="?", type=str, help="text")
+  parser.add_argument('text', metavar='TXT', nargs='?', type=str, help='text')
   parser.add_argument(
-    "-H",
-    "--html",
-    action="store_true",
-    help="HTML mode",
+    '-H',
+    '--html',
+    action='store_true',
+    help='HTML mode',
   )
   model_select_group = parser.add_mutually_exclusive_group()
   model_select_group.add_argument(
-    "-m",
-    "--model",
-    metavar="JSON",
+    '-m',
+    '--model',
+    metavar='JSON',
     type=check_file,
-    default=check_lang("ja"),
-    help="custom model file path",
+    default=check_lang('ja'),
+    help='custom model file path',
   )
   model_select_group.add_argument(
-    "-l",
-    "--lang",
-    metavar="LANG",
+    '-l',
+    '--lang',
+    metavar='LANG',
     type=check_lang,
-    help="language of custom model",
+    help='language of custom model',
   )
   parser.add_argument(
-    "-s",
-    "--sep",
-    metavar="STR",
+    '-s',
+    '--sep',
+    metavar='STR',
     type=str,
-    default="\n",
-    help="output phrase separator in TEXT mode",
+    default='\n',
+    help='output phrase separator in TEXT mode',
   )
   parser.add_argument(
-    "-d",
-    "--delim",
-    metavar="STR",
+    '-d',
+    '--delim',
+    metavar='STR',
     type=str,
-    default="---",
-    help="output sentence delimiter in TEXT mode",
+    default='---',
+    help='output sentence delimiter in TEXT mode',
   )
   parser.add_argument(
-    "-V",
-    "--version",
-    action="version",
-    version=f"%(prog)s {budoux.__version__}",
+    '-V',
+    '--version',
+    action='version',
+    version=f'%(prog)s {budoux.__version__}',
   )
   if test is not None:
     return parser.parse_args(test)
@@ -157,7 +157,7 @@ def _main(test: ArgList = None) -> str:
   args = parse_args(test=test)
   model_path = args.lang or args.model
   # Using open() directly assuming model_path is a path-like object.
-  with open(model_path, encoding="utf-8") as f:
+  with open(model_path, encoding='utf-8') as f:
     model = json.load(f)
 
   parser = budoux.Parser(model)
@@ -171,7 +171,7 @@ def _main(test: ArgList = None) -> str:
       inputs = [v.rstrip() for v in args.text.splitlines()]
     outputs = [parser.parse(sentence) for sentence in inputs]
     combined_output = [args.sep.join(output) for output in outputs]
-    ors = "\n" + args.delim + "\n"
+    ors = '\n' + args.delim + '\n'
     res = ors.join(combined_output)
 
   return res
@@ -184,5 +184,5 @@ def main(test: ArgList = None) -> None:
     sys.exit(0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

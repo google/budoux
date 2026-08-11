@@ -18,7 +18,7 @@ import os
 
 from .html_processor import get_text, resolve
 
-MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
+MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 
 
 class Parser:
@@ -53,22 +53,22 @@ class Parser:
     Returns:
       A list of semantic chunks (List[str]).
     """
-    if sentence == "":
+    if sentence == '':
       return []
     chunks = [sentence[0]]
-    uw1 = self._model.get("UW1", {})
-    uw2 = self._model.get("UW2", {})
-    uw3 = self._model.get("UW3", {})
-    uw4 = self._model.get("UW4", {})
-    uw5 = self._model.get("UW5", {})
-    uw6 = self._model.get("UW6", {})
-    bw1 = self._model.get("BW1", {})
-    bw2 = self._model.get("BW2", {})
-    bw3 = self._model.get("BW3", {})
-    tw1 = self._model.get("TW1", {})
-    tw2 = self._model.get("TW2", {})
-    tw3 = self._model.get("TW3", {})
-    tw4 = self._model.get("TW4", {})
+    uw1 = self._model.get('UW1', {})
+    uw2 = self._model.get('UW2', {})
+    uw3 = self._model.get('UW3', {})
+    uw4 = self._model.get('UW4', {})
+    uw5 = self._model.get('UW5', {})
+    uw6 = self._model.get('UW6', {})
+    bw1 = self._model.get('BW1', {})
+    bw2 = self._model.get('BW2', {})
+    bw3 = self._model.get('BW3', {})
+    tw1 = self._model.get('TW1', {})
+    tw2 = self._model.get('TW2', {})
+    tw3 = self._model.get('TW3', {})
+    tw4 = self._model.get('TW4', {})
     for i in range(1, len(sentence)):
       score = self._base_score
       if i > 2:
@@ -124,7 +124,7 @@ def load_default_japanese_parser() -> Parser:
   Returns:
     A parser (:obj:`budoux.Parser`).
   """
-  with open(os.path.join(MODEL_DIR, "ja.json"), encoding="utf-8") as f:
+  with open(os.path.join(MODEL_DIR, 'ja.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
 
@@ -135,7 +135,7 @@ def load_default_simplified_chinese_parser() -> Parser:
   Returns:
     A parser (:obj:`budoux.Parser`).
   """
-  with open(os.path.join(MODEL_DIR, "zh-hans.json"), encoding="utf-8") as f:
+  with open(os.path.join(MODEL_DIR, 'zh-hans.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
 
@@ -146,7 +146,7 @@ def load_default_traditional_chinese_parser() -> Parser:
   Returns:
     A parser (:obj:`budoux.Parser`).
   """
-  with open(os.path.join(MODEL_DIR, "zh-hant.json"), encoding="utf-8") as f:
+  with open(os.path.join(MODEL_DIR, 'zh-hant.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)
 
@@ -157,6 +157,6 @@ def load_default_thai_parser() -> Parser:
   Returns:
     A parser (:obj:`budoux.Parser`).
   """
-  with open(os.path.join(MODEL_DIR, "th.json"), encoding="utf-8") as f:
+  with open(os.path.join(MODEL_DIR, 'th.json'), encoding='utf-8') as f:
     model = json.load(f)
   return Parser(model)

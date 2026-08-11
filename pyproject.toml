@@ -71,9 +71,11 @@ preset = "legacy"
 [tool.ruff]
 line-length = 88
 indent-width = 2
+exclude = ["*.md"]
 
 [tool.ruff.format]
 indent-style = "space"
+quote-style = "single"
 
 [tool.ruff.lint]
 extend-select = [

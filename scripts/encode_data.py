@@ -21,15 +21,15 @@ import os
 import sys
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..")
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import utils
 
 ArgList = list[str] | None
-DEFAULT_OUTPUT_FILENAME = "encoded_data.txt"
+DEFAULT_OUTPUT_FILENAME = 'encoded_data.txt'
 
-INVALID = "▔"
+INVALID = '▔'
 """The invalid feature string."""
 
 
@@ -49,24 +49,24 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str) -> list[st
 
   """
   raw_feature = {
-    "UW1": w1,
-    "UW2": w2,
-    "UW3": w3,
-    "UW4": w4,
-    "UW5": w5,
-    "UW6": w6,
-    "BW1": w2 + w3,
-    "BW2": w3 + w4,
-    "BW3": w4 + w5,
-    "TW1": w1 + w2 + w3,
-    "TW2": w2 + w3 + w4,
-    "TW3": w3 + w4 + w5,
-    "TW4": w4 + w5 + w6,
+    'UW1': w1,
+    'UW2': w2,
+    'UW3': w3,
+    'UW4': w4,
+    'UW5': w5,
+    'UW6': w6,
+    'BW1': w2 + w3,
+    'BW2': w3 + w4,
+    'BW3': w4 + w5,
+    'TW1': w1 + w2 + w3,
+    'TW2': w2 + w3 + w4,
+    'TW3': w3 + w4 + w5,
+    'TW4': w4 + w5 + w6,
   }
   for key, value in list(raw_feature.items()):
     if INVALID in value:
       del raw_feature[key]
-  return [f"{item[0]}:{item[1]}" for item in raw_feature.items()]
+  return [f'{item[0]}:{item[1]}' for item in raw_feature.items()]
 
 
 def parse_args(test: ArgList = None) -> argparse.Namespace:
@@ -80,24 +80,25 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
   """
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
-    "source_data", help="""File path of the source training data to extract features."""
+    'source_data',
+    help="""File path of the source training data to extract features.""",
   )
   parser.add_argument(
-    "-o",
-    "--outfile",
+    '-o',
+    '--outfile',
     help="""Output file path for the encoded training data.
             (default: encoded_data.txt)""",
     default=DEFAULT_OUTPUT_FILENAME,
   )
   parser.add_argument(
-    "--processes",
+    '--processes',
     type=int,
     help="""Number of processes to use.
           (default: the number of CPUs in the system)""",
     default=None,
   )
   parser.add_argument(
-    "--scale",
+    '--scale',
     type=int,
     help="""Weight scale for the entries. The value should be a unsigned
          integer. (default: 1)""",
@@ -127,7 +128,7 @@ def process(i: int, sentence: str, sep_indices: set[int], scale: int) -> str:
     sentence[i + 2] if i + 2 < len(sentence) else INVALID,
   )
   positive = i in sep_indices
-  line = "\t".join([f"{scale}" if positive else f"{-scale}", *feature])
+  line = '\t'.join([f'{scale}' if positive else f'{-scale}', *feature])
   return line
 
 
@@ -141,10 +142,10 @@ def normalize_input(data: str) -> tuple[str, set[int]]:
     typing.Tuple[str, typing.Set[int]]: A tuple of the sentence and the
       separator indices.
   """
-  chunks = data.replace("\n", utils.SEP).strip().split(utils.SEP)
+  chunks = data.replace('\n', utils.SEP).strip().split(utils.SEP)
   chunk_lengths = [len(chunk) for chunk in chunks]
   sep_indices = set(itertools.accumulate(chunk_lengths, lambda x, y: x + y))
-  sentence = "".join(chunks)
+  sentence = ''.join(chunks)
   return (sentence, sep_indices)
 
 
@@ -163,11 +164,11 @@ def main(test: ArgList = None) -> None:
     )
     lines = p.map(func, range(1, len(sentence) + 1))
 
-  with open(entries_filename, "w", encoding=sys.getdefaultencoding()) as f:
-    f.writelines(line + "\n" for line in lines)
+  with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
+    f.writelines(line + '\n' for line in lines)
 
-  print(f"\033[92mEncoded training data is out at: {entries_filename}\033[0m")
+  print(f'\033[92mEncoded training data is out at: {entries_filename}\033[0m')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

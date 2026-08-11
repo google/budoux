@@ -18,7 +18,7 @@ import sys
 import unittest
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..")
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import html_processor
@@ -27,67 +27,75 @@ from budoux import html_processor
 class TestTextContentExtractor(unittest.TestCase):
   def test_output(self) -> None:
     input = '<p><a href="#">Hello</a>, <b>World</b></p>'
-    expected = "Hello, World"
+    expected = 'Hello, World'
     extractor = html_processor.TextContentExtractor()
     extractor.feed(input)
     self.assertEqual(
       extractor.output,
       expected,
-      "Text content should be extacted from the given HTML string.",
+      'Text content should be extacted from the given HTML string.',
     )
 
 
 class TestHTMLChunkResolver(unittest.TestCase):
   def test_output(self) -> None:
-    input = "<p>ab<b>cde</b>f</p>"
-    expected = "<p>ab<b>c<wbr>de</b>f</p>"
-    resolver = html_processor.HTMLChunkResolver(["abc", "def"], "<wbr>")
+    input = '<p>ab<b>cde</b>f</p>'
+    expected = '<p>ab<b>c<wbr>de</b>f</p>'
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(
-      resolver.output, expected, "WBR tags should be inserted as specified by chunks."
+      resolver.output,
+      expected,
+      'WBR tags should be inserted as specified by chunks.',
     )
 
   def test_unpaired(self) -> None:
-    input = "<p>abcdef</p></p>"
-    expected = "<p>abc<wbr>def</p></p>"
-    resolver = html_processor.HTMLChunkResolver(["abc", "def"], "<wbr>")
+    input = '<p>abcdef</p></p>'
+    expected = '<p>abc<wbr>def</p></p>'
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(
-      resolver.output, expected, "Unpaired close tag should not cause errors."
+      resolver.output,
+      expected,
+      'Unpaired close tag should not cause errors.',
     )
 
   def test_nobr(self) -> None:
-    input = "<p>ab<nobr>cde</nobr>f</p>"
-    expected = "<p>ab<nobr>cde</nobr>f</p>"
-    resolver = html_processor.HTMLChunkResolver(["abc", "def"], "<wbr>")
+    input = '<p>ab<nobr>cde</nobr>f</p>'
+    expected = '<p>ab<nobr>cde</nobr>f</p>'
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(
-      resolver.output, expected, "WBR tags should not be inserted if in NOBR."
+      resolver.output,
+      expected,
+      'WBR tags should not be inserted if in NOBR.',
     )
 
   def test_after_nobr(self) -> None:
-    input = "<p>ab<nobr>xy</nobr>abcdef</p>"
-    expected = "<p>ab<nobr>xy</nobr>abc<wbr>def</p>"
-    resolver = html_processor.HTMLChunkResolver(["abxyabc", "def"], "<wbr>")
+    input = '<p>ab<nobr>xy</nobr>abcdef</p>'
+    expected = '<p>ab<nobr>xy</nobr>abc<wbr>def</p>'
+    resolver = html_processor.HTMLChunkResolver(['abxyabc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(
-      resolver.output, expected, "WBR tags should be inserted if after NOBR."
+      resolver.output,
+      expected,
+      'WBR tags should be inserted if after NOBR.',
     )
 
   def test_img_in_nobr(self) -> None:
-    input = "<p>ab<nobr>x<img>y</nobr>abcdef</p>"
-    expected = "<p>ab<nobr>x<img>y</nobr>abc<wbr>def</p>"
-    resolver = html_processor.HTMLChunkResolver(["abxyabc", "def"], "<wbr>")
+    input = '<p>ab<nobr>x<img>y</nobr>abcdef</p>'
+    expected = '<p>ab<nobr>x<img>y</nobr>abc<wbr>def</p>'
+    resolver = html_processor.HTMLChunkResolver(['abxyabc', 'def'], '<wbr>')
     resolver.feed(input)
     self.assertEqual(
-      resolver.output, expected, "IMG should not affect surrounding NOBR."
+      resolver.output, expected, 'IMG should not affect surrounding NOBR.'
     )
 
 
 class TestResolve(unittest.TestCase):
   def test_with_simple_text_input(self) -> None:
-    chunks = ["abc", "def"]
-    html = "abcdef"
+    chunks = ['abc', 'def']
+    html = 'abcdef'
     result = html_processor.resolve(chunks, html)
     expected = (
       '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200bdef</span>'
@@ -95,29 +103,29 @@ class TestResolve(unittest.TestCase):
     self.assertEqual(result, expected)
 
   def test_with_standard_html_input(self) -> None:
-    chunks = ["abc", "def"]
+    chunks = ['abc', 'def']
     html = 'ab<a href="http://example.com">cd</a>ef'
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">ab<a href="http://example.com">c\u200bd</a>ef</span>'
     self.assertEqual(result, expected)
 
   def test_with_nodes_to_skip(self) -> None:
-    chunks = ["abc", "def", "ghi"]
-    html = "a<button>bcde</button>fghi"
+    chunks = ['abc', 'def', 'ghi']
+    html = 'a<button>bcde</button>fghi'
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f\u200bghi</span>'
     self.assertEqual(result, expected)
 
   def test_with_break_before_skip(self) -> None:
-    chunks = ["abc", "def", "ghi", "jkl"]
-    html = "abc<button>defghi</button>jkl"
+    chunks = ['abc', 'def', 'ghi', 'jkl']
+    html = 'abc<button>defghi</button>jkl'
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200b<button>defghi</button>\u200bjkl</span>'
     self.assertEqual(result, expected)
 
   def test_with_nothing_to_split(self) -> None:
-    chunks = ["abcdef"]
-    html = "abcdef"
+    chunks = ['abcdef']
+    html = 'abcdef'
     result = html_processor.resolve(chunks, html)
     expected = (
       '<span style="word-break: keep-all; overflow-wrap: anywhere;">abcdef</span>'
@@ -125,15 +133,15 @@ class TestResolve(unittest.TestCase):
     self.assertEqual(result, expected)
 
   def test_with_list_items_and_whitespace(self) -> None:
-    chunks = ["abc", "\ndef"]
-    html = "<ul><li>abc</li>\n<li>def</li></ul>"
-    result = html_processor.resolve(chunks, html, "<wbr>")
+    chunks = ['abc', '\ndef']
+    html = '<ul><li>abc</li>\n<li>def</li></ul>'
+    result = html_processor.resolve(chunks, html, '<wbr>')
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><ul><li>abc</li>\n<li>def</li></ul></span>'
     self.assertEqual(result, expected)
 
   def test_with_break_after_whitespace_in_list(self) -> None:
-    chunks = ["abc\n", "def"]
-    html = "<ul><li>abc</li>\n<li>def</li></ul>"
-    result = html_processor.resolve(chunks, html, "<wbr>")
+    chunks = ['abc\n', 'def']
+    html = '<ul><li>abc</li>\n<li>def</li></ul>'
+    result = html_processor.resolve(chunks, html, '<wbr>')
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><ul><li>abc</li>\n<li>def</li></ul></span>'
     self.assertEqual(result, expected)

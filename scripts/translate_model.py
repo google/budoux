@@ -42,18 +42,18 @@ def translate_icu(model: dict[str, dict[str, int]]) -> str:
   Returns:
     A model string formatted in the ICU Resource Bundle format.
   """
-  indent = "    "
-  output = "jaml {\n"
+  indent = '    '
+  output = 'jaml {\n'
   for group_name, members in sorted(model.items()):
-    output += f"{indent}{group_name}Keys {{\n"
+    output += f'{indent}{group_name}Keys {{\n'
     for key in members:
       output += f'{indent}{indent}"{key}",\n'
-    output += f"{indent}}}\n"
-    output += f"{indent}{group_name}Values:intvector {{\n"
+    output += f'{indent}}}\n'
+    output += f'{indent}{group_name}Values:intvector {{\n'
     for val in members.values():
-      output += f"{indent}{indent}{val},\n"
-    output += f"{indent}}}\n"
-  output += "}"
+      output += f'{indent}{indent}{val},\n'
+    output += f'{indent}}}\n'
+  output += '}'
   return output
 
 
@@ -69,34 +69,34 @@ def normalize(model: dict[str, typing.Any]) -> dict[str, dict[str, int]]:
   if is_old_format:
     output = {}
     sorted_items = sorted(model.items(), key=lambda x: x[0])
-    groups = itertools.groupby(sorted_items, key=lambda x: x[0].split(":")[0])
+    groups = itertools.groupby(sorted_items, key=lambda x: x[0].split(':')[0])
     for group in groups:
-      output[group[0]] = {item[0].split(":")[-1]: item[1] for item in group[1]}
+      output[group[0]] = {item[0].split(':')[-1]: item[1] for item in group[1]}
     return output
   try:
     assert all(
       isinstance(v, int) for groups in model.values() for v in groups.values()
-    ), "Scores should be integers"
+    ), 'Scores should be integers'
   except (AssertionError, AttributeError) as e:
-    raise ValueError(f"Unsupported model format: {e}")
+    raise ValueError(f'Unsupported model format: {e}')
   else:
     return model
 
 
 def main() -> None:
-  DEFAULT_FORMAT = "json"
+  DEFAULT_FORMAT = 'json'
   parser = argparse.ArgumentParser(
     description=__doc__, formatter_class=argparse.RawTextHelpFormatter
   )
   parser.add_argument(
-    "model", help="File path for the JSON format model file.", type=str
+    'model', help='File path for the JSON format model file.', type=str
   )
   parser.add_argument(
-    "--format",
-    help=f"Target format (default: {DEFAULT_FORMAT})",
+    '--format',
+    help=f'Target format (default: {DEFAULT_FORMAT})',
     type=str,
     default=DEFAULT_FORMAT,
-    choices={DEFAULT_FORMAT, "icu"},
+    choices={DEFAULT_FORMAT, 'icu'},
   )
   args = parser.parse_args()
   model_path: str = args.model
@@ -104,13 +104,13 @@ def main() -> None:
   with open(model_path) as f:
     model = json.load(f)
   model = normalize(model)
-  if format == "json":
-    print(json.dumps(model, ensure_ascii=False, separators=(",", ":")))
-  elif format == "icu":
+  if format == 'json':
+    print(json.dumps(model, ensure_ascii=False, separators=(',', ':')))
+  elif format == 'icu':
     print(translate_icu(model))
   else:
     pass
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()
