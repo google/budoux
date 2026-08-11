@@ -44,20 +44,21 @@ def get_colab_binary() -> str:
     return which_path
 
   raise FileNotFoundError(
-      "Colab CLI binary not found. Please install the PyPI package "
-      "'google-colab-cli' (providing the 'colab' CLI executable for managing "
-      "remote Colab runtimes) via: pip install google-colab-cli "
-      "or set the COLAB_CLI_PATH environment variable.")
+    "Colab CLI binary not found. Please install the PyPI package "
+    "'google-colab-cli' (providing the 'colab' CLI executable for managing "
+    "remote Colab runtimes) via: pip install google-colab-cli "
+    "or set the COLAB_CLI_PATH environment variable."
+  )
 
 
 class ColabRunner:
   """Manages remote Google Colab VM execution lifecycle."""
 
   def __init__(
-      self,
-      session_name: str = "budoux-train",
-      accelerator: str = "T4",
-      binary_path: str | None = None,
+    self,
+    session_name: str = "budoux-train",
+    accelerator: str = "T4",
+    binary_path: str | None = None,
   ) -> None:
     """Initializes ColabRunner.
 
@@ -71,9 +72,9 @@ class ColabRunner:
     self.binary_path = binary_path or get_colab_binary()
     self._is_active = False
 
-  def _run_cmd(self,
-               args: list[str],
-               check: bool = True) -> subprocess.CompletedProcess[str]:
+  def _run_cmd(
+    self, args: list[str], check: bool = True
+  ) -> subprocess.CompletedProcess[str]:
     """Executes a colab CLI command subprocess.
 
     Args:
@@ -97,16 +98,16 @@ class ColabRunner:
       cmd.extend(["--gpu", self.accelerator])
 
     print(
-        f"[Colab CLI] Provisioning remote session '{self.session_name}' "
-        f"with accelerator '{self.accelerator}'...",
-        flush=True,
+      f"[Colab CLI] Provisioning remote session '{self.session_name}' "
+      f"with accelerator '{self.accelerator}'...",
+      flush=True,
     )
     self._run_cmd(cmd)
     self._is_active = True
 
-  def upload_file(self,
-                  local_path: str,
-                  remote_path: str | None = None) -> None:
+  def upload_file(
+    self, local_path: str, remote_path: str | None = None
+  ) -> None:
     """Uploads a local file to the remote VM."""
     cmd = ["upload", "-s", self.session_name, local_path]
     if remote_path:
@@ -118,15 +119,17 @@ class ColabRunner:
     """Downloads a file from the remote VM to local workstation."""
     cmd = ["download", "-s", self.session_name, remote_path, local_path]
     print(
-        f"[Colab CLI] Downloading remote {remote_path} -> {local_path}...",
-        flush=True,
+      f"[Colab CLI] Downloading remote {remote_path} -> {local_path}...",
+      flush=True,
     )
     self._run_cmd(cmd)
 
-  def exec_script(self,
-                  script_path: str,
-                  output_image: str | None = None,
-                  timeout: float = 43200.0) -> None:
+  def exec_script(
+    self,
+    script_path: str,
+    output_image: str | None = None,
+    timeout: float = 43200.0,
+  ) -> None:
     """Executes a local Python script remotely on the Colab VM.
 
     Args:
@@ -135,19 +138,19 @@ class ColabRunner:
       timeout: Execution timeout in seconds (default: 43200.0).
     """
     cmd = [
-        "exec",
-        "-s",
-        self.session_name,
-        "-f",
-        script_path,
-        "--timeout",
-        str(timeout),
+      "exec",
+      "-s",
+      self.session_name,
+      "-f",
+      script_path,
+      "--timeout",
+      str(timeout),
     ]
     if output_image:
       cmd.extend(["--output-image", output_image])
     print(
-        f"[Colab CLI] Running remote script execution ({script_path})...",
-        flush=True,
+      f"[Colab CLI] Running remote script execution ({script_path})...",
+      flush=True,
     )
     self._run_cmd(cmd)
 
@@ -155,8 +158,8 @@ class ColabRunner:
     """Terminates and cleans up the remote Colab session."""
     if self._is_active:
       print(
-          f"[Colab CLI] Terminating remote session '{self.session_name}'...",
-          flush=True,
+        f"[Colab CLI] Terminating remote session '{self.session_name}'...",
+        flush=True,
       )
       self._run_cmd(["stop", "-s", self.session_name], check=False)
       self._is_active = False
@@ -166,9 +169,9 @@ class ColabRunner:
     return self
 
   def __exit__(
-      self,
-      exc_type: object,
-      exc_val: BaseException | None,
-      exc_tb: object,
+    self,
+    exc_type: object,
+    exc_val: BaseException | None,
+    exc_tb: object,
   ) -> None:
     self.stop_session()

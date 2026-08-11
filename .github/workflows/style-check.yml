@@ -20,9 +20,9 @@ jobs:
           pip install --upgrade pip
           pip install ".[dev]"
           pip install ".[jaxcpu]"
-      - name: Run yapf
+      - name: Run ruff format
         run: |
-          yapf --diff --recursive budoux tests scripts
+          ruff format --check budoux tests scripts
       - name: Run pyrefly
         run: |
           pyrefly check

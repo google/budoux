@@ -19,7 +19,7 @@ import typing
 import unittest
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import utils
@@ -27,58 +27,58 @@ from scripts import encode_data
 
 
 class TestGetFeature(unittest.TestCase):
-
   def test_standard(self) -> None:
-    feature = encode_data.get_feature('a', 'b', 'c', 'd', 'e', 'f')
+    feature = encode_data.get_feature("a", "b", "c", "d", "e", "f")
     self.assertSetEqual(
-        set(feature),
-        {
-            # Unigram of Words (UW)
-            'UW1:a',
-            'UW2:b',
-            'UW3:c',
-            'UW4:d',
-            'UW5:e',
-            'UW6:f',
-
-            # Bigram of Words (BW)
-            'BW1:bc',
-            'BW2:cd',
-            'BW3:de',
-
-            # Trigram of Words (TW)
-            'TW1:abc',
-            'TW2:bcd',
-            'TW3:cde',
-            'TW4:def',
-        },
-        'Features should be extracted.')
+      set(feature),
+      {
+        # Unigram of Words (UW)
+        "UW1:a",
+        "UW2:b",
+        "UW3:c",
+        "UW4:d",
+        "UW5:e",
+        "UW6:f",
+        # Bigram of Words (BW)
+        "BW1:bc",
+        "BW2:cd",
+        "BW3:de",
+        # Trigram of Words (TW)
+        "TW1:abc",
+        "TW2:bcd",
+        "TW3:cde",
+        "TW4:def",
+      },
+      "Features should be extracted.",
+    )
 
   def test_with_invalid(self) -> None:
 
     def find_by_prefix(prefix: str, feature: list[str]) -> bool:
       return any(item.startswith(prefix) for item in feature)
 
-    feature = encode_data.get_feature('a', 'a', encode_data.INVALID, 'a', 'a',
-                                      'a')
+    feature = encode_data.get_feature(
+      "a", "a", encode_data.INVALID, "a", "a", "a"
+    )
     self.assertFalse(
-        find_by_prefix('UW3:', feature),
-        'Should omit the Unigram feature when the character is invalid.')
+      find_by_prefix("UW3:", feature),
+      "Should omit the Unigram feature when the character is invalid.",
+    )
     self.assertFalse(
-        find_by_prefix('BW2:', feature),
-        'Should omit the Bigram feature that covers an invalid character.')
+      find_by_prefix("BW2:", feature),
+      "Should omit the Bigram feature that covers an invalid character.",
+    )
 
 
 class TestArgParse(unittest.TestCase):
-
   def test_cmdargs_invalid_option(self) -> None:
-    cmdargs = ['-v']
+    cmdargs = ["-v"]
     with self.assertRaises(SystemExit) as cm:
       encode_data.parse_args(cmdargs)
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_help(self) -> None:
-    cmdargs = ['-h']
+    cmdargs = ["-h"]
     with self.assertRaises(SystemExit) as cm:
       encode_data.parse_args(cmdargs)
     self.assertEqual(cm.exception.code, 0)
@@ -89,80 +89,78 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_default(self) -> None:
-    cmdargs = ['source.txt']
+    cmdargs = ["source.txt"]
     output = encode_data.parse_args(cmdargs)
-    self.assertEqual(output.source_data, 'source.txt')
+    self.assertEqual(output.source_data, "source.txt")
     self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
     self.assertIsNone(output.processes)
     self.assertEqual(output.scale, 1)
 
   def test_cmdargs_with_outfile(self) -> None:
-    cmdargs = ['source.txt', '-o', 'out.txt']
+    cmdargs = ["source.txt", "-o", "out.txt"]
     output = encode_data.parse_args(cmdargs)
-    self.assertEqual(output.source_data, 'source.txt')
-    self.assertEqual(output.outfile, 'out.txt')
+    self.assertEqual(output.source_data, "source.txt")
+    self.assertEqual(output.outfile, "out.txt")
     self.assertIsNone(output.processes)
     self.assertEqual(output.scale, 1)
 
   def test_cmdargs_with_processes(self) -> None:
-    cmdargs = ['source.txt', '--processes', '8']
+    cmdargs = ["source.txt", "--processes", "8"]
     output = encode_data.parse_args(cmdargs)
-    self.assertEqual(output.source_data, 'source.txt')
+    self.assertEqual(output.source_data, "source.txt")
     self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
     self.assertEqual(output.processes, 8)
     self.assertEqual(output.scale, 1)
 
   def test_cmdargs_with_scale(self) -> None:
-    cmdargs = ['source.txt', '--scale', '20']
+    cmdargs = ["source.txt", "--scale", "20"]
     output = encode_data.parse_args(cmdargs)
-    self.assertEqual(output.source_data, 'source.txt')
+    self.assertEqual(output.source_data, "source.txt")
     self.assertEqual(output.outfile, encode_data.DEFAULT_OUTPUT_FILENAME)
     self.assertIsNone(output.processes)
     self.assertEqual(output.scale, 20)
 
 
 class TestProcess(unittest.TestCase):
-
-  sentence = '六本木ヒルズでお昼を食べる。'
+  sentence = "六本木ヒルズでお昼を食べる。"
   sep_indices: typing.ClassVar[set[int]] = {7, 10, 13}
 
   def test_on_negative_point_with_scale(self) -> None:
     line = encode_data.process(8, self.sentence, self.sep_indices, 16)
-    items = line.split('\t')
+    items = line.split("\t")
     weight = items[0]
     features = set(items[1:])
-    self.assertEqual(weight, '-16')
-    self.assertIn('UW2:で', features)
+    self.assertEqual(weight, "-16")
+    self.assertIn("UW2:で", features)
 
   def test_on_positive_point_with_scale(self) -> None:
     line = encode_data.process(7, self.sentence, self.sep_indices, 13)
-    items = line.split('\t')
+    items = line.split("\t")
     weight = items[0]
     features = set(items[1:])
-    self.assertEqual(weight, '13')
-    self.assertIn('UW3:で', features)
+    self.assertEqual(weight, "13")
+    self.assertIn("UW3:で", features)
 
 
 class TestNormalizeInput(unittest.TestCase):
-
   def test_standard_input(self) -> None:
-    source = f'ABC{utils.SEP}DE{utils.SEP}FGHI'
+    source = f"ABC{utils.SEP}DE{utils.SEP}FGHI"
     sentence, sep_indices = encode_data.normalize_input(source)
-    self.assertEqual(sentence, 'ABCDEFGHI')
+    self.assertEqual(sentence, "ABCDEFGHI")
     self.assertEqual(sep_indices, {3, 5, 9})
 
   def test_with_linebreaks(self) -> None:
-    source = f'AB\nCDE{utils.SEP}FG'
+    source = f"AB\nCDE{utils.SEP}FG"
     sentence, sep_indices = encode_data.normalize_input(source)
-    self.assertEqual(sentence, 'ABCDEFG')
+    self.assertEqual(sentence, "ABCDEFG")
     self.assertEqual(sep_indices, {2, 5, 7})
 
   def test_doubled_seps(self) -> None:
-    source = f'ABC{utils.SEP}{utils.SEP}DE\n\nFG'
+    source = f"ABC{utils.SEP}{utils.SEP}DE\n\nFG"
     sentence, sep_indices = encode_data.normalize_input(source)
-    self.assertEqual(sentence, 'ABCDEFG')
+    self.assertEqual(sentence, "ABCDEFG")
     self.assertEqual(sep_indices, {3, 5, 7})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

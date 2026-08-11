@@ -18,7 +18,7 @@ import sys
 import unittest
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux
@@ -26,13 +26,17 @@ from budoux.evaluate_model import evaluate
 
 
 class TestQuality(unittest.TestCase):
-
   def test_ja(self) -> None:
     model_path = os.path.join(
-        os.path.dirname(budoux.__file__), 'models', 'ja.json')
-    quality_path = os.path.join(os.path.dirname(__file__), 'quality', 'ja.tsv')
+      os.path.dirname(budoux.__file__), "models", "ja.json"
+    )
+    quality_path = os.path.join(os.path.dirname(__file__), "quality", "ja.tsv")
     res = evaluate(model_path, quality_path)
-    errors = res['errors']
+    errors = res["errors"]
     self.assertEqual(
-        len(errors), 0, 'Failing sentences:\n{}'.format('\n'.join(
-            [f'expected:{err[0]}\tactual:{err[1]}' for err in errors])))
+      len(errors),
+      0,
+      "Failing sentences:\n{}".format(
+        "\n".join([f"expected:{err[0]}\tactual:{err[1]}" for err in errors])
+      ),
+    )

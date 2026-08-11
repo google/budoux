@@ -30,10 +30,10 @@ from scripts import run_training_pipeline
 
 
 class TestRunTrainingPipeline(unittest.TestCase):
-
   @patch("subprocess.run")
-  def test_run_retraining_pipeline_subprocess(self,
-                                              mock_run: typing.Any) -> None:
+  def test_run_retraining_pipeline_subprocess(
+    self, mock_run: typing.Any
+  ) -> None:
     with tempfile.TemporaryDirectory() as tmp_dir:
       split_dir = os.path.join(tmp_dir, "splits")
       os.makedirs(split_dir, exist_ok=True)
@@ -42,7 +42,8 @@ class TestRunTrainingPipeline(unittest.TestCase):
 
       out_model = os.path.join(tmp_dir, "model.json")
       run_training_pipeline.run_retraining_pipeline(
-          lang="ja", iterations=10, split_dir=split_dir, out_model=out_model)
+        lang="ja", iterations=10, split_dir=split_dir, out_model=out_model
+      )
 
       self.assertGreaterEqual(mock_run.call_count, 4)
 
@@ -52,20 +53,22 @@ class TestRunTrainingPipeline(unittest.TestCase):
       split_dir = os.path.join(tmp_dir, "splits")
       os.makedirs(split_dir, exist_ok=True)
       with open(
-          os.path.join(split_dir, "knbc_train.txt"), "w",
-          encoding="utf-8") as f:
+        os.path.join(split_dir, "knbc_train.txt"), "w", encoding="utf-8"
+      ) as f:
         f.write("今日▁は▁良い▁天気▁です。\n")
       with open(
-          os.path.join(split_dir, "knbc_val.txt"), "w", encoding="utf-8") as f:
+        os.path.join(split_dir, "knbc_val.txt"), "w", encoding="utf-8"
+      ) as f:
         f.write("明日▁も▁晴れ▁です。\n")
 
       out_model = os.path.join(tmp_dir, "model.json")
       run_training_pipeline.run_retraining_pipeline(
-          lang="ja",
-          iterations=5,
-          split_dir=split_dir,
-          out_model=out_model,
-          weight_factor=1)
+        lang="ja",
+        iterations=5,
+        split_dir=split_dir,
+        out_model=out_model,
+        weight_factor=1,
+      )
 
       self.assertTrue(os.path.exists(out_model))
       with open(out_model, encoding="utf-8") as f:
@@ -75,7 +78,8 @@ class TestRunTrainingPipeline(unittest.TestCase):
   @patch("scripts.colab_runner.ColabRunner")
   @patch("subprocess.run")
   def test_run_retraining_pipeline_colab(
-      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock) -> None:
+    self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock
+  ) -> None:
     mock_runner = MagicMock()
     mock_colab_runner_cls.return_value.__enter__.return_value = mock_runner
 
@@ -95,20 +99,21 @@ class TestRunTrainingPipeline(unittest.TestCase):
       mock_runner.download_file.side_effect = fake_download
 
       run_training_pipeline.run_retraining_pipeline(
-          lang="ja",
-          iterations=10,
-          split_dir=split_dir,
-          out_model=out_model,
-          colab=True,
-          accelerator="T4",
+        lang="ja",
+        iterations=10,
+        split_dir=split_dir,
+        out_model=out_model,
+        colab=True,
+        accelerator="T4",
       )
 
       mock_colab_runner_cls.assert_called_once_with(
-          session_name="budoux-train-T4", accelerator="T4")
+        session_name="budoux-train-T4", accelerator="T4"
+      )
       self.assertTrue(mock_runner.exec_script.called)
 
       uploaded_remote_paths = [
-          call[0][1] for call in mock_runner.upload_file.call_args_list
+        call[0][1] for call in mock_runner.upload_file.call_args_list
       ]
       self.assertIn("/content/cleaned.txt", uploaded_remote_paths)
       self.assertIn("/content/train.py", uploaded_remote_paths)
@@ -116,11 +121,13 @@ class TestRunTrainingPipeline(unittest.TestCase):
   @patch("scripts.colab_runner.ColabRunner")
   @patch("subprocess.run")
   def test_colab_download_failure_does_not_mask_error(
-      self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock) -> None:
+    self, mock_run: MagicMock, mock_colab_runner_cls: MagicMock
+  ) -> None:
     mock_runner = MagicMock()
     mock_colab_runner_cls.return_value.__enter__.return_value = mock_runner
     mock_runner.exec_script.side_effect = RuntimeError(
-        "Remote execution failed")
+      "Remote execution failed"
+    )
 
     with tempfile.TemporaryDirectory() as tmp_dir:
       split_dir = os.path.join(tmp_dir, "splits")
@@ -131,11 +138,11 @@ class TestRunTrainingPipeline(unittest.TestCase):
       out_model = os.path.join(tmp_dir, "model.json")
       with self.assertRaises(RuntimeError) as cm:
         run_training_pipeline.run_retraining_pipeline(
-            lang="ja",
-            iterations=10,
-            split_dir=split_dir,
-            out_model=out_model,
-            colab=True,
+          lang="ja",
+          iterations=10,
+          split_dir=split_dir,
+          out_model=out_model,
+          colab=True,
         )
       self.assertEqual(str(cm.exception), "Remote execution failed")
 
