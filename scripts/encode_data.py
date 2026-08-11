@@ -122,7 +122,7 @@ def process(i: int, sentence: str, sep_indices: set[int], scale: int) -> str:
                         sentence[i + 1] if i + 1 < len(sentence) else INVALID,
                         sentence[i + 2] if i + 2 < len(sentence) else INVALID)
   positive = i in sep_indices
-  line = '\t'.join(['%d' % (scale) if positive else '%d' % (-scale)] + feature)
+  line = '\t'.join([f'{scale}' if positive else f'{-scale}', *feature])
   return line
 
 
@@ -160,7 +160,7 @@ def main(test: ArgList = None) -> None:
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
     f.writelines(line + '\n' for line in lines)
 
-  print('\033[92mEncoded training data is out at: %s\033[0m' % entries_filename)
+  print(f'\033[92mEncoded training data is out at: {entries_filename}\033[0m')
 
 
 if __name__ == '__main__':

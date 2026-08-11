@@ -145,7 +145,6 @@ class TestStdin(unittest.TestCase):
   def test_cmdargs_blank_stdin(self) -> None:
     with open(
         join(abspath(dirname(__file__)), "in/1.in"),
-        "r",
         encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main([])
@@ -155,7 +154,6 @@ class TestStdin(unittest.TestCase):
   def test_cmdargs_text_stdin(self) -> None:
     with open(
         join(abspath(dirname(__file__)), "in/2.in"),
-        "r",
         encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main([])
@@ -165,7 +163,6 @@ class TestStdin(unittest.TestCase):
   def test_cmdargs_html_stdin(self) -> None:
     with open(
         join(abspath(dirname(__file__)), "in/3.in"),
-        "r",
         encoding=sys.getdefaultencoding()) as f:
       sys.stdin = f
       output = main._main(["-H"])

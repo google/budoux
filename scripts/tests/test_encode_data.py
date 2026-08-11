@@ -15,6 +15,7 @@
 
 import os
 import sys
+import typing
 import unittest
 
 # module hack
@@ -123,7 +124,7 @@ class TestArgParse(unittest.TestCase):
 class TestProcess(unittest.TestCase):
 
   sentence = '六本木ヒルズでお昼を食べる。'
-  sep_indices = {7, 10, 13}
+  sep_indices: typing.ClassVar[set[int]] = {7, 10, 13}
 
   def test_on_negative_point_with_scale(self) -> None:
     line = encode_data.process(8, self.sentence, self.sep_indices, 16)

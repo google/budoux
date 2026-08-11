@@ -197,7 +197,8 @@ def process_knbc(
     if file[-11:] != '-morph.html':
       continue
     parser = KNBCHTMLParser(granularity)
-    data = open(os.path.join(html_dir, file)).read()
+    with open(os.path.join(html_dir, file)) as f:
+      data = f.read()
     parser.feed(data)
     chunks = parser.chunks
     chunks = postprocess(chunks)
@@ -207,7 +208,7 @@ def process_knbc(
 
   with open(outfile, 'w', encoding='utf-8') as f:
     f.writelines(s + '\n' for s in sentences)
-  print('\033[92mFull training data is output to: %s\033[0m' % (outfile))
+  print(f'\033[92mFull training data is output to: {outfile}\033[0m')
 
   if split_dir:
     valid_ratios = (0.0 <= val_ratio <= 1.0) and (
@@ -242,9 +243,8 @@ def process_knbc(
         f.writelines(line + '\n' for line in split_lines)
 
     print(
-        '\033[92m3-Way split dataset written to %s:\n  Train: %s (%d lines)\n  Val:   %s (%d lines)\n  Test:  %s (%d lines)\033[0m'
-        % (split_dir, train_path, len(train_sentences), val_path,
-           len(val_sentences), test_path, len(test_sentences)))
+        f'\033[92m3-Way split dataset written to {split_dir}:\n  Train: {train_path} ({len(train_sentences)} lines)\n  Val:   {val_path} ({len(val_sentences)} lines)\n  Test:  {test_path} ({len(test_sentences)} lines)\033[0m'
+    )
 
 
 def main() -> None:

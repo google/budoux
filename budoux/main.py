@@ -155,7 +155,7 @@ def _main(test: ArgList = None) -> str:
   args = parse_args(test=test)
   model_path = args.lang or args.model
   # Using open() directly assuming model_path is a path-like object.
-  with open(model_path, 'r', encoding='utf-8') as f:
+  with open(model_path, encoding='utf-8') as f:
     model = json.load(f)
 
   parser = budoux.Parser(model)

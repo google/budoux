@@ -45,7 +45,7 @@ class TestFindConflicts(unittest.TestCase):
     find_conflicts.find_conflicts(
         self.input_file, self.output_file, threshold=1.0)
 
-    with open(self.output_file, 'r', encoding='utf-8') as f:
+    with open(self.output_file, encoding='utf-8') as f:
       lines = f.readlines()
 
     self.assertEqual(len(lines), 4)
@@ -60,7 +60,7 @@ class TestFindConflicts(unittest.TestCase):
     find_conflicts.find_conflicts(
         self.input_file, self.output_file, threshold=1.0)
 
-    with open(self.output_file, 'r', encoding='utf-8') as f:
+    with open(self.output_file, encoding='utf-8') as f:
       lines = f.readlines()
 
     self.assertEqual(len(lines), 1)
@@ -78,7 +78,7 @@ class TestFindConflicts(unittest.TestCase):
     find_conflicts.find_conflicts(
         self.input_file, self.output_file, threshold=0.8)
 
-    with open(self.output_file, 'r', encoding='utf-8') as f:
+    with open(self.output_file, encoding='utf-8') as f:
       lines = f.readlines()
 
     self.assertEqual(len(lines), 3)
@@ -97,7 +97,7 @@ class TestFindConflicts(unittest.TestCase):
     find_conflicts.find_conflicts(
         self.input_file, self.output_file, threshold=0.8)
 
-    with open(self.output_file, 'r', encoding='utf-8') as f:
+    with open(self.output_file, encoding='utf-8') as f:
       lines = f.readlines()
 
     self.assertEqual(len(lines), 1)
@@ -112,7 +112,7 @@ class TestFindConflicts(unittest.TestCase):
     find_conflicts.find_conflicts(
         self.input_file, self.output_file, threshold=1.0)
 
-    with open(self.output_file, 'r', encoding='utf-8') as f:
+    with open(self.output_file, encoding='utf-8') as f:
       lines = f.readlines()
 
     self.assertEqual(len(lines), 0)

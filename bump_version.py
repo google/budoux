@@ -35,7 +35,7 @@ def main():
   # This turns "1.2.3-rc4" into "1.2.3rc4"
   python_version = re.sub(r'-(rc|alpha|beta|preview)', r'\1', new_version)
   init_file = 'budoux/__init__.py'
-  with open(init_file, 'r') as f:
+  with open(init_file) as f:
     content = f.read()
   new_content = re.sub(r'(__version__\s+=\s+[\'"])([\.\-\w]+)([\'"])',
                        rf'\g<1>{python_version}\g<3>', content)
@@ -44,7 +44,7 @@ def main():
 
   # Updates JavaScript port version number
   package_json_path = 'javascript/package.json'
-  with open(package_json_path, 'r') as f:
+  with open(package_json_path) as f:
     package_data = json.load(f)
     current_version = package_data.get('version')
 
@@ -55,7 +55,7 @@ def main():
     print(f"JavaScript version is already {new_version}, skipping npm version.")
 
   cli_file = 'javascript/src/cli.ts'
-  with open(cli_file, 'r') as f:
+  with open(cli_file) as f:
     content = f.read()
   new_content = re.sub(r'(const\s+CLI_VERSION\s+=\s+[\'"])([\.\-\w]+)([\'"])',
                        rf'\g<1>{new_version}\g<3>', content)

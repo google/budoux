@@ -87,18 +87,12 @@ extend-select = [
     "PIE",
     "PLR1722",
     "EXE",
+    "PYI",
+    "TRY002",
+    "TRY004",
 ]
 ignore = [
     "E402", # Module level import not at top of file (module hack)
     "E501", # Line too long (handled by yapf)
     "RUF001", # String contains ambiguous character (e.g. fullwidth punctuation in test data)
-    "RUF005", # Consider iterable unpacking instead of concatenation
-    "RUF012", # Mutable default value for class attribute
-    "UP015", # Unnecessary mode argument (e.g. open(..., 'r'))
-    "UP031", # Use format specifiers instead of percent format
-    "PYI034", # `__enter__` methods in classes like `ColabRunner` usually return `self` at runtime
-    "PYI036", # The argument in `__exit__` should be annotated with `object` or `type[BaseException] | None`
-    "SIM115", # Use a context manager for opening files
-    "TRY002", # Create your own exception
-    "TRY004", # Prefer `TypeError` exception for invalid type
 ]

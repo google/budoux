@@ -81,7 +81,7 @@ class HTMLChunkResolver(HTMLParser):
       if attr[1] is None:
         attr_pairs.append(' ' + attr[0])
       else:
-        attr_pairs.append(' %s="%s"' % (attr[0], attr[1]))
+        attr_pairs.append(f' {attr[0]}="{attr[1]}"')
     encoded_attrs = ''.join(attr_pairs)
     self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
@@ -89,10 +89,10 @@ class HTMLChunkResolver(HTMLParser):
         self.scan_index += 1
         self.output += self.separator
       self.to_skip = True
-    self.output += '<%s%s>' % (tag, encoded_attrs)
+    self.output += f'<{tag}{encoded_attrs}>'
 
   def handle_endtag(self, tag: str) -> None:
-    self.output += '</%s>' % (tag)
+    self.output += f'</{tag}>'
     while not self.element_stack.empty():
       state = self.element_stack.get_nowait()
       if state.tag == tag:
@@ -144,5 +144,5 @@ def resolve(phrases: list[str], html: str, separator: str = '\u200b') -> str:
   """
   resolver = HTMLChunkResolver(phrases, separator)
   resolver.feed(html)
-  result = '<span style="%s">%s</span>' % (PARENT_CSS_STYLE, resolver.output)
+  result = f'<span style="{PARENT_CSS_STYLE}">{resolver.output}</span>'
   return result

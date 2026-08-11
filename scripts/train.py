@@ -257,7 +257,7 @@ def fit(dataset_train: Dataset, dataset_val: Dataset | None,
     if dataset_val:
       f.write('\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore')
     f.write('\n')
-  print('Outputting learned weights to %s ...' % (weights_filename))
+  print(f'Outputting learned weights to {weights_filename} ...')
 
   M = len(features)
   scores = jnp.zeros(M)
@@ -270,44 +270,38 @@ def fit(dataset_train: Dataset, dataset_val: Dataset | None,
 
   def output_progress(t: int) -> None:
     with open(weights_filename, 'a') as f:
-      f.write('\n'.join('%s\t%.6f' % p for p in feature_score_buffer) + '\n')
+      f.write('\n'.join(f'{p[0]}\t{p[1]:.6f}' for p in feature_score_buffer) +
+              '\n')
     feature_score_buffer.clear()
 
-    print('=== %s ===' % t)
+    print(f'=== {t} ===')
     print()
 
     with open(log_filename, 'a') as f:
       pred_train = pred(scores, dataset_train.X_rows, dataset_train.X_cols,
                         N_train)
       metrics_train = get_metrics(pred_train, Y_train)
-      print('train accuracy:\t%.5f' % metrics_train.accuracy)
-      print('train prec.:\t%.5f' % metrics_train.precision)
-      print('train recall:\t%.5f' % metrics_train.recall)
-      print('train fscore:\t%.5f' % metrics_train.fscore)
+      print(f'train accuracy:\t{metrics_train.accuracy:.5f}')
+      print(f'train prec.:\t{metrics_train.precision:.5f}')
+      print(f'train recall:\t{metrics_train.recall:.5f}')
+      print(f'train fscore:\t{metrics_train.fscore:.5f}')
       print()
-      f.write('%d\t%.5f\t%.5f\t%.5f\t%.5f' % (
-          t,
-          metrics_train.accuracy,
-          metrics_train.precision,
-          metrics_train.recall,
-          metrics_train.fscore,
-      ))
+      f.write(
+          f'{t}\t{metrics_train.accuracy:.5f}\t{metrics_train.precision:.5f}\t{metrics_train.recall:.5f}\t{metrics_train.fscore:.5f}'
+      )
 
       if dataset_val:
         pred_test = pred(scores, dataset_val.X_rows, dataset_val.X_cols, N_test)
         metrics_test = get_metrics(pred_test, Y_test)
-        print('test accuracy:\t%.5f' % metrics_test.accuracy)
-        print('test prec.:\t%.5f' % metrics_test.precision)
-        print('test recall:\t%.5f' % metrics_test.recall)
-        print('test fscore:\t%.5f' % metrics_test.fscore)
+        print(f'test accuracy:\t{metrics_test.accuracy:.5f}')
+        print(f'test prec.:\t{metrics_test.precision:.5f}')
+        print(f'test recall:\t{metrics_test.recall:.5f}')
+        print(f'test fscore:\t{metrics_test.fscore:.5f}')
         print()
 
-        f.write('\t%.5f\t%.5f\t%.5f\t%.5f' % (
-            metrics_test.accuracy,
-            metrics_test.precision,
-            metrics_test.recall,
-            metrics_test.fscore,
-        ))
+        f.write(
+            f'\t{metrics_test.accuracy:.5f}\t{metrics_test.precision:.5f}\t{metrics_test.recall:.5f}\t{metrics_test.fscore:.5f}'
+        )
 
       f.write('\n')
 
@@ -386,8 +380,9 @@ def main() -> None:
                                                     feature_thres, val_data)
   fit(dataset_train, dataset_val, features, iterations, weights_filename,
       log_filename, out_span)
-  print('Training done. Export the model by passing %s to build_model.py' %
-        (weights_filename))
+  print(
+      f'Training done. Export the model by passing {weights_filename} to build_model.py'
+  )
 
 
 if __name__ == '__main__':

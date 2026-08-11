@@ -81,12 +81,12 @@ def run_retraining_pipeline(
     )
     with open(weighted_train, "w", encoding="utf-8") as out_f:
       for ft_file in sorted(glob.glob(finetuning_pattern)):
-        with open(ft_file, "r", encoding="utf-8") as in_f:
+        with open(ft_file, encoding="utf-8") as in_f:
           content = in_f.read()
         out_f.writelines(content for _ in range(weight_factor))
       knbc_train = os.path.join(split_dir, "knbc_train.txt")
       if os.path.exists(knbc_train):
-        with open(knbc_train, "r", encoding="utf-8") as in_f:
+        with open(knbc_train, encoding="utf-8") as in_f:
           shutil.copyfileobj(in_f, out_f)
 
     encoded_train = os.path.join(tmp, "encoded.txt")

@@ -20,7 +20,7 @@ file transfer, script execution, and auto-cleanup via Python context managers.
 import os
 import shutil
 import subprocess
-from typing import Any
+import typing
 
 
 def get_colab_binary() -> str:
@@ -83,7 +83,7 @@ class ColabRunner:
     Returns:
       CompletedProcess instance.
     """
-    cmd = [self.binary_path] + args
+    cmd = [self.binary_path, *args]
     print(f"[Colab CLI] Executing: {' '.join(cmd)}", flush=True)
     return subprocess.run(cmd, check=check, text=True, capture_output=False)
 
@@ -161,14 +161,14 @@ class ColabRunner:
       self._run_cmd(["stop", "-s", self.session_name], check=False)
       self._is_active = False
 
-  def __enter__(self) -> "ColabRunner":
+  def __enter__(self) -> typing.Self:
     self.provision_session()
     return self
 
   def __exit__(
       self,
-      exc_type: type | None,
+      exc_type: object,
       exc_val: BaseException | None,
-      exc_tb: Any | None,
+      exc_tb: object,
   ) -> None:
     self.stop_session()

@@ -59,7 +59,7 @@ def find_conflicts(data_path: str,
   total_data_points = 0
 
   # First pass: identify conflicts
-  with open(data_path, 'r', encoding='utf-8') as f:
+  with open(data_path, encoding='utf-8') as f:
     for line in f:
       cols = line.strip('\n').split('\t')
       if len(cols) < 2:
@@ -145,7 +145,7 @@ def find_conflicts(data_path: str,
 
   # Second pass: write out resolved file
   with open(
-      data_path, 'r', encoding='utf-8') as fin, open(
+      data_path, encoding='utf-8') as fin, open(
           output_path, 'w', encoding='utf-8') as fout:
     for line in fin:
       cols = line.strip('\n').split('\t')
