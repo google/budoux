@@ -32,7 +32,7 @@ import sys
 from typing import Any
 
 # Module hack to allow importing budoux from repository root when run from CLI
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..")
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import requests

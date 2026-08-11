@@ -23,12 +23,12 @@ from collections import defaultdict
 
 def _reconstruct_text_from_unigram(features: str) -> str:
   """Reconstructs the human-readable text from unigrams."""
-  feature_list = features.split("\t")
+  feature_list = features.split('\t')
   unigrams = {}
   for feat in feature_list:
-    if not feat.startswith("UW"):
+    if not feat.startswith('UW'):
       continue
-    parts = feat.split(":", 1)
+    parts = feat.split(':', 1)
     if len(parts) != 2:
       continue
     idx = int(parts[0][2:])
@@ -59,15 +59,15 @@ def find_conflicts(
   total_data_points = 0
 
   # First pass: identify conflicts
-  with open(data_path, encoding="utf-8") as f:
+  with open(data_path, encoding='utf-8') as f:
     for line in f:
-      cols = line.strip("\n").split("\t")
+      cols = line.strip('\n').split('\t')
       if len(cols) < 2:
         continue
       label = int(cols[0])
 
       # Canonicalize features by sorting them
-      features = "\t".join(sorted(cols[1:]))
+      features = '\t'.join(sorted(cols[1:]))
 
       if label > 0:
         features_to_pos_weight[features] += label
@@ -147,13 +147,13 @@ def find_conflicts(
 
   # Second pass: write out resolved file
   with (
-    open(data_path, encoding="utf-8") as fin,
-    open(output_path, "w", encoding="utf-8") as fout,
+    open(data_path, encoding='utf-8') as fin,
+    open(output_path, 'w', encoding='utf-8') as fout,
   ):
     for line in fin:
-      cols = line.strip("\n").split("\t")
+      cols = line.strip('\n').split('\t')
       label = int(cols[0])
-      features = "\t".join(sorted(cols[1:]))
+      features = '\t'.join(sorted(cols[1:]))
       if features in resolved_features:
         if features in majority_features:
           winner_sign = majority_features[features]
@@ -168,24 +168,24 @@ def find_conflicts(
 
 def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
-  parser.add_argument("encoded_data", help="File path for the encoded data.")
+  parser.add_argument('encoded_data', help='File path for the encoded data.')
   parser.add_argument(
-    "-o",
-    "--output",
-    help="File path to save the cleaned encoded data.",
+    '-o',
+    '--output',
+    help='File path to save the cleaned encoded data.',
     default=None,
   )
   parser.add_argument(
-    "-t",
-    "--threshold",
+    '-t',
+    '--threshold',
     type=float,
     default=1.0,
-    help="Threshold ratio for majority vote (default: 1.0 [Delete All]).",
+    help='Threshold ratio for majority vote (default: 1.0 [Delete All]).',
   )
   args = parser.parse_args()
 
   find_conflicts(args.encoded_data, args.output, args.threshold)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

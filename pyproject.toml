@@ -68,6 +68,9 @@ dev = [
 line-length = 80
 indent-width = 2
 
+[tool.ruff.format]
+quote-style = "preserve"
+
 [tool.pyrefly]
 python-version = "3.12"
 preset = "legacy"

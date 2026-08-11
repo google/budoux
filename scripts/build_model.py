@@ -35,9 +35,9 @@ def aggregate_scores(weights: list[str]) -> dict[str, dict[str, float]]:
     row = row.strip()
     if not row:
       continue
-    feature = row.split("\t")[0]
-    feature_group, feature_content = feature.split(":", 1)
-    score = float(row.split("\t")[1])
+    feature = row.split('\t')[0]
+    feature_group, feature_content = feature.split(':', 1)
+    score = float(row.split('\t')[1])
     decision_trees.setdefault(feature_group, {})
     decision_trees[feature_group].setdefault(feature_content, 0)
     decision_trees[feature_group][feature_content] += score
@@ -80,18 +80,18 @@ def parse_args(test: list[str] | None = None) -> argparse.Namespace:
     description=__doc__, formatter_class=argparse.RawTextHelpFormatter
   )
   parser.add_argument(
-    "weight_file", help="A file path for the learned weights."
+    'weight_file', help='A file path for the learned weights.'
   )
   parser.add_argument(
-    "-o",
-    "--outfile",
-    help="A file path to export a model file. (default: model.json)",
-    default="model.json",
+    '-o',
+    '--outfile',
+    help='A file path to export a model file. (default: model.json)',
+    default='model.json',
     type=str,
   )
   parser.add_argument(
-    "--scale",
-    help="A scale factor for the output scores",
+    '--scale',
+    help='A scale factor for the output scores',
     default=1000,
     type=int,
   )
@@ -110,10 +110,10 @@ def main() -> None:
     weights = f.readlines()
   model = aggregate_scores(weights)
   model_rounded = round_model(model, scale)
-  with open(model_filename, "w", encoding="utf-8") as f:
-    json.dump(model_rounded, f, ensure_ascii=False, separators=(",", ":"))
-  print("Model file is exported as", model_filename)
+  with open(model_filename, 'w', encoding='utf-8') as f:
+    json.dump(model_rounded, f, ensure_ascii=False, separators=(',', ':'))
+  print('Model file is exported as', model_filename)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

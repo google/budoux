@@ -18,7 +18,7 @@ import sys
 import unittest
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import translate_model
@@ -26,35 +26,35 @@ from scripts import translate_model
 
 class TestNormalize(unittest.TestCase):
   def test_old_format_input(self) -> None:
-    model = {"a:x": 48, "a:y": 21, "b:x": 2, "b:z": 89}
-    expect = {"a": {"x": 48, "y": 21}, "b": {"x": 2, "z": 89}}
+    model = {'a:x': 48, 'a:y': 21, 'b:x': 2, 'b:z': 89}
+    expect = {'a': {'x': 48, 'y': 21}, 'b': {'x': 2, 'z': 89}}
     result = translate_model.normalize(model)
     self.assertDictEqual(result, expect)
 
   def test_new_format_input(self) -> None:
-    model = {"a": {"x": 48, "y": 21}, "b": {"x": 2, "z": 89}}
+    model = {'a': {'x': 48, 'y': 21}, 'b': {'x': 2, 'z': 89}}
     result = translate_model.normalize(model)
     self.assertDictEqual(result, model)
 
   def test_broken_input1(self) -> None:
-    model = {"a:x": 23, "b": {"x": 37, "y": 18}}
+    model = {'a:x': 23, 'b': {'x': 37, 'y': 18}}
     with self.assertRaises(Exception) as cm:
       translate_model.normalize(model)
-    self.assertTrue("Unsupported model format" in str(cm.exception))
+    self.assertTrue('Unsupported model format' in str(cm.exception))
 
   def test_broken_input2(self) -> None:
-    model = {"b": {"x": 37, "y": {"z": 123}}}
+    model = {'b': {'x': 37, 'y': {'z': 123}}}
     with self.assertRaises(Exception) as cm:
       translate_model.normalize(model)
-    self.assertTrue("Unsupported model format" in str(cm.exception))
+    self.assertTrue('Unsupported model format' in str(cm.exception))
 
 
 class TestTranslateICU(unittest.TestCase):
   def test_standard(self) -> None:
     model = {}
-    model["b"] = {"x": 47, "z": 13}
-    model["a"] = {"x": 12, "y": 88}
-    expect = """
+    model['b'] = {'x': 47, 'z': 13}
+    model['a'] = {'x': 12, 'y': 88}
+    expect = '''
 jaml {
     aKeys {
         "x",
@@ -73,6 +73,6 @@ jaml {
         13,
     }
 }
-""".strip()
+'''.strip()
     result = translate_model.translate_icu(model)
     self.assertEqual(result, expect)
