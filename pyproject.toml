@@ -41,7 +41,6 @@ dev = [
     "twine",
     "types-regex",
     "types-setuptools",
-    "yapf",
     "jax>=0.9.0; python_version >= '3.12'",
     "pyrefly>=1.2.0",
     "ruff>=0.16.2",
@@ -65,13 +64,16 @@ dev = [
     "budoux[dev]",
 ]
 
-[tool.yapf]
-based_on_style = "yapf"
-
-
 [tool.pyrefly]
 python-version = "3.12"
 preset = "legacy"
+
+[tool.ruff]
+line-length = 88
+indent-width = 2
+
+[tool.ruff.format]
+indent-style = "space"
 
 [tool.ruff.lint]
 extend-select = [
@@ -93,6 +95,6 @@ extend-select = [
 ]
 ignore = [
     "E402", # Module level import not at top of file (module hack)
-    "E501", # Line too long (handled by yapf)
+    "E501", # Line too long (handled by ruff format)
     "RUF001", # String contains ambiguous character (e.g. fullwidth punctuation in test data)
 ]

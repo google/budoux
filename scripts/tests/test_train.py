@@ -25,22 +25,21 @@ pytest.importorskip("jax")
 from jax import numpy as jnp
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import train
 
 
 class TestArgParse(unittest.TestCase):
-
   def test_cmdargs_invalid_option(self) -> None:
-    cmdargs = ['-v']
+    cmdargs = ["-v"]
     with self.assertRaises(SystemExit) as cm:
       train.parse_args(cmdargs)
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_help(self) -> None:
-    cmdargs = ['-h']
+    cmdargs = ["-h"]
     with self.assertRaises(SystemExit) as cm:
       train.parse_args(cmdargs)
     self.assertEqual(cm.exception.code, 0)
@@ -51,9 +50,9 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_default(self) -> None:
-    cmdargs = ['encoded.txt']
+    cmdargs = ["encoded.txt"]
     output = train.parse_args(cmdargs)
-    self.assertEqual(output.encoded_train_data, 'encoded.txt')
+    self.assertEqual(output.encoded_train_data, "encoded.txt")
     self.assertEqual(output.output, train.DEFAULT_OUTPUT_NAME)
     self.assertEqual(output.log, train.DEFAULT_LOG_NAME)
     self.assertEqual(output.feature_thres, train.DEFAULT_FEATURE_THRES)
@@ -63,22 +62,31 @@ class TestArgParse(unittest.TestCase):
 
   def test_cmdargs_full(self) -> None:
     cmdargs = [
-        'encoded.txt', '-o', 'out.txt', '--log', 'foo.log', '--feature-thres',
-        '100', '--iter', '10', '--out-span', '50', '--val-data',
-        'val_encoded.txt'
+      "encoded.txt",
+      "-o",
+      "out.txt",
+      "--log",
+      "foo.log",
+      "--feature-thres",
+      "100",
+      "--iter",
+      "10",
+      "--out-span",
+      "50",
+      "--val-data",
+      "val_encoded.txt",
     ]
     output = train.parse_args(cmdargs)
-    self.assertEqual(output.encoded_train_data, 'encoded.txt')
-    self.assertEqual(output.output, 'out.txt')
-    self.assertEqual(output.log, 'foo.log')
+    self.assertEqual(output.encoded_train_data, "encoded.txt")
+    self.assertEqual(output.output, "out.txt")
+    self.assertEqual(output.log, "foo.log")
     self.assertEqual(output.feature_thres, 100)
     self.assertEqual(output.iter, 10)
     self.assertEqual(output.out_span, 50)
-    self.assertEqual(output.val_data, 'val_encoded.txt')
+    self.assertEqual(output.val_data, "val_encoded.txt")
 
 
 class TestPreprocess(unittest.TestCase):
-
   def test_standard_setup(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       train_data_path = tf.name
@@ -86,20 +94,15 @@ class TestPreprocess(unittest.TestCase):
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       val_data_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(train_data_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
-    with open(val_data_path, 'w') as f:
-      f.write('1\tbar\tbaz\n'
-              '-1\txyz\n'
-              '1\tabc\tqux\tfoo\n')
+    with open(train_data_path, "w") as f:
+      f.write("1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n")
+    with open(val_data_path, "w") as f:
+      f.write("1\tbar\tbaz\n-1\txyz\n1\tabc\tqux\tfoo\n")
     train_dataset, features, val_dataset = train.preprocess(
-        train_data_path, 1, val_data_path)
+      train_data_path, 1, val_data_path
+    )
 
-    self.assertEqual(features, ['foo', 'bar', 'baz'])
+    self.assertEqual(features, ["foo", "bar", "baz"])
     # The training input X and the target Y should look like below:
     # Y    X(foo bar baz)
     # 1      1   1   0
@@ -122,20 +125,16 @@ class TestPreprocess(unittest.TestCase):
       self.assertEqual(val_dataset.X_rows.tolist(), [0, 0, 2])
       self.assertEqual(val_dataset.X_cols.tolist(), [1, 2, 0])
     else:
-      raise TypeError('val_dataset is not an instance of Dataset.')
+      raise TypeError("val_dataset is not an instance of Dataset.")
 
   def test_no_val(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       train_data_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(train_data_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
+    with open(train_data_path, "w") as f:
+      f.write("1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n")
     train_dataset, features, val_dataset = train.preprocess(train_data_path, 1)
-    self.assertEqual(features, ['foo', 'bar', 'baz'])
+    self.assertEqual(features, ["foo", "bar", "baz"])
     self.assertEqual(train_dataset.Y.tolist(), [1, -1, 1, 1, -1])
     self.assertEqual(train_dataset.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(train_dataset.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
@@ -143,29 +142,29 @@ class TestPreprocess(unittest.TestCase):
 
 
 class TestPred(unittest.TestCase):
-
   def test_standard_setup(self) -> None:
-    X = jnp.array([
+    X = jnp.array(
+      [
         [1, 1, 0],
         [1, 0, 1],
         [0, 1, 0],
         [0, 0, 1],
-    ])
+      ]
+    )
     phis = jnp.array([0.4, 0.2, -0.3])
     N = X.shape[0]
     rows, cols = jnp.where(X == 1)
     res = train.pred(phis, rows, cols, N)
     expected = [
-        0.4 + 0.2 - (-0.3) > 0,
-        0.4 - 0.2 + (-0.3) > 0,
-        -0.4 + 0.2 - (-0.3) > 0,
-        -0.4 - 0.2 + (-0.3) > 0,
+      0.4 + 0.2 - (-0.3) > 0,
+      0.4 - 0.2 + (-0.3) > 0,
+      -0.4 + 0.2 - (-0.3) > 0,
+      -0.4 - 0.2 + (-0.3) > 0,
     ]
     self.assertEqual(res.tolist(), expected)
 
 
 class TestGetMetrics(unittest.TestCase):
-
   def test_standard_setup(self) -> None:
     pred = jnp.array([0, 0, 1, 0, 0], dtype=bool)
     target = jnp.array([1, 0, 1, 1, 1], dtype=bool)
@@ -183,13 +182,15 @@ class TestGetMetrics(unittest.TestCase):
 
 
 class TestUpdate(unittest.TestCase):
-  X = jnp.array([
+  X = jnp.array(
+    [
       [1, 0, 1, 0],
       [0, 1, 0, 0],
       [0, 0, 0, 0],
       [1, 0, 0, 0],
       [0, 1, 1, 0],
-  ])
+    ]
+  )
 
   def test_standard_setup1(self) -> None:
     rows, cols = jnp.where(self.X == 1)
@@ -198,7 +199,8 @@ class TestUpdate(unittest.TestCase):
     w = jnp.array([0.1, 0.3, 0.1, 0.1, 0.4])
     scores = jnp.zeros(M)
     new_w, new_scores, best_feature_index, added_score = train.update(
-        w, scores, rows, cols, Y)
+      w, scores, rows, cols, Y
+    )
     self.assertFalse(w.argmax() == 0)
     self.assertTrue(new_w.argmax() == 0)
     self.assertFalse(scores.argmax() == 1)
@@ -208,7 +210,6 @@ class TestUpdate(unittest.TestCase):
 
 
 class TestFit(unittest.TestCase):
-
   def test_fit(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       weights_file_path = tf.name
@@ -218,43 +219,47 @@ class TestFit(unittest.TestCase):
       self.addCleanup(os.remove, tf.name)
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
-    X = jnp.array([
+    X = jnp.array(
+      [
         [0, 1, 1, 1],
         [1, 1, 0, 1],
         [0, 0, 1, 1],
         [1, 0, 0, 1],
-    ])
+      ]
+    )
     Y = jnp.array([0, 0, 1, 1])
     rows, cols = jnp.where(X == 1)
     dataset = train.Dataset(rows, cols, Y)
-    features = ['a', 'b', 'c']
+    features = ["a", "b", "c"]
     iters = 5
     out_span = 2
-    scores = train.fit(dataset, dataset, features, iters, weights_file_path,
-                       log_file_path, out_span)
+    scores = train.fit(
+      dataset, dataset, features, iters, weights_file_path, log_file_path, out_span
+    )
     with open(weights_file_path) as f:
-      weights = [
-          line.split('\t') for line in f.read().splitlines() if line.strip()
-      ]
+      weights = [line.split("\t") for line in f.read().splitlines() if line.strip()]
     top_feature = weights[0][0]
     self.assertEqual(
-        top_feature, 'b', msg='The most effective feature should be selected.')
-    self.assertEqual(
-        len(weights),
-        iters,
-        msg='The number of lines should equal to the iteration count.')
-
-    with open(log_file_path) as f:
-      log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
-    self.assertEqual(
-        len(log),
-        math.ceil(iters / out_span) + 1,
-        msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header'
+      top_feature, "b", msg="The most effective feature should be selected."
     )
     self.assertEqual(
-        len({len(line) for line in log}),
-        1,
-        msg='The header and the body should have the same number of columns.')
+      len(weights),
+      iters,
+      msg="The number of lines should equal to the iteration count.",
+    )
+
+    with open(log_file_path) as f:
+      log = [line.split("\t") for line in f.read().splitlines() if line.strip()]
+    self.assertEqual(
+      len(log),
+      math.ceil(iters / out_span) + 1,
+      msg="The number of lines should equal to the ceil of iteration / out_span plus one for the header",
+    )
+    self.assertEqual(
+      len({len(line) for line in log}),
+      1,
+      msg="The header and the body should have the same number of columns.",
+    )
 
     model: dict[str, float] = {}
     for weight in weights:
@@ -266,63 +271,42 @@ class TestFit(unittest.TestCase):
 
 
 class TestExtractFeatures(unittest.TestCase):
-
   def test_with_standard_setup(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
+    with open(entries_file_path, "w") as f:
+      f.write("1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n")
     result = train.extract_features(entries_file_path, 1)
-    self.assertEqual(result, ['foo', 'bar', 'baz'])
+    self.assertEqual(result, ["foo", "bar", "baz"])
 
   def test_with_redundant_breaks(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n\n'
-              '1\tbar\tfoo\n'
-              '\n'
-              '-1\tbaz\tqux\n')
+    with open(entries_file_path, "w") as f:
+      f.write("1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n\n1\tbar\tfoo\n\n-1\tbaz\tqux\n")
     result = train.extract_features(entries_file_path, 1)
-    self.assertEqual(result, ['foo', 'bar', 'baz'])
+    self.assertEqual(result, ["foo", "bar", "baz"])
 
   def test_with_weighted_entries(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(entries_file_path, 'w') as f:
-      f.write('2\tfoo\n'
-              '-3\tbar\n'
-              '1\tbaz\n')
+    with open(entries_file_path, "w") as f:
+      f.write("2\tfoo\n-3\tbar\n1\tbaz\n")
     result = train.extract_features(entries_file_path, 1)
-    self.assertEqual(result, ['bar', 'foo'])
+    self.assertEqual(result, ["bar", "foo"])
 
 
 class TestLoadDataset(unittest.TestCase):
-
   def test_with_standard_setup(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
-    result = train.load_dataset(entries_file_path, {
-        'foo': 0,
-        'bar': 1,
-        'baz': 2
-    })
+    with open(entries_file_path, "w") as f:
+      f.write("1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n")
+    result = train.load_dataset(entries_file_path, {"foo": 0, "bar": 1, "baz": 2})
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
@@ -331,18 +315,9 @@ class TestLoadDataset(unittest.TestCase):
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n\n'
-              '1\tbar\tfoo\n'
-              '\n'
-              '-1\tbaz\tqux\n')
-    result = train.load_dataset(entries_file_path, {
-        'foo': 0,
-        'bar': 1,
-        'baz': 2
-    })
+    with open(entries_file_path, "w") as f:
+      f.write("1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n\n1\tbar\tfoo\n\n-1\tbaz\tqux\n")
+    result = train.load_dataset(entries_file_path, {"foo": 0, "bar": 1, "baz": 2})
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
@@ -351,21 +326,13 @@ class TestLoadDataset(unittest.TestCase):
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
-    with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-14\tfoo\n'
-              '10\tfoo\tbar\tbaz\n'
-              '-11\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
-    result = train.load_dataset(entries_file_path, {
-        'foo': 0,
-        'bar': 1,
-        'baz': 2
-    })
+    with open(entries_file_path, "w") as f:
+      f.write("1\tfoo\tbar\n-14\tfoo\n10\tfoo\tbar\tbaz\n-11\tbar\tfoo\n-1\tbaz\tqux\n")
+    result = train.load_dataset(entries_file_path, {"foo": 0, "bar": 1, "baz": 2})
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -14, 10, -11, -1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

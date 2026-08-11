@@ -18,108 +18,93 @@ import sys
 import unittest
 
 # module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import build_model
 
 
 class TestAggregateScores(unittest.TestCase):
-
   def test_standard(self) -> None:
-    weights = [
-        'AB:x\t2.893\n', 'BC:y\t0.123\n', 'AB:y\t2.123\n', 'BC:y\t1.234\n'
-    ]
+    weights = ["AB:x\t2.893\n", "BC:y\t0.123\n", "AB:y\t2.123\n", "BC:y\t1.234\n"]
     model = build_model.aggregate_scores(weights)
-    self.assertDictEqual(model, {
-        'AB': {
-            'x': 2.893,
-            'y': 2.123
-        },
-        'BC': {
-            'y': 1.357
-        }
-    }, 'should group scores by feature type.')
+    self.assertDictEqual(
+      model,
+      {"AB": {"x": 2.893, "y": 2.123}, "BC": {"y": 1.357}},
+      "should group scores by feature type.",
+    )
 
   def test_blank_line(self) -> None:
     weights = [
-        '\n', 'AB:x\t2.893\n', 'BC:y\t0.123\n', '\n', 'AB:y\t2.123\n',
-        'BC:y\t1.234\n'
+      "\n",
+      "AB:x\t2.893\n",
+      "BC:y\t0.123\n",
+      "\n",
+      "AB:y\t2.123\n",
+      "BC:y\t1.234\n",
     ]
     model = build_model.aggregate_scores(weights)
-    self.assertDictEqual(model, {
-        'AB': {
-            'x': 2.893,
-            'y': 2.123
-        },
-        'BC': {
-            'y': 1.357
-        }
-    }, 'should skip blank lines.')
+    self.assertDictEqual(
+      model,
+      {"AB": {"x": 2.893, "y": 2.123}, "BC": {"y": 1.357}},
+      "should skip blank lines.",
+    )
 
   def test_colon(self) -> None:
-    weights = ['AB::\t8.123']
+    weights = ["AB::\t8.123"]
     model = build_model.aggregate_scores(weights)
     self.assertDictEqual(
-        model, {'AB': {
-            ':': 8.123
-        }}, 'should consider the first colon only as a delimiter.')
+      model,
+      {"AB": {":": 8.123}},
+      "should consider the first colon only as a delimiter.",
+    )
 
 
 class TestRoundModel(unittest.TestCase):
-
   def test_standard(self) -> None:
     model = {
-        'AB': {
-            'x': 1.0002,
-            'y': 4.1237,
-        },
-        'BC': {
-            'z': 2.1111,
-        }
+      "AB": {
+        "x": 1.0002,
+        "y": 4.1237,
+      },
+      "BC": {
+        "z": 2.1111,
+      },
     }
     model_rounded = build_model.round_model(model, 1000)
-    self.assertDictEqual(model_rounded, {
-        'AB': {
-            'x': 1000,
-            'y': 4123
-        },
-        'BC': {
-            'z': 2111
-        }
-    }, 'should scale and round scores to integer.')
+    self.assertDictEqual(
+      model_rounded,
+      {"AB": {"x": 1000, "y": 4123}, "BC": {"z": 2111}},
+      "should scale and round scores to integer.",
+    )
 
   def test_insignificant_score(self) -> None:
     model = {
-        'AB': {
-            'x': 0.0009,
-            'y': 4.1237,
-        },
-        'BC': {
-            'z': 2.1111,
-        }
+      "AB": {
+        "x": 0.0009,
+        "y": 4.1237,
+      },
+      "BC": {
+        "z": 2.1111,
+      },
     }
     model_rounded = build_model.round_model(model, 1000)
-    self.assertDictEqual(model_rounded, {
-        'AB': {
-            'y': 4123
-        },
-        'BC': {
-            'z': 2111
-        }
-    }, 'should remove insignificant scores lower than 1.')
+    self.assertDictEqual(
+      model_rounded,
+      {"AB": {"y": 4123}, "BC": {"z": 2111}},
+      "should remove insignificant scores lower than 1.",
+    )
 
 
 class TestArgParse(unittest.TestCase):
-
   def test_cmdargs_invalid_option(self) -> None:
-    cmdargs = ['-v']
+    cmdargs = ["-v"]
     with self.assertRaises(SystemExit) as cm:
       build_model.parse_args(cmdargs)
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_help(self) -> None:
-    cmdargs = ['-h']
+    cmdargs = ["-h"]
     with self.assertRaises(SystemExit) as cm:
       build_model.parse_args(cmdargs)
     self.assertEqual(cm.exception.code, 0)
@@ -130,14 +115,13 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(cm.exception.code, 2)
 
   def test_cmdargs_default(self) -> None:
-    output = build_model.parse_args(['weight.txt'])
-    self.assertEqual(output.weight_file, 'weight.txt')
-    self.assertEqual(output.outfile, 'model.json')
+    output = build_model.parse_args(["weight.txt"])
+    self.assertEqual(output.weight_file, "weight.txt")
+    self.assertEqual(output.outfile, "model.json")
     self.assertEqual(output.scale, 1000)
 
   def test_cmdargs_with_scale(self) -> None:
-    output = build_model.parse_args(
-        ['weight.txt', '-o', 'foo.json', '--scale', '200'])
-    self.assertEqual(output.weight_file, 'weight.txt')
-    self.assertEqual(output.outfile, 'foo.json')
+    output = build_model.parse_args(["weight.txt", "-o", "foo.json", "--scale", "200"])
+    self.assertEqual(output.weight_file, "weight.txt")
+    self.assertEqual(output.outfile, "foo.json")
     self.assertEqual(output.scale, 200)

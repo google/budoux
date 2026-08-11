@@ -24,8 +24,8 @@ import jax
 import jax.numpy as jnp
 
 EPS = float(jnp.finfo(float).eps)
-DEFAULT_OUTPUT_NAME = 'weights.txt'
-DEFAULT_LOG_NAME = 'train.log'
+DEFAULT_OUTPUT_NAME = "weights.txt"
+DEFAULT_LOG_NAME = "train.log"
 DEFAULT_FEATURE_THRES = 10
 DEFAULT_ITERATION = 10000
 DEFAULT_OUT_SPAN = 100
@@ -50,6 +50,7 @@ class Dataset(NamedTuple):
   X_cols (jax.Array): Column indices of True values in the input data.
   Y (jax.Array): The target output.
   """
+
   X_rows: jax.Array
   X_cols: jax.Array
   Y: jax.Array
@@ -71,7 +72,7 @@ def extract_features(data_path: str, thres: int) -> list[str]:
   counter: typing.Counter[str] = Counter()
   with open(data_path) as f:
     for row in f:
-      cols = row.strip().split('\t')
+      cols = row.strip().split("\t")
       if len(cols) < 2:
         continue
       scale = abs(int(cols[0]))
@@ -90,13 +91,13 @@ def load_dataset(data_path: str, findex: dict[str, int]) -> Dataset:
   Returns:
     A dataset
   """
-  Y = array.array('i')
-  X_rows = array.array('I')
-  X_cols = array.array('I')
+  Y = array.array("i")
+  X_rows = array.array("I")
+  X_cols = array.array("I")
   with open(data_path) as f:
     i = 0
     for row in f:
-      cols = row.strip().split('\t')
+      cols = row.strip().split("\t")
       if len(cols) < 2:
         continue
       Y.append(int(cols[0]))
@@ -108,9 +109,9 @@ def load_dataset(data_path: str, findex: dict[str, int]) -> Dataset:
 
 
 def preprocess(
-    train_data_path: str,
-    feature_thres: int,
-    val_data_path: str | None = None,
+  train_data_path: str,
+  feature_thres: int,
+  val_data_path: str | None = None,
 ) -> tuple[Dataset, list[str], Dataset | None]:
   """Loads entries and translates them into JAX arrays. The boolean matrix of
   the input data is represented by row indices and column indices of True values
@@ -133,14 +134,12 @@ def preprocess(
   features = extract_features(train_data_path, feature_thres)
   feature_index = {feature: i for i, feature in enumerate(features)}
   train_dataset = load_dataset(train_data_path, feature_index)
-  val_dataset = load_dataset(val_data_path,
-                             feature_index) if val_data_path else None
+  val_dataset = load_dataset(val_data_path, feature_index) if val_data_path else None
   return train_dataset, features, val_dataset
 
 
 @partial(jax.jit, static_argnums=[3])
-def pred(scores: jax.Array, rows: jax.Array, cols: jax.Array,
-         N: int) -> jax.Array:
+def pred(scores: jax.Array, rows: jax.Array, cols: jax.Array, N: int) -> jax.Array:
   """Predicts the target output from the learned scores and input entries.
 
   Args:
@@ -154,8 +153,7 @@ def pred(scores: jax.Array, rows: jax.Array, cols: jax.Array,
   """
   # This is equivalent to scores.dot(2X - 1) = 2 * scores.dot(X) - scores.sum()
   # but in a sparse matrix-friendly way.
-  r: jax.Array = 2 * jax.ops.segment_sum(scores.take(cols), rows,
-                                         N) - scores.sum()
+  r: jax.Array = 2 * jax.ops.segment_sum(scores.take(cols), rows, N) - scores.sum()
   return r > 0
 
 
@@ -179,20 +177,21 @@ def get_metrics(pred: jax.Array, actual: jax.Array) -> Result:
   recall = tp / (tp + fn + EPS)
   fscore = 2 * precision * recall / (precision + recall + EPS)
   return Result(
-      tp=tp,
-      tn=tn,
-      fp=fp,
-      fn=fn,
-      accuracy=accuracy,
-      precision=precision,
-      recall=recall,
-      fscore=fscore,
+    tp=tp,
+    tn=tn,
+    fp=fp,
+    fn=fn,
+    accuracy=accuracy,
+    precision=precision,
+    recall=recall,
+    fscore=fscore,
   )
 
 
 @jax.jit
-def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
-           Y: jax.Array) -> tuple[jax.Array, jax.Array, int, float]:
+def update(
+  w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array, Y: jax.Array
+) -> tuple[jax.Array, jax.Array, int, float]:
   """Calculates the new weight vector and the contribution scores.
 
   Args:
@@ -223,9 +222,11 @@ def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
   amount: float = jnp.log((1 - err_min) / (err_min + EPS))  # type: ignore
 
   # This is equivalent to X_best = X[:, best_feature_index]
-  X_best = jnp.zeros(
-      N, dtype=bool).at[jnp.where(cols == best_feature_index, rows, N)].set(
-          True, mode='drop')
+  X_best = (
+    jnp.zeros(N, dtype=bool)
+    .at[jnp.where(cols == best_feature_index, rows, N)]
+    .set(True, mode="drop")
+  )
   w = w * jnp.exp(amount * (Y ^ X_best == positivity))
   w = w / w.sum()
   score = amount * (2 * positivity - 1)
@@ -233,9 +234,15 @@ def update(w: jax.Array, scores: jax.Array, rows: jax.Array, cols: jax.Array,
   return w, scores, best_feature_index, score
 
 
-def fit(dataset_train: Dataset, dataset_val: Dataset | None,
-        features: list[str], iters: int, weights_filename: str,
-        log_filename: str, out_span: int) -> jax.Array:
+def fit(
+  dataset_train: Dataset,
+  dataset_val: Dataset | None,
+  features: list[str],
+  iters: int,
+  weights_filename: str,
+  log_filename: str,
+  out_span: int,
+) -> jax.Array:
   """Trains an AdaBoost binary classifier.
 
   Args:
@@ -250,14 +257,14 @@ def fit(dataset_train: Dataset, dataset_val: Dataset | None,
   Returns:
     scores (jax.Array): The contribution scores.
   """
-  with open(weights_filename, 'w') as f:
-    f.write('')
-  with open(log_filename, 'w') as f:
-    f.write('iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore')
+  with open(weights_filename, "w") as f:
+    f.write("")
+  with open(log_filename, "w") as f:
+    f.write("iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore")
     if dataset_val:
-      f.write('\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore')
-    f.write('\n')
-  print(f'Outputting learned weights to {weights_filename} ...')
+      f.write("\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore")
+    f.write("\n")
+  print(f"Outputting learned weights to {weights_filename} ...")
 
   M = len(features)
   scores = jnp.zeros(M)
@@ -269,46 +276,44 @@ def fit(dataset_train: Dataset, dataset_val: Dataset | None,
   w = jnp.abs(dataset_train.Y) / jnp.sum(jnp.abs(dataset_train.Y))
 
   def output_progress(t: int) -> None:
-    with open(weights_filename, 'a') as f:
-      f.write('\n'.join(f'{p[0]}\t{p[1]:.6f}' for p in feature_score_buffer) +
-              '\n')
+    with open(weights_filename, "a") as f:
+      f.write("\n".join(f"{p[0]}\t{p[1]:.6f}" for p in feature_score_buffer) + "\n")
     feature_score_buffer.clear()
 
-    print(f'=== {t} ===')
+    print(f"=== {t} ===")
     print()
 
-    with open(log_filename, 'a') as f:
-      pred_train = pred(scores, dataset_train.X_rows, dataset_train.X_cols,
-                        N_train)
+    with open(log_filename, "a") as f:
+      pred_train = pred(scores, dataset_train.X_rows, dataset_train.X_cols, N_train)
       metrics_train = get_metrics(pred_train, Y_train)
-      print(f'train accuracy:\t{metrics_train.accuracy:.5f}')
-      print(f'train prec.:\t{metrics_train.precision:.5f}')
-      print(f'train recall:\t{metrics_train.recall:.5f}')
-      print(f'train fscore:\t{metrics_train.fscore:.5f}')
+      print(f"train accuracy:\t{metrics_train.accuracy:.5f}")
+      print(f"train prec.:\t{metrics_train.precision:.5f}")
+      print(f"train recall:\t{metrics_train.recall:.5f}")
+      print(f"train fscore:\t{metrics_train.fscore:.5f}")
       print()
       f.write(
-          f'{t}\t{metrics_train.accuracy:.5f}\t{metrics_train.precision:.5f}\t{metrics_train.recall:.5f}\t{metrics_train.fscore:.5f}'
+        f"{t}\t{metrics_train.accuracy:.5f}\t{metrics_train.precision:.5f}\t{metrics_train.recall:.5f}\t{metrics_train.fscore:.5f}"
       )
 
       if dataset_val:
         pred_test = pred(scores, dataset_val.X_rows, dataset_val.X_cols, N_test)
         metrics_test = get_metrics(pred_test, Y_test)
-        print(f'test accuracy:\t{metrics_test.accuracy:.5f}')
-        print(f'test prec.:\t{metrics_test.precision:.5f}')
-        print(f'test recall:\t{metrics_test.recall:.5f}')
-        print(f'test fscore:\t{metrics_test.fscore:.5f}')
+        print(f"test accuracy:\t{metrics_test.accuracy:.5f}")
+        print(f"test prec.:\t{metrics_test.precision:.5f}")
+        print(f"test recall:\t{metrics_test.recall:.5f}")
+        print(f"test fscore:\t{metrics_test.fscore:.5f}")
         print()
 
         f.write(
-            f'\t{metrics_test.accuracy:.5f}\t{metrics_test.precision:.5f}\t{metrics_test.recall:.5f}\t{metrics_test.fscore:.5f}'
+          f"\t{metrics_test.accuracy:.5f}\t{metrics_test.precision:.5f}\t{metrics_test.recall:.5f}\t{metrics_test.fscore:.5f}"
         )
 
-      f.write('\n')
+      f.write("\n")
 
   for t in range(iters):
-    w, scores, best_feature_index, score = update(w, scores,
-                                                  dataset_train.X_rows,
-                                                  dataset_train.X_cols, Y_train)
+    w, scores, best_feature_index, score = update(
+      w, scores, dataset_train.X_rows, dataset_train.X_cols, Y_train
+    )
     w.block_until_ready()
     feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))
@@ -331,35 +336,42 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
   """
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
-      'encoded_train_data', help='File path for the encoded training data.')
+    "encoded_train_data", help="File path for the encoded training data."
+  )
   parser.add_argument(
-      '-o',
-      '--output',
-      help=f'Output file path for the learned weights. (default: {DEFAULT_OUTPUT_NAME})',
-      type=str,
-      default=DEFAULT_OUTPUT_NAME)
+    "-o",
+    "--output",
+    help=f"Output file path for the learned weights. (default: {DEFAULT_OUTPUT_NAME})",
+    type=str,
+    default=DEFAULT_OUTPUT_NAME,
+  )
   parser.add_argument(
-      '--log',
-      help=f'Output file path for the training log. (default: {DEFAULT_LOG_NAME})',
-      type=str,
-      default=DEFAULT_LOG_NAME)
+    "--log",
+    help=f"Output file path for the training log. (default: {DEFAULT_LOG_NAME})",
+    type=str,
+    default=DEFAULT_LOG_NAME,
+  )
   parser.add_argument(
-      '--feature-thres',
-      help=f'Threshold value of the minimum feature frequency. (default: {DEFAULT_FEATURE_THRES})',
-      type=int,
-      default=DEFAULT_FEATURE_THRES)
+    "--feature-thres",
+    help=f"Threshold value of the minimum feature frequency. (default: {DEFAULT_FEATURE_THRES})",
+    type=int,
+    default=DEFAULT_FEATURE_THRES,
+  )
   parser.add_argument(
-      '--iter',
-      help=f'Number of iterations for training. (default: {DEFAULT_ITERATION})',
-      type=int,
-      default=DEFAULT_ITERATION)
+    "--iter",
+    help=f"Number of iterations for training. (default: {DEFAULT_ITERATION})",
+    type=int,
+    default=DEFAULT_ITERATION,
+  )
   parser.add_argument(
-      '--out-span',
-      help=f'Iteration span to output metrics and weights. (default: {DEFAULT_OUT_SPAN})',
-      type=int,
-      default=DEFAULT_OUT_SPAN)
+    "--out-span",
+    help=f"Iteration span to output metrics and weights. (default: {DEFAULT_OUT_SPAN})",
+    type=int,
+    default=DEFAULT_OUT_SPAN,
+  )
   parser.add_argument(
-      '--val-data', help='File path for the encoded validation data.', type=str)
+    "--val-data", help="File path for the encoded validation data.", type=str
+  )
   if test is None:
     return parser.parse_args()
   else:
@@ -376,14 +388,22 @@ def main() -> None:
   out_span = int(args.out_span)
   val_data: str | None = args.val_data
 
-  dataset_train, features, dataset_val = preprocess(data_filename,
-                                                    feature_thres, val_data)
-  fit(dataset_train, dataset_val, features, iterations, weights_filename,
-      log_filename, out_span)
+  dataset_train, features, dataset_val = preprocess(
+    data_filename, feature_thres, val_data
+  )
+  fit(
+    dataset_train,
+    dataset_val,
+    features,
+    iterations,
+    weights_filename,
+    log_filename,
+    out_span,
+  )
   print(
-      f'Training done. Export the model by passing {weights_filename} to build_model.py'
+    f"Training done. Export the model by passing {weights_filename} to build_model.py"
   )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()

@@ -21,10 +21,10 @@ from html.parser import HTMLParser
 from .utils import SEP
 
 HTMLAttr = list[tuple[str, str | None]]
-PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: anywhere;'
+PARENT_CSS_STYLE = "word-break: keep-all; overflow-wrap: anywhere;"
 with open(
-    os.path.join(os.path.dirname(__file__), 'skip_nodes.json'),
-    encoding='utf-8') as f:
+  os.path.join(os.path.dirname(__file__), "skip_nodes.json"), encoding="utf-8"
+) as f:
   SKIP_NODES: set[str] = set(json.load(f))
 
 
@@ -47,7 +47,8 @@ class TextContentExtractor(HTMLParser):
   Attributes:
     output (str): Accumulated text content.
   """
-  output = ''
+
+  output = ""
 
   def handle_data(self, data: str) -> None:
     self.output += data
@@ -59,7 +60,8 @@ class HTMLChunkResolver(HTMLParser):
   Attributes:
     output (str): The HTML string to output.
   """
-  output = ''
+
+  output = ""
 
   def __init__(self, chunks: list[str], separator: str):
     """Initializes the parser.
@@ -79,20 +81,20 @@ class HTMLChunkResolver(HTMLParser):
     attr_pairs = []
     for attr in attrs:
       if attr[1] is None:
-        attr_pairs.append(' ' + attr[0])
+        attr_pairs.append(" " + attr[0])
       else:
         attr_pairs.append(f' {attr[0]}="{attr[1]}"')
-    encoded_attrs = ''.join(attr_pairs)
+    encoded_attrs = "".join(attr_pairs)
     self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
       if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
         self.scan_index += 1
         self.output += self.separator
       self.to_skip = True
-    self.output += f'<{tag}{encoded_attrs}>'
+    self.output += f"<{tag}{encoded_attrs}>"
 
   def handle_endtag(self, tag: str) -> None:
-    self.output += f'</{tag}>'
+    self.output += f"</{tag}>"
     while not self.element_stack.empty():
       state = self.element_stack.get_nowait()
       if state.tag == tag:
@@ -108,8 +110,9 @@ class HTMLChunkResolver(HTMLParser):
   def handle_data(self, data: str) -> None:
     for char in data:
       if char != self.chunks_joined[self.scan_index]:
-        prev_was_whitespace = self.scan_index > 0 and self.chunks_joined[
-            self.scan_index - 1].isspace()
+        prev_was_whitespace = (
+          self.scan_index > 0 and self.chunks_joined[self.scan_index - 1].isspace()
+        )
         if not self.to_skip and not char.isspace() and not prev_was_whitespace:
           self.output += self.separator
         self.scan_index += 1
@@ -131,7 +134,7 @@ def get_text(html: str) -> str:
   return text_content_extractor.output
 
 
-def resolve(phrases: list[str], html: str, separator: str = '\u200b') -> str:
+def resolve(phrases: list[str], html: str, separator: str = "\u200b") -> str:
   """Wraps phrases in the HTML string with non-breaking markup.
 
   Args:

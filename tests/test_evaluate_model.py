@@ -21,7 +21,7 @@ import tempfile
 import unittest
 
 # module hack to allow importing budoux from workspace root
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+LIB_PATH = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux
@@ -29,19 +29,18 @@ from budoux.evaluate_model import evaluate
 
 
 class TestEvaluateModel(unittest.TestCase):
-
   def setUp(self) -> None:
     self.temp_dir = tempfile.TemporaryDirectory()
-    self.model_path = os.path.join(self.temp_dir.name, 'model.json')
-    self.test_data_path = os.path.join(self.temp_dir.name, 'test_data.txt')
+    self.model_path = os.path.join(self.temp_dir.name, "model.json")
+    self.test_data_path = os.path.join(self.temp_dir.name, "test_data.txt")
 
     # A simple model that has UW4:A with positive weight (making it break at A)
     # and all other scores 0.
     # Base score: -1000 * 0.5 = -500.
     # At 'A': -500 + 1000 = 500 > 0 (Break).
     # At 'B': -500 + 0 = -500 <= 0 (No Break).
-    self.tiny_model = {'UW4': {'A': 1000}}
-    with open(self.model_path, 'w', encoding='utf-8') as f:
+    self.tiny_model = {"UW4": {"A": 1000}}
+    with open(self.model_path, "w", encoding="utf-8") as f:
       json.dump(self.tiny_model, f)
 
   def tearDown(self) -> None:
@@ -61,26 +60,25 @@ class TestEvaluateModel(unittest.TestCase):
     # Precision: 2/(2+0) = 1.0
     # Recall: 2/(2+1) = 0.6666666666666666
     # Fscore: 2 * 1.0 * 0.666... / (1.0 + 0.666...) = 0.8
-    test_content = f'B{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
-    with open(self.test_data_path, 'w', encoding='utf-8') as f:
+    test_content = f"B{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n"
+    with open(self.test_data_path, "w", encoding="utf-8") as f:
       f.write(test_content)
 
     metrics = evaluate(self.model_path, self.test_data_path)
 
-    self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
-    self.assertAlmostEqual(metrics['precision'], 1.0)
-    self.assertAlmostEqual(metrics['recall'], 2 / 3)
-    self.assertAlmostEqual(metrics['fscore'], 0.8)
+    self.assertAlmostEqual(metrics["accuracy"], 2 / 3)
+    self.assertAlmostEqual(metrics["precision"], 1.0)
+    self.assertAlmostEqual(metrics["recall"], 2 / 3)
+    self.assertAlmostEqual(metrics["fscore"], 0.8)
 
   def test_evaluate_model_pathlike(self) -> None:
-    test_content = f'B{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
-    with open(self.test_data_path, 'w', encoding='utf-8') as f:
+    test_content = f"B{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n"
+    with open(self.test_data_path, "w", encoding="utf-8") as f:
       f.write(test_content)
 
-    metrics = evaluate(
-        pathlib.Path(self.model_path), pathlib.Path(self.test_data_path))
+    metrics = evaluate(pathlib.Path(self.model_path), pathlib.Path(self.test_data_path))
 
-    self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
+    self.assertAlmostEqual(metrics["accuracy"], 2 / 3)
 
   def test_evaluate_model_literal_slashes(self) -> None:
     # Verify that literal slashes are treated strictly as text characters
@@ -97,20 +95,20 @@ class TestEvaluateModel(unittest.TestCase):
     # Precision: 0/2 = 0.0
     # Recall: 0/1 = 0.0
     # Fscore: 0.0
-    test_content = f'B/A{budoux.utils.SEP}B/A\n'
-    with open(self.test_data_path, 'w', encoding='utf-8') as f:
+    test_content = f"B/A{budoux.utils.SEP}B/A\n"
+    with open(self.test_data_path, "w", encoding="utf-8") as f:
       f.write(test_content)
 
     metrics = evaluate(self.model_path, self.test_data_path)
 
-    self.assertAlmostEqual(metrics['accuracy'], 0.4)
-    self.assertAlmostEqual(metrics['precision'], 0.0)
-    self.assertAlmostEqual(metrics['recall'], 0.0)
-    self.assertAlmostEqual(metrics['fscore'], 0.0)
+    self.assertAlmostEqual(metrics["accuracy"], 0.4)
+    self.assertAlmostEqual(metrics["precision"], 0.0)
+    self.assertAlmostEqual(metrics["recall"], 0.0)
+    self.assertAlmostEqual(metrics["fscore"], 0.0)
 
   def test_evaluate_model_edge_cases(self) -> None:
     # Verify empty lines are skipped and single characters do not crash
-    test_content = '\n\nB\n\nB▁A\n'
+    test_content = "\n\nB\n\nB▁A\n"
     # 'B': length 1 -> 0 transition boundaries (skipped or 0 counts)
     # 'B▁A': length 2 -> 1 transition boundary (index 1).
     # Ground truth: [True]
@@ -118,34 +116,34 @@ class TestEvaluateModel(unittest.TestCase):
     # Predicted breaks: [True]
     # TP: 1, TN: 0, FP: 0, FN: 0
     # Accuracy: 1.0, Precision: 1.0, Recall: 1.0, Fscore: 1.0
-    with open(self.test_data_path, 'w', encoding='utf-8') as f:
+    with open(self.test_data_path, "w", encoding="utf-8") as f:
       f.write(test_content)
 
     metrics = evaluate(self.model_path, self.test_data_path)
 
-    self.assertEqual(metrics['accuracy'], 1.0)
-    self.assertEqual(metrics['precision'], 1.0)
-    self.assertEqual(metrics['recall'], 1.0)
-    self.assertEqual(metrics['fscore'], 1.0)
-    self.assertEqual(len(metrics['errors']), 0)
+    self.assertEqual(metrics["accuracy"], 1.0)
+    self.assertEqual(metrics["precision"], 1.0)
+    self.assertEqual(metrics["recall"], 1.0)
+    self.assertEqual(metrics["fscore"], 1.0)
+    self.assertEqual(len(metrics["errors"]), 0)
 
   def test_evaluate_model_tsv_format(self) -> None:
-    tsv_path = os.path.join(self.temp_dir.name, 'test_data.tsv')
+    tsv_path = os.path.join(self.temp_dir.name, "test_data.tsv")
     test_content = (
-        '# comment line\n'
-        f'gh123\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
-        f'gh124\tmeta_info\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+      "# comment line\n"
+      f"gh123\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n"
+      f"gh124\tmeta_info\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n"
     )
-    with open(tsv_path, 'w', encoding='utf-8') as f:
+    with open(tsv_path, "w", encoding="utf-8") as f:
       f.write(test_content)
 
     metrics = evaluate(self.model_path, tsv_path)
-    self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
-    self.assertEqual(metrics['precision'], 1.0)
-    self.assertAlmostEqual(metrics['recall'], 2 / 3)
-    self.assertAlmostEqual(metrics['fscore'], 0.8)
-    self.assertEqual(len(metrics['errors']), 2)
+    self.assertAlmostEqual(metrics["accuracy"], 2 / 3)
+    self.assertEqual(metrics["precision"], 1.0)
+    self.assertAlmostEqual(metrics["recall"], 2 / 3)
+    self.assertAlmostEqual(metrics["fscore"], 0.8)
+    self.assertEqual(len(metrics["errors"]), 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()
