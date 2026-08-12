@@ -29,7 +29,6 @@ from budoux.evaluate_model import evaluate
 
 
 class TestEvaluateModel(unittest.TestCase):
-
   def setUp(self) -> None:
     self.temp_dir = tempfile.TemporaryDirectory()
     self.model_path = os.path.join(self.temp_dir.name, 'model.json')
@@ -77,8 +76,7 @@ class TestEvaluateModel(unittest.TestCase):
     with open(self.test_data_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
-    metrics = evaluate(
-        pathlib.Path(self.model_path), pathlib.Path(self.test_data_path))
+    metrics = evaluate(pathlib.Path(self.model_path), pathlib.Path(self.test_data_path))
 
     self.assertAlmostEqual(metrics['accuracy'], 2 / 3)
 
@@ -132,9 +130,9 @@ class TestEvaluateModel(unittest.TestCase):
   def test_evaluate_model_tsv_format(self) -> None:
     tsv_path = os.path.join(self.temp_dir.name, 'test_data.tsv')
     test_content = (
-        '# comment line\n'
-        f'gh123\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
-        f'gh124\tmeta_info\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+      '# comment line\n'
+      f'gh123\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+      f'gh124\tmeta_info\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
     )
     with open(tsv_path, 'w', encoding='utf-8') as f:
       f.write(test_content)

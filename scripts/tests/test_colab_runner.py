@@ -26,7 +26,6 @@ from scripts import colab_runner
 
 
 class TestGetColabBinary(unittest.TestCase):
-
   @patch.dict(os.environ, {"COLAB_CLI_PATH": "/custom/colab"})
   @patch("os.path.exists", return_value=True)
   def test_env_var_override(self, mock_exists: MagicMock) -> None:
@@ -42,58 +41,52 @@ class TestGetColabBinary(unittest.TestCase):
   @patch.dict(os.environ, {}, clear=True)
   @patch("shutil.which", return_value=None)
   @patch("os.path.exists", return_value=False)
-  def test_not_found_raises(self, mock_which: MagicMock,
-                            mock_exists: MagicMock) -> None:
+  def test_not_found_raises(
+    self, mock_which: MagicMock, mock_exists: MagicMock
+  ) -> None:
     with self.assertRaises(FileNotFoundError):
       colab_runner.get_colab_binary()
 
 
 class TestColabRunner(unittest.TestCase):
-
   @patch("subprocess.run")
   def test_provision_and_stop(self, mock_run: MagicMock) -> None:
     runner = colab_runner.ColabRunner(
-        session_name="test-session",
-        accelerator="v6e1",
-        binary_path="/usr/bin/colab",
+      session_name="test-session", accelerator="v6e1", binary_path="/usr/bin/colab"
     )
     runner.provision_session()
     mock_run.assert_called_with(
-        ["/usr/bin/colab", "new", "-s", "test-session", "--tpu", "v6e1"],
-        check=True,
-        text=True,
-        capture_output=False,
+      ["/usr/bin/colab", "new", "-s", "test-session", "--tpu", "v6e1"],
+      check=True,
+      text=True,
+      capture_output=False,
     )
 
     runner.stop_session()
     mock_run.assert_called_with(
-        ["/usr/bin/colab", "stop", "-s", "test-session"],
-        check=False,
-        text=True,
-        capture_output=False,
+      ["/usr/bin/colab", "stop", "-s", "test-session"],
+      check=False,
+      text=True,
+      capture_output=False,
     )
 
   @patch("subprocess.run")
   def test_gpu_provisioning(self, mock_run: MagicMock) -> None:
     runner = colab_runner.ColabRunner(
-        session_name="gpu-session",
-        accelerator="A100",
-        binary_path="/usr/bin/colab",
+      session_name="gpu-session", accelerator="A100", binary_path="/usr/bin/colab"
     )
     runner.provision_session()
     mock_run.assert_called_with(
-        ["/usr/bin/colab", "new", "-s", "gpu-session", "--gpu", "A100"],
-        check=True,
-        text=True,
-        capture_output=False,
+      ["/usr/bin/colab", "new", "-s", "gpu-session", "--gpu", "A100"],
+      check=True,
+      text=True,
+      capture_output=False,
     )
 
   @patch("subprocess.run")
   def test_context_manager(self, mock_run: MagicMock) -> None:
     with colab_runner.ColabRunner(
-        session_name="ctx-session",
-        accelerator="v6e1",
-        binary_path="/usr/bin/colab",
+      session_name="ctx-session", accelerator="v6e1", binary_path="/usr/bin/colab"
     ) as runner:
       self.assertTrue(runner._is_active)
       runner.upload_file("local.txt")

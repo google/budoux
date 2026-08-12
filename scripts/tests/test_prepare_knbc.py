@@ -25,7 +25,6 @@ from scripts import prepare_knbc
 
 
 class TestBreakBeforeSequence(unittest.TestCase):
-
   def test_standard(self) -> None:
     chunks = ['abcdef', 'ghi']
     result = prepare_knbc.break_before_sequence(chunks, 'de')

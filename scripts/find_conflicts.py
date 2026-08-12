@@ -41,16 +41,14 @@ def _reconstruct_text_from_unigram(features: str) -> str:
   return f"{left} / {right}"
 
 
-def find_conflicts(data_path: str,
-                   output_path: str,
-                   threshold: float = 1.0) -> None:
+def find_conflicts(data_path: str, output_path: str, threshold: float = 1.0) -> None:
   """Finds and prints conflicting entries in the encoded data file.
 
-    Args:
-      data_path: The path to the encoded data file.
-      output_path: The path to save the cleaned encoded data file.
-      threshold: The minimum ratio to keep the majority label (default 1.0 = unanimity).
-    """
+  Args:
+    data_path: The path to the encoded data file.
+    output_path: The path to save the cleaned encoded data file.
+    threshold: The minimum ratio to keep the majority label (default 1.0 = unanimity).
+  """
 
   features_to_pos_weight: dict[str, int] = defaultdict(int)
   features_to_neg_weight: dict[str, int] = defaultdict(int)
@@ -80,8 +78,9 @@ def find_conflicts(data_path: str,
 
   # A conflict requires both positive and negative evidence
   conflicts = {
-      feat for feat, pos_w in features_to_pos_weight.items()
-      if pos_w > 0 and features_to_neg_weight[feat] > 0
+    feat
+    for feat, pos_w in features_to_pos_weight.items()
+    if pos_w > 0 and features_to_neg_weight[feat] > 0
   }
 
   deleted_points = 0
@@ -89,9 +88,7 @@ def find_conflicts(data_path: str,
   majority_features = {}
 
   if conflicts:
-    print(
-        f"Found {len(conflicts)} unique feature sets with conflicting labels:\n"
-    )
+    print(f"Found {len(conflicts)} unique feature sets with conflicting labels:\n")
     for features in conflicts:
       print(f"Features: {_reconstruct_text_from_unigram(features)}")
       pos_w = features_to_pos_weight[features]
@@ -101,10 +98,10 @@ def find_conflicts(data_path: str,
       neg_ratio = neg_w / total_w
 
       print(
-          f"  Positive weight: {pos_w} ({pos_ratio:.1%}) from {features_to_pos_count[features]} occurrences"
+        f"  Positive weight: {pos_w} ({pos_ratio:.1%}) from {features_to_pos_count[features]} occurrences"
       )
       print(
-          f"  Negative weight: {neg_w} ({neg_ratio:.1%}) from {features_to_neg_count[features]} occurrences"
+        f"  Negative weight: {neg_w} ({neg_ratio:.1%}) from {features_to_neg_count[features]} occurrences"
       )
 
       if pos_ratio >= neg_ratio:
@@ -121,17 +118,18 @@ def find_conflicts(data_path: str,
       if max_ratio >= threshold:
         majority_features[features] = winner_sign
         print(
-            f"  -> Threshold met ({max_ratio:.1%} >= {threshold:.1%} limit): keeping {winner_name} sign"
+          f"  -> Threshold met ({max_ratio:.1%} >= {threshold:.1%} limit): keeping {winner_name} sign"
         )
         # We delete all the ones that aren't the winner
         deleted_points += loser_count
         resolved_features.add(features)
       else:
         print(
-            f"  -> Threshold not met: deleted all ({features_to_pos_count[features] + features_to_neg_count[features]} occurrences)"
+          f"  -> Threshold not met: deleted all ({features_to_pos_count[features] + features_to_neg_count[features]} occurrences)"
         )
-        deleted_points += features_to_pos_count[
-            features] + features_to_neg_count[features]
+        deleted_points += (
+          features_to_pos_count[features] + features_to_neg_count[features]
+        )
         resolved_features.add(features)
       print("-" * 40)
   else:
@@ -140,13 +138,14 @@ def find_conflicts(data_path: str,
   if deleted_points > 0:
     percent = (deleted_points / total_data_points) * 100
     print(
-        f"Deleted {deleted_points} data points ({percent:.2f}% of {total_data_points} total)."
+      f"Deleted {deleted_points} data points ({percent:.2f}% of {total_data_points} total)."
     )
 
   # Second pass: write out resolved file
-  with open(
-      data_path, encoding='utf-8') as fin, open(
-          output_path, 'w', encoding='utf-8') as fout:
+  with (
+    open(data_path, encoding='utf-8') as fin,
+    open(output_path, 'w', encoding='utf-8') as fout,
+  ):
     for line in fin:
       cols = line.strip('\n').split('\t')
       label = int(cols[0])
@@ -167,16 +166,15 @@ def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument('encoded_data', help='File path for the encoded data.')
   parser.add_argument(
-      '-o',
-      '--output',
-      help='File path to save the cleaned encoded data.',
-      default=None)
+    '-o', '--output', help='File path to save the cleaned encoded data.', default=None
+  )
   parser.add_argument(
-      '-t',
-      '--threshold',
-      type=float,
-      default=1.0,
-      help='Threshold ratio for majority vote (default: 1.0 [Delete All]).')
+    '-t',
+    '--threshold',
+    type=float,
+    default=1.0,
+    help='Threshold ratio for majority vote (default: 1.0 [Delete All]).',
+  )
   args = parser.parse_args()
 
   find_conflicts(args.encoded_data, args.output, args.threshold)

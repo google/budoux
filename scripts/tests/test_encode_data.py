@@ -27,50 +27,48 @@ from scripts import encode_data
 
 
 class TestGetFeature(unittest.TestCase):
-
   def test_standard(self) -> None:
     feature = encode_data.get_feature('a', 'b', 'c', 'd', 'e', 'f')
     self.assertSetEqual(
-        set(feature),
-        {
-            # Unigram of Words (UW)
-            'UW1:a',
-            'UW2:b',
-            'UW3:c',
-            'UW4:d',
-            'UW5:e',
-            'UW6:f',
-
-            # Bigram of Words (BW)
-            'BW1:bc',
-            'BW2:cd',
-            'BW3:de',
-
-            # Trigram of Words (TW)
-            'TW1:abc',
-            'TW2:bcd',
-            'TW3:cde',
-            'TW4:def',
-        },
-        'Features should be extracted.')
+      set(feature),
+      {
+        # Unigram of Words (UW)
+        'UW1:a',
+        'UW2:b',
+        'UW3:c',
+        'UW4:d',
+        'UW5:e',
+        'UW6:f',
+        # Bigram of Words (BW)
+        'BW1:bc',
+        'BW2:cd',
+        'BW3:de',
+        # Trigram of Words (TW)
+        'TW1:abc',
+        'TW2:bcd',
+        'TW3:cde',
+        'TW4:def',
+      },
+      'Features should be extracted.',
+    )
 
   def test_with_invalid(self) -> None:
 
     def find_by_prefix(prefix: str, feature: list[str]) -> bool:
       return any(item.startswith(prefix) for item in feature)
 
-    feature = encode_data.get_feature('a', 'a', encode_data.INVALID, 'a', 'a',
-                                      'a')
+    feature = encode_data.get_feature('a', 'a', encode_data.INVALID, 'a', 'a', 'a')
     self.assertFalse(
-        find_by_prefix('UW3:', feature),
-        'Should omit the Unigram feature when the character is invalid.')
+      find_by_prefix('UW3:', feature),
+      'Should omit the Unigram feature when the character is invalid.',
+    )
     self.assertFalse(
-        find_by_prefix('BW2:', feature),
-        'Should omit the Bigram feature that covers an invalid character.')
+      find_by_prefix('BW2:', feature),
+      'Should omit the Bigram feature that covers an invalid character.',
+    )
 
 
 class TestArgParse(unittest.TestCase):
-
   def test_cmdargs_invalid_option(self) -> None:
     cmdargs = ['-v']
     with self.assertRaises(SystemExit) as cm:
@@ -122,7 +120,6 @@ class TestArgParse(unittest.TestCase):
 
 
 class TestProcess(unittest.TestCase):
-
   sentence = '六本木ヒルズでお昼を食べる。'
   sep_indices: typing.ClassVar[set[int]] = {7, 10, 13}
 
@@ -144,7 +141,6 @@ class TestProcess(unittest.TestCase):
 
 
 class TestNormalizeInput(unittest.TestCase):
-
   def test_standard_input(self) -> None:
     source = f'ABC{utils.SEP}DE{utils.SEP}FGHI'
     sentence, sep_indices = encode_data.normalize_input(source)

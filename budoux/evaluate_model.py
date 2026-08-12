@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Compiled model evaluation benchmark utility.
-"""
+"""Compiled model evaluation benchmark utility."""
 
 import argparse
 import json
@@ -32,8 +31,7 @@ class EvaluationMetrics(typing.TypedDict):
 
 
 def evaluate(
-    model_path: str | os.PathLike,
-    test_data_path: str | os.PathLike,
+  model_path: str | os.PathLike, test_data_path: str | os.PathLike
 ) -> EvaluationMetrics:
   """Loads the JSON model and evaluates it against the test dataset.
 
@@ -124,34 +122,34 @@ def evaluate(
   accuracy = (tp + tn) / total if total > 0 else 0.0
   precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
   recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-  fscore = (2 * precision * recall / (precision + recall) if
-            (precision + recall) > 0 else 0.0)
+  fscore = (
+    2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+  )
 
   return {
-      'accuracy': accuracy,
-      'precision': precision,
-      'recall': recall,
-      'fscore': fscore,
-      'errors': errors,
+    'accuracy': accuracy,
+    'precision': precision,
+    'recall': recall,
+    'fscore': fscore,
+    'errors': errors,
   }
 
 
 def main() -> None:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
-      '-m',
-      '--model',
-      required=True,
-      help='Path to the compiled model JSON file.',
+    '-m', '--model', required=True, help='Path to the compiled model JSON file.'
   )
   parser.add_argument(
-      '-t',
-      '--test-data',
-      required=True,
-      help=('Path to the test dataset file. Each line must contain one '
-            'sentence split by "▁". For .tsv files, lines starting with "#" '
-            'are ignored and only the last column after tab splitting is '
-            'evaluated.'),
+    '-t',
+    '--test-data',
+    required=True,
+    help=(
+      'Path to the test dataset file. Each line must contain one '
+      'sentence split by "▁". For .tsv files, lines starting with "#" '
+      'are ignored and only the last column after tab splitting is '
+      'evaluated.'
+    ),
   )
   args = parser.parse_args()
 

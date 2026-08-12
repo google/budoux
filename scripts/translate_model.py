@@ -74,10 +74,9 @@ def normalize(model: dict[str, typing.Any]) -> dict[str, dict[str, int]]:
       output[group[0]] = {item[0].split(':')[-1]: item[1] for item in group[1]}
     return output
   try:
-    assert (all(
-        isinstance(v, int)
-        for groups in model.values()
-        for v in groups.values())), 'Scores should be integers'
+    assert all(
+      isinstance(v, int) for groups in model.values() for v in groups.values()
+    ), 'Scores should be integers'
   except (AssertionError, AttributeError) as e:
     raise ValueError(f'Unsupported model format: {e}')
   else:
@@ -87,15 +86,18 @@ def normalize(model: dict[str, typing.Any]) -> dict[str, dict[str, int]]:
 def main() -> None:
   DEFAULT_FORMAT = 'json'
   parser = argparse.ArgumentParser(
-      description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+  )
   parser.add_argument(
-      'model', help='File path for the JSON format model file.', type=str)
+    'model', help='File path for the JSON format model file.', type=str
+  )
   parser.add_argument(
-      '--format',
-      help=f'Target format (default: {DEFAULT_FORMAT})',
-      type=str,
-      default=DEFAULT_FORMAT,
-      choices={DEFAULT_FORMAT, 'icu'})
+    '--format',
+    help=f'Target format (default: {DEFAULT_FORMAT})',
+    type=str,
+    default=DEFAULT_FORMAT,
+    choices={DEFAULT_FORMAT, 'icu'},
+  )
   args = parser.parse_args()
   model_path: str = args.model
   format: str = args.format

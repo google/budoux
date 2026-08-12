@@ -23,6 +23,7 @@ Then run this command as follows over each file.
 $ python scripts/prepare_wisesight.py wisesight-1000-samples-tokenised.label -o source_train.txt
 $ python scripts/prepare_wisesight.py wisesight-160-samples-tokenised.label -o source_val.txt
 """
+
 import argparse
 import re
 
@@ -32,14 +33,15 @@ import regex
 def parse_args() -> argparse.Namespace:
   DEFAULT_OUT_PATH = 'source.txt'
   parser = argparse.ArgumentParser(
-      description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+  )
+  parser.add_argument('source_filepath', help='Path to a Wisesight corpus label file.')
   parser.add_argument(
-      'source_filepath', help='Path to a Wisesight corpus label file.')
-  parser.add_argument(
-      '-o',
-      '--outfile',
-      help=f'File path to the output dataset. (default: {DEFAULT_OUT_PATH})',
-      default=DEFAULT_OUT_PATH)
+    '-o',
+    '--outfile',
+    help=f'File path to the output dataset. (default: {DEFAULT_OUT_PATH})',
+    default=DEFAULT_OUT_PATH,
+  )
   return parser.parse_args()
 
 
@@ -54,7 +56,8 @@ def main() -> None:
       line = re.sub(r'https?://[^ ]+', '', line)  # Remove URLs
       line = re.sub(r'#[^ ]+', '', line)  # Remove hashtags
       line = regex.compile(r'\p{Emoji_Presentation=Yes}+').sub(
-          '', line)  # Remove emojis
+        '', line
+      )  # Remove emojis
       line = re.sub(r'\|+', '|', line)  # Remove consecutive separators
       line = re.sub(r'(\|\s)*\|$', '', line)  # Remove redundant spaces
       outfile.write(line.replace('|', '▁') + '\n')  # Replace the separators.

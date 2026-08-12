@@ -70,8 +70,7 @@ class KNBCHTMLParser(HTMLParser):
     self.on_split_row = False
     self.granularity = granularity
 
-  def handle_starttag(self, tag: str,
-                      attributes: list[tuple[str, str | None]]) -> None:
+  def handle_starttag(self, tag: str, attributes: list[tuple[str, str | None]]) -> None:
     if tag == 'tr':
       self.row += 1
       self.col = 0
@@ -113,8 +112,9 @@ def break_before_sequence(chunks: list[str], sequence: str) -> list[str]:
   Returns:
     Processed chunks.
   """
-  chunks = utils.SEP.join(chunks).replace(sequence,
-                                          utils.SEP + sequence).split(utils.SEP)
+  chunks = (
+    utils.SEP.join(chunks).replace(sequence, utils.SEP + sequence).split(utils.SEP)
+  )
   chunks = [chunk for chunk in chunks if len(chunk) > 0]
   return chunks
 
@@ -137,16 +137,18 @@ def parse_args() -> argparse.Namespace:
   DEFAULT_OUT_PATH = 'source.txt'
   DEFAULT_GRANULARITY = 'phrase'
   parser = argparse.ArgumentParser(
-      description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+  )
   parser.add_argument('source_dir', help='Path to the KNBC corpus directory.')
   parser.add_argument(
-      '-o',
-      '--outfile',
-      help=f'File path to the output dataset. (default: {DEFAULT_OUT_PATH})',
-      default=DEFAULT_OUT_PATH)
+    '-o',
+    '--outfile',
+    help=f'File path to the output dataset. (default: {DEFAULT_OUT_PATH})',
+    default=DEFAULT_OUT_PATH,
+  )
   parser.add_argument(
-      '--granularity',
-      help=f'''Granularity of the output chunks. (default: {DEFAULT_GRANULARITY})
+    '--granularity',
+    help=f'''Granularity of the output chunks. (default: {DEFAULT_GRANULARITY})
 The value should be one of "phrase", "tag", or "word".
 "phrase" is equivalent to Bunsetu-based segmentation.
 "tag" provides more granular segmentation than "phrase".
@@ -157,38 +159,43 @@ phrase: 携帯ユーザーの / 仲間入りを / するかです。
 tag: 携帯 / ユーザーの / 仲間 / 入りを / するかです。
 word: 携帯 / ユーザー / の / 仲間 / 入り / を / する / か / です / 。
 ''',
-      choices=GRANULARITY_OPTIONS,
-      default=DEFAULT_GRANULARITY)
+    choices=GRANULARITY_OPTIONS,
+    default=DEFAULT_GRANULARITY,
+  )
   parser.add_argument(
-      '--split-dir',
-      help='Directory to output 3-way split datasets (knbc_train.txt, knbc_val.txt, knbc_test.txt).',
-      default=None)
+    '--split-dir',
+    help='Directory to output 3-way split datasets (knbc_train.txt, knbc_val.txt, knbc_test.txt).',
+    default=None,
+  )
   parser.add_argument(
-      '--val-ratio',
-      type=float,
-      help='Ratio of validation partition (default: 0.10).',
-      default=0.10)
+    '--val-ratio',
+    type=float,
+    help='Ratio of validation partition (default: 0.10).',
+    default=0.10,
+  )
   parser.add_argument(
-      '--test-ratio',
-      type=float,
-      help='Ratio of test partition (default: 0.10).',
-      default=0.10)
+    '--test-ratio',
+    type=float,
+    help='Ratio of test partition (default: 0.10).',
+    default=0.10,
+  )
   parser.add_argument(
-      '--seed',
-      type=int,
-      help='Random seed for deterministic split (default: 42).',
-      default=42)
+    '--seed',
+    type=int,
+    help='Random seed for deterministic split (default: 42).',
+    default=42,
+  )
   return parser.parse_args()
 
 
 def process_knbc(
-    source_dir: str,
-    outfile: str,
-    granularity: Granularity = 'phrase',
-    split_dir: str | None = None,
-    val_ratio: float = 0.10,
-    test_ratio: float = 0.10,
-    seed: int = 42,
+  source_dir: str,
+  outfile: str,
+  granularity: Granularity = 'phrase',
+  split_dir: str | None = None,
+  val_ratio: float = 0.10,
+  test_ratio: float = 0.10,
+  seed: int = 42,
 ) -> None:
   """Processes KNBC HTML archives into segmented text files and optional splits."""
   html_dir = os.path.join(source_dir, 'html')
@@ -211,11 +218,15 @@ def process_knbc(
   print(f'\033[92mFull training data is output to: {outfile}\033[0m')
 
   if split_dir:
-    valid_ratios = (0.0 <= val_ratio <= 1.0) and (
-        0.0 <= test_ratio <= 1.0) and (val_ratio + test_ratio < 1.0)
+    valid_ratios = (
+      (0.0 <= val_ratio <= 1.0)
+      and (0.0 <= test_ratio <= 1.0)
+      and (val_ratio + test_ratio < 1.0)
+    )
     if not valid_ratios:
       raise ValueError(
-          "Invalid split ratios: val_ratio + test_ratio must be less than 1.0.")
+        "Invalid split ratios: val_ratio + test_ratio must be less than 1.0."
+      )
     os.makedirs(split_dir, exist_ok=True)
     shuffled = sentences.copy()
     random.seed(seed)
@@ -227,36 +238,36 @@ def process_knbc(
     num_train = num_total - num_val - num_test
 
     train_sentences = shuffled[:num_train]
-    val_sentences = shuffled[num_train:num_train + num_val]
-    test_sentences = shuffled[num_train + num_val:]
+    val_sentences = shuffled[num_train : num_train + num_val]
+    test_sentences = shuffled[num_train + num_val :]
 
     train_path = os.path.join(split_dir, 'knbc_train.txt')
     val_path = os.path.join(split_dir, 'knbc_val.txt')
     test_path = os.path.join(split_dir, 'knbc_test.txt')
 
     for path, split_lines in [
-        (train_path, train_sentences),
-        (val_path, val_sentences),
-        (test_path, test_sentences),
+      (train_path, train_sentences),
+      (val_path, val_sentences),
+      (test_path, test_sentences),
     ]:
       with open(path, 'w', encoding='utf-8') as f:
         f.writelines(line + '\n' for line in split_lines)
 
     print(
-        f'\033[92m3-Way split dataset written to {split_dir}:\n  Train: {train_path} ({len(train_sentences)} lines)\n  Val:   {val_path} ({len(val_sentences)} lines)\n  Test:  {test_path} ({len(test_sentences)} lines)\033[0m'
+      f'\033[92m3-Way split dataset written to {split_dir}:\n  Train: {train_path} ({len(train_sentences)} lines)\n  Val:   {val_path} ({len(val_sentences)} lines)\n  Test:  {test_path} ({len(test_sentences)} lines)\033[0m'
     )
 
 
 def main() -> None:
   args = parse_args()
   process_knbc(
-      source_dir=args.source_dir,
-      outfile=args.outfile,
-      granularity=args.granularity,
-      split_dir=args.split_dir,
-      val_ratio=args.val_ratio,
-      test_ratio=args.test_ratio,
-      seed=args.seed,
+    source_dir=args.source_dir,
+    outfile=args.outfile,
+    granularity=args.granularity,
+    split_dir=args.split_dir,
+    val_ratio=args.val_ratio,
+    test_ratio=args.test_ratio,
+    seed=args.seed,
   )
 
 
