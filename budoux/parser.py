@@ -83,19 +83,19 @@ class Parser:
         score += uw6.get(sentence[i + 2], 0)
 
       if i > 1:
-        score += bw1.get(sentence[i - 2:i], 0)
-      score += bw2.get(sentence[i - 1:i + 1], 0)
+        score += bw1.get(sentence[i - 2 : i], 0)
+      score += bw2.get(sentence[i - 1 : i + 1], 0)
       if i + 1 < len(sentence):
-        score += bw3.get(sentence[i:i + 2], 0)
+        score += bw3.get(sentence[i : i + 2], 0)
 
       if i > 2:
-        score += tw1.get(sentence[i - 3:i], 0)
+        score += tw1.get(sentence[i - 3 : i], 0)
       if i > 1:
-        score += tw2.get(sentence[i - 2:i + 1], 0)
+        score += tw2.get(sentence[i - 2 : i + 1], 0)
       if i + 1 < len(sentence):
-        score += tw3.get(sentence[i - 1:i + 2], 0)
+        score += tw3.get(sentence[i - 1 : i + 2], 0)
       if i + 2 < len(sentence):
-        score += tw4.get(sentence[i:i + 3], 0)
+        score += tw4.get(sentence[i : i + 3], 0)
 
       if score > 0:
         chunks.append(sentence[i])

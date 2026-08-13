@@ -32,7 +32,6 @@ from scripts import train
 
 
 class TestArgParse(unittest.TestCase):
-
   def test_cmdargs_invalid_option(self) -> None:
     cmdargs = ['-v']
     with self.assertRaises(SystemExit) as cm:
@@ -63,9 +62,19 @@ class TestArgParse(unittest.TestCase):
 
   def test_cmdargs_full(self) -> None:
     cmdargs = [
-        'encoded.txt', '-o', 'out.txt', '--log', 'foo.log', '--feature-thres',
-        '100', '--iter', '10', '--out-span', '50', '--val-data',
-        'val_encoded.txt'
+      'encoded.txt',
+      '-o',
+      'out.txt',
+      '--log',
+      'foo.log',
+      '--feature-thres',
+      '100',
+      '--iter',
+      '10',
+      '--out-span',
+      '50',
+      '--val-data',
+      'val_encoded.txt',
     ]
     output = train.parse_args(cmdargs)
     self.assertEqual(output.encoded_train_data, 'encoded.txt')
@@ -78,7 +87,6 @@ class TestArgParse(unittest.TestCase):
 
 
 class TestPreprocess(unittest.TestCase):
-
   def test_standard_setup(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       train_data_path = tf.name
@@ -87,17 +95,12 @@ class TestPreprocess(unittest.TestCase):
       val_data_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(train_data_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
+      f.write('1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n')
     with open(val_data_path, 'w') as f:
-      f.write('1\tbar\tbaz\n'
-              '-1\txyz\n'
-              '1\tabc\tqux\tfoo\n')
+      f.write('1\tbar\tbaz\n-1\txyz\n1\tabc\tqux\tfoo\n')
     train_dataset, features, val_dataset = train.preprocess(
-        train_data_path, 1, val_data_path)
+      train_data_path, 1, val_data_path
+    )
 
     self.assertEqual(features, ['foo', 'bar', 'baz'])
     # The training input X and the target Y should look like below:
@@ -129,11 +132,7 @@ class TestPreprocess(unittest.TestCase):
       train_data_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(train_data_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
+      f.write('1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n')
     train_dataset, features, val_dataset = train.preprocess(train_data_path, 1)
     self.assertEqual(features, ['foo', 'bar', 'baz'])
     self.assertEqual(train_dataset.Y.tolist(), [1, -1, 1, 1, -1])
@@ -143,29 +142,22 @@ class TestPreprocess(unittest.TestCase):
 
 
 class TestPred(unittest.TestCase):
-
   def test_standard_setup(self) -> None:
-    X = jnp.array([
-        [1, 1, 0],
-        [1, 0, 1],
-        [0, 1, 0],
-        [0, 0, 1],
-    ])
+    X = jnp.array([[1, 1, 0], [1, 0, 1], [0, 1, 0], [0, 0, 1]])
     phis = jnp.array([0.4, 0.2, -0.3])
     N = X.shape[0]
     rows, cols = jnp.where(X == 1)
     res = train.pred(phis, rows, cols, N)
     expected = [
-        0.4 + 0.2 - (-0.3) > 0,
-        0.4 - 0.2 + (-0.3) > 0,
-        -0.4 + 0.2 - (-0.3) > 0,
-        -0.4 - 0.2 + (-0.3) > 0,
+      0.4 + 0.2 - (-0.3) > 0,
+      0.4 - 0.2 + (-0.3) > 0,
+      -0.4 + 0.2 - (-0.3) > 0,
+      -0.4 - 0.2 + (-0.3) > 0,
     ]
     self.assertEqual(res.tolist(), expected)
 
 
 class TestGetMetrics(unittest.TestCase):
-
   def test_standard_setup(self) -> None:
     pred = jnp.array([0, 0, 1, 0, 0], dtype=bool)
     target = jnp.array([1, 0, 1, 1, 1], dtype=bool)
@@ -183,13 +175,7 @@ class TestGetMetrics(unittest.TestCase):
 
 
 class TestUpdate(unittest.TestCase):
-  X = jnp.array([
-      [1, 0, 1, 0],
-      [0, 1, 0, 0],
-      [0, 0, 0, 0],
-      [1, 0, 0, 0],
-      [0, 1, 1, 0],
-  ])
+  X = jnp.array([[1, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 1, 0]])
 
   def test_standard_setup1(self) -> None:
     rows, cols = jnp.where(self.X == 1)
@@ -198,7 +184,8 @@ class TestUpdate(unittest.TestCase):
     w = jnp.array([0.1, 0.3, 0.1, 0.1, 0.4])
     scores = jnp.zeros(M)
     new_w, new_scores, best_feature_index, added_score = train.update(
-        w, scores, rows, cols, Y)
+      w, scores, rows, cols, Y
+    )
     self.assertFalse(w.argmax() == 0)
     self.assertTrue(new_w.argmax() == 0)
     self.assertFalse(scores.argmax() == 1)
@@ -208,7 +195,6 @@ class TestUpdate(unittest.TestCase):
 
 
 class TestFit(unittest.TestCase):
-
   def test_fit(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       weights_file_path = tf.name
@@ -218,43 +204,40 @@ class TestFit(unittest.TestCase):
       self.addCleanup(os.remove, tf.name)
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
-    X = jnp.array([
-        [0, 1, 1, 1],
-        [1, 1, 0, 1],
-        [0, 0, 1, 1],
-        [1, 0, 0, 1],
-    ])
+    X = jnp.array([[0, 1, 1, 1], [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 0, 1]])
     Y = jnp.array([0, 0, 1, 1])
     rows, cols = jnp.where(X == 1)
     dataset = train.Dataset(rows, cols, Y)
     features = ['a', 'b', 'c']
     iters = 5
     out_span = 2
-    scores = train.fit(dataset, dataset, features, iters, weights_file_path,
-                       log_file_path, out_span)
+    scores = train.fit(
+      dataset, dataset, features, iters, weights_file_path, log_file_path, out_span
+    )
     with open(weights_file_path) as f:
-      weights = [
-          line.split('\t') for line in f.read().splitlines() if line.strip()
-      ]
+      weights = [line.split('\t') for line in f.read().splitlines() if line.strip()]
     top_feature = weights[0][0]
     self.assertEqual(
-        top_feature, 'b', msg='The most effective feature should be selected.')
+      top_feature, 'b', msg='The most effective feature should be selected.'
+    )
     self.assertEqual(
-        len(weights),
-        iters,
-        msg='The number of lines should equal to the iteration count.')
+      len(weights),
+      iters,
+      msg='The number of lines should equal to the iteration count.',
+    )
 
     with open(log_file_path) as f:
       log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
     self.assertEqual(
-        len(log),
-        math.ceil(iters / out_span) + 1,
-        msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header'
+      len(log),
+      math.ceil(iters / out_span) + 1,
+      msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header',
     )
     self.assertEqual(
-        len({len(line) for line in log}),
-        1,
-        msg='The header and the body should have the same number of columns.')
+      len({len(line) for line in log}),
+      1,
+      msg='The header and the body should have the same number of columns.',
+    )
 
     model: dict[str, float] = {}
     for weight in weights:
@@ -266,17 +249,12 @@ class TestFit(unittest.TestCase):
 
 
 class TestExtractFeatures(unittest.TestCase):
-
   def test_with_standard_setup(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
+      f.write('1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n')
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
@@ -285,12 +263,7 @@ class TestExtractFeatures(unittest.TestCase):
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n\n'
-              '1\tbar\tfoo\n'
-              '\n'
-              '-1\tbaz\tqux\n')
+      f.write('1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n\n1\tbar\tfoo\n\n-1\tbaz\tqux\n')
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['foo', 'bar', 'baz'])
 
@@ -299,30 +272,19 @@ class TestExtractFeatures(unittest.TestCase):
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
-      f.write('2\tfoo\n'
-              '-3\tbar\n'
-              '1\tbaz\n')
+      f.write('2\tfoo\n-3\tbar\n1\tbaz\n')
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['bar', 'foo'])
 
 
 class TestLoadDataset(unittest.TestCase):
-
   def test_with_standard_setup(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n'
-              '1\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
-    result = train.load_dataset(entries_file_path, {
-        'foo': 0,
-        'bar': 1,
-        'baz': 2
-    })
+      f.write('1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n1\tbar\tfoo\n-1\tbaz\tqux\n')
+    result = train.load_dataset(entries_file_path, {'foo': 0, 'bar': 1, 'baz': 2})
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
@@ -332,17 +294,8 @@ class TestLoadDataset(unittest.TestCase):
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-1\tfoo\n'
-              '1\tfoo\tbar\tbaz\n\n'
-              '1\tbar\tfoo\n'
-              '\n'
-              '-1\tbaz\tqux\n')
-    result = train.load_dataset(entries_file_path, {
-        'foo': 0,
-        'bar': 1,
-        'baz': 2
-    })
+      f.write('1\tfoo\tbar\n-1\tfoo\n1\tfoo\tbar\tbaz\n\n1\tbar\tfoo\n\n-1\tbaz\tqux\n')
+    result = train.load_dataset(entries_file_path, {'foo': 0, 'bar': 1, 'baz': 2})
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -1, 1, 1, -1])
@@ -352,16 +305,8 @@ class TestLoadDataset(unittest.TestCase):
       entries_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
     with open(entries_file_path, 'w') as f:
-      f.write('1\tfoo\tbar\n'
-              '-14\tfoo\n'
-              '10\tfoo\tbar\tbaz\n'
-              '-11\tbar\tfoo\n'
-              '-1\tbaz\tqux\n')
-    result = train.load_dataset(entries_file_path, {
-        'foo': 0,
-        'bar': 1,
-        'baz': 2
-    })
+      f.write('1\tfoo\tbar\n-14\tfoo\n10\tfoo\tbar\tbaz\n-11\tbar\tfoo\n-1\tbaz\tqux\n')
+    result = train.load_dataset(entries_file_path, {'foo': 0, 'bar': 1, 'baz': 2})
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -14, 10, -11, -1])

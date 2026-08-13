@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """BudouX Script to provide CLI for user."""
+
 import argparse
 import json
 import os
@@ -29,14 +30,13 @@ ArgList = list[str] | None
 # imports for Traversable which varies across Python versions.
 models: typing.Any = resources.files('budoux') / "models"
 langs: dict[str, typing.Any] = {
-    model.name[:-5]: model
-    for model in models.iterdir()
-    if model.name.endswith(".json")
+  model.name[:-5]: model for model in models.iterdir() if model.name.endswith(".json")
 }
 
 
-class BudouxHelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
-                          argparse.RawDescriptionHelpFormatter):
+class BudouxHelpFormatter(
+  argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter
+):
   pass
 
 
@@ -74,7 +74,7 @@ def check_lang(lang: str) -> typing.Any:
     return langs[lang]
   else:
     raise argparse.ArgumentTypeError(
-        f"'{lang}' does not exist in builtin models. (supported languages: {list(langs.keys())})"
+      f"'{lang}' does not exist in builtin models. (supported languages: {list(langs.keys())})"
     )
 
 
@@ -88,62 +88,52 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
       argparse.Namespace: Parsed data of args.
   """
   parser = argparse.ArgumentParser(
-      prog="budoux",
-      formatter_class=(lambda prog: BudouxHelpFormatter(
-          prog,
-          width=shutil.get_terminal_size(fallback=(120, 50)).columns,
-          max_help_position=30,
-      )),
-      description=textwrap.dedent("""\
+    prog="budoux",
+    formatter_class=(
+      lambda prog: BudouxHelpFormatter(
+        prog,
+        width=shutil.get_terminal_size(fallback=(120, 50)).columns,
+        max_help_position=30,
+      )
+    ),
+    description=textwrap.dedent("""\
         BudouX is the successor to Budou,
         the machine learning powered line break organizer tool."""),
-      epilog="\n- ".join(
-          ["supported languages of `-l`, `--lang`:", *langs.keys()]))
+    epilog="\n- ".join(["supported languages of `-l`, `--lang`:", *langs.keys()]),
+  )
 
   parser.add_argument("text", metavar="TXT", nargs="?", type=str, help="text")
-  parser.add_argument(
-      "-H",
-      "--html",
-      action="store_true",
-      help="HTML mode",
-  )
+  parser.add_argument("-H", "--html", action="store_true", help="HTML mode")
   model_select_group = parser.add_mutually_exclusive_group()
   model_select_group.add_argument(
-      "-m",
-      "--model",
-      metavar="JSON",
-      type=check_file,
-      default=check_lang('ja'),
-      help="custom model file path",
+    "-m",
+    "--model",
+    metavar="JSON",
+    type=check_file,
+    default=check_lang('ja'),
+    help="custom model file path",
   )
   model_select_group.add_argument(
-      "-l",
-      "--lang",
-      metavar="LANG",
-      type=check_lang,
-      help="language of custom model",
+    "-l", "--lang", metavar="LANG", type=check_lang, help="language of custom model"
   )
   parser.add_argument(
-      "-s",
-      "--sep",
-      metavar="STR",
-      type=str,
-      default="\n",
-      help="output phrase separator in TEXT mode",
+    "-s",
+    "--sep",
+    metavar="STR",
+    type=str,
+    default="\n",
+    help="output phrase separator in TEXT mode",
   )
   parser.add_argument(
-      "-d",
-      "--delim",
-      metavar="STR",
-      type=str,
-      default="---",
-      help="output sentence delimiter in TEXT mode",
+    "-d",
+    "--delim",
+    metavar="STR",
+    type=str,
+    default="---",
+    help="output sentence delimiter in TEXT mode",
   )
   parser.add_argument(
-      "-V",
-      "--version",
-      action="version",
-      version=f"%(prog)s {budoux.__version__}",
+    "-V", "--version", action="version", version=f"%(prog)s {budoux.__version__}"
   )
   if test is not None:
     return parser.parse_args(test)

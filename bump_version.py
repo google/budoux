@@ -21,14 +21,16 @@ import subprocess
 def main():
   parser = argparse.ArgumentParser(description='Bump the version number.')
   parser.add_argument(
-      'new_version', type=str,
-      help='The new version number (e.g., 1.2.3, 1.2.3-rc4)')
+    'new_version', type=str, help='The new version number (e.g., 1.2.3, 1.2.3-rc4)'
+  )
   args = parser.parse_args()
   new_version = args.new_version
 
   if not re.match(r'^\d+\.\d+\.\d+(?:-[\w.-]+)?$', new_version):
-    parser.error(f'Invalid version: {new_version}. '
-                 'Please use the semantic versioning (e.g., 1.2.3, 1.2.3-rc4).')
+    parser.error(
+      f'Invalid version: {new_version}. '
+      'Please use the semantic versioning (e.g., 1.2.3, 1.2.3-rc4).'
+    )
 
   # Updates Python port version number
   # Normalizes the version string for Python (PEP 440)
@@ -37,8 +39,11 @@ def main():
   init_file = 'budoux/__init__.py'
   with open(init_file) as f:
     content = f.read()
-  new_content = re.sub(r'(__version__\s+=\s+[\'"])([\.\-\w]+)([\'"])',
-                       rf'\g<1>{python_version}\g<3>', content)
+  new_content = re.sub(
+    r'(__version__\s+=\s+[\'"])([\.\-\w]+)([\'"])',
+    rf'\g<1>{python_version}\g<3>',
+    content,
+  )
   with open(init_file, 'w') as f:
     f.write(new_content)
 
@@ -57,15 +62,20 @@ def main():
   cli_file = 'javascript/src/cli.ts'
   with open(cli_file) as f:
     content = f.read()
-  new_content = re.sub(r'(const\s+CLI_VERSION\s+=\s+[\'"])([\.\-\w]+)([\'"])',
-                       rf'\g<1>{new_version}\g<3>', content)
+  new_content = re.sub(
+    r'(const\s+CLI_VERSION\s+=\s+[\'"])([\.\-\w]+)([\'"])',
+    rf'\g<1>{new_version}\g<3>',
+    content,
+  )
   with open(cli_file, 'w') as f:
     f.write(new_content)
 
   # Updates Java port version number
   mvn_command = [
-      'mvn', 'versions:set', f'-DnewVersion={new_version}',
-      '-DgenerateBackupPoms=false'
+    'mvn',
+    'versions:set',
+    f'-DnewVersion={new_version}',
+    '-DgenerateBackupPoms=false',
   ]
   subprocess.run(mvn_command, cwd='java', check=True)
 

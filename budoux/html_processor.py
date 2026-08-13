@@ -23,8 +23,8 @@ from .utils import SEP
 HTMLAttr = list[tuple[str, str | None]]
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: anywhere;'
 with open(
-    os.path.join(os.path.dirname(__file__), 'skip_nodes.json'),
-    encoding='utf-8') as f:
+  os.path.join(os.path.dirname(__file__), 'skip_nodes.json'), encoding='utf-8'
+) as f:
   SKIP_NODES: set[str] = set(json.load(f))
 
 
@@ -47,6 +47,7 @@ class TextContentExtractor(HTMLParser):
   Attributes:
     output (str): Accumulated text content.
   """
+
   output = ''
 
   def handle_data(self, data: str) -> None:
@@ -59,6 +60,7 @@ class HTMLChunkResolver(HTMLParser):
   Attributes:
     output (str): The HTML string to output.
   """
+
   output = ''
 
   def __init__(self, chunks: list[str], separator: str):
@@ -108,8 +110,9 @@ class HTMLChunkResolver(HTMLParser):
   def handle_data(self, data: str) -> None:
     for char in data:
       if char != self.chunks_joined[self.scan_index]:
-        prev_was_whitespace = self.scan_index > 0 and self.chunks_joined[
-            self.scan_index - 1].isspace()
+        prev_was_whitespace = (
+          self.scan_index > 0 and self.chunks_joined[self.scan_index - 1].isspace()
+        )
         if not self.to_skip and not char.isspace() and not prev_was_whitespace:
           self.output += self.separator
         self.scan_index += 1

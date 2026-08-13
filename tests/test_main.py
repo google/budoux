@@ -32,7 +32,6 @@ if isinstance(sys.stdout, io.TextIOWrapper):
 
 
 class TestCommonOption(unittest.TestCase):
-
   def test_cmdargs_invalid_option(self) -> None:
     cmdargs = ['-v']
     with self.assertRaises(SystemExit) as cm:
@@ -56,7 +55,6 @@ class TestCommonOption(unittest.TestCase):
 
 
 class TestModelOption(unittest.TestCase):
-
   def test_cmdargs_invalid_json(self) -> None:
     cmdargs = ['-m', '404.json']
     with self.assertRaises(SystemExit) as cm:
@@ -92,7 +90,6 @@ class TestModelOption(unittest.TestCase):
 
 
 class TestTextArguments(unittest.TestCase):
-
   def test_cmdargs_single_text(self) -> None:
     cmdargs = ['これはテストです。']
     output = main._main(cmdargs)
@@ -129,8 +126,10 @@ class TestTextArguments(unittest.TestCase):
     output = main._main(cmdargs)
 
     self.assertEqual(
-        output, '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        '今日は<b>\u200bとても\u200b天気</b>です。</span>')
+      output,
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+      '今日は<b>\u200bとても\u200b天気</b>です。</span>',
+    )
 
   def test_cmdargs_multi_html(self) -> None:
     cmdargs = ['-H', '今日は<b>とても天気</b>です。', 'これは<b>テスト</b>です。']
@@ -141,11 +140,10 @@ class TestTextArguments(unittest.TestCase):
 
 
 class TestStdin(unittest.TestCase):
-
   def test_cmdargs_blank_stdin(self) -> None:
     with open(
-        join(abspath(dirname(__file__)), "in/1.in"),
-        encoding=sys.getdefaultencoding()) as f:
+      join(abspath(dirname(__file__)), "in/1.in"), encoding=sys.getdefaultencoding()
+    ) as f:
       sys.stdin = f
       output = main._main([])
 
@@ -153,8 +151,8 @@ class TestStdin(unittest.TestCase):
 
   def test_cmdargs_text_stdin(self) -> None:
     with open(
-        join(abspath(dirname(__file__)), "in/2.in"),
-        encoding=sys.getdefaultencoding()) as f:
+      join(abspath(dirname(__file__)), "in/2.in"), encoding=sys.getdefaultencoding()
+    ) as f:
       sys.stdin = f
       output = main._main([])
 
@@ -162,15 +160,17 @@ class TestStdin(unittest.TestCase):
 
   def test_cmdargs_html_stdin(self) -> None:
     with open(
-        join(abspath(dirname(__file__)), "in/3.in"),
-        encoding=sys.getdefaultencoding()) as f:
+      join(abspath(dirname(__file__)), "in/3.in"), encoding=sys.getdefaultencoding()
+    ) as f:
       sys.stdin = f
       output = main._main(["-H"])
 
     self.assertEqual(
-        output, '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-        'これは<b>\u200bテスト</b>です。\n'
-        '</span>')
+      output,
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+      'これは<b>\u200bテスト</b>です。\n'
+      '</span>',
+    )
 
 
 if __name__ == '__main__':

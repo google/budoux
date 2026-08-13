@@ -25,7 +25,6 @@ from scripts import translate_model
 
 
 class TestNormalize(unittest.TestCase):
-
   def test_old_format_input(self) -> None:
     model = {'a:x': 48, 'a:y': 21, 'b:x': 2, 'b:z': 89}
     expect = {'a': {'x': 48, 'y': 21}, 'b': {'x': 2, 'z': 89}}
@@ -51,7 +50,6 @@ class TestNormalize(unittest.TestCase):
 
 
 class TestTranslateICU(unittest.TestCase):
-
   def test_standard(self) -> None:
     model = {}
     model['b'] = {'x': 47, 'z': 13}

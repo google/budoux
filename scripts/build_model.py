@@ -44,8 +44,9 @@ def aggregate_scores(weights: list[str]) -> dict[str, dict[str, float]]:
   return decision_trees
 
 
-def round_model(model: dict[str, dict[str, float]],
-                scale: int) -> dict[str, dict[str, int]]:
+def round_model(
+  model: dict[str, dict[str, float]], scale: int
+) -> dict[str, dict[str, int]]:
   """Rounds the scores in the model to integer after scaling.
 
   Args:
@@ -76,20 +77,19 @@ def parse_args(test: list[str] | None = None) -> argparse.Namespace:
     Parsed arguments (argparse.Namespace).
   """
   parser = argparse.ArgumentParser(
-      description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+  )
+  parser.add_argument('weight_file', help='A file path for the learned weights.')
   parser.add_argument(
-      'weight_file', help='A file path for the learned weights.')
+    '-o',
+    '--outfile',
+    help='A file path to export a model file. (default: model.json)',
+    default='model.json',
+    type=str,
+  )
   parser.add_argument(
-      '-o',
-      '--outfile',
-      help='A file path to export a model file. (default: model.json)',
-      default='model.json',
-      type=str)
-  parser.add_argument(
-      '--scale',
-      help='A scale factor for the output scores',
-      default=1000,
-      type=int)
+    '--scale', help='A scale factor for the output scores', default=1000, type=int
+  )
   if test is None:
     return parser.parse_args()
   else:

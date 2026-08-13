@@ -33,8 +33,7 @@ INVALID = '▔'
 """The invalid feature string."""
 
 
-def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str,
-                w6: str) -> list[str]:
+def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str) -> list[str]:
   """Generates a feature from characters around (w1-6).
 
   Args:
@@ -50,19 +49,19 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str,
 
   """
   raw_feature = {
-      'UW1': w1,
-      'UW2': w2,
-      'UW3': w3,
-      'UW4': w4,
-      'UW5': w5,
-      'UW6': w6,
-      'BW1': w2 + w3,
-      'BW2': w3 + w4,
-      'BW3': w4 + w5,
-      'TW1': w1 + w2 + w3,
-      'TW2': w2 + w3 + w4,
-      'TW3': w3 + w4 + w5,
-      'TW4': w4 + w5 + w6,
+    'UW1': w1,
+    'UW2': w2,
+    'UW3': w3,
+    'UW4': w4,
+    'UW5': w5,
+    'UW6': w6,
+    'BW1': w2 + w3,
+    'BW2': w3 + w4,
+    'BW3': w4 + w5,
+    'TW1': w1 + w2 + w3,
+    'TW2': w2 + w3 + w4,
+    'TW3': w3 + w4 + w5,
+    'TW4': w4 + w5 + w6,
   }
   for key, value in list(raw_feature.items()):
     if INVALID in value:
@@ -81,26 +80,29 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
   """
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
-      'source_data',
-      help='''File path of the source training data to extract features.''')
+    'source_data', help='''File path of the source training data to extract features.'''
+  )
   parser.add_argument(
-      '-o',
-      '--outfile',
-      help='''Output file path for the encoded training data.
+    '-o',
+    '--outfile',
+    help='''Output file path for the encoded training data.
             (default: encoded_data.txt)''',
-      default=DEFAULT_OUTPUT_FILENAME)
+    default=DEFAULT_OUTPUT_FILENAME,
+  )
   parser.add_argument(
-      '--processes',
-      type=int,
-      help='''Number of processes to use.
+    '--processes',
+    type=int,
+    help='''Number of processes to use.
           (default: the number of CPUs in the system)''',
-      default=None)
+    default=None,
+  )
   parser.add_argument(
-      '--scale',
-      type=int,
-      help='''Weight scale for the entries. The value should be a unsigned
+    '--scale',
+    type=int,
+    help='''Weight scale for the entries. The value should be a unsigned
          integer. (default: 1)''',
-      default=1)
+    default=1,
+  )
   if test is None:
     return parser.parse_args()
   else:
@@ -116,11 +118,14 @@ def process(i: int, sentence: str, sep_indices: set[int], scale: int) -> str:
     sep_indices (typing.Set[int]): A set of separator indices.
     scale (int): A weight scale for the entries.
   """
-  feature = get_feature(sentence[i - 3] if i > 2 else INVALID,
-                        sentence[i - 2] if i > 1 else INVALID, sentence[i - 1],
-                        sentence[i] if i < len(sentence) else INVALID,
-                        sentence[i + 1] if i + 1 < len(sentence) else INVALID,
-                        sentence[i + 2] if i + 2 < len(sentence) else INVALID)
+  feature = get_feature(
+    sentence[i - 3] if i > 2 else INVALID,
+    sentence[i - 2] if i > 1 else INVALID,
+    sentence[i - 1],
+    sentence[i] if i < len(sentence) else INVALID,
+    sentence[i + 1] if i + 1 < len(sentence) else INVALID,
+    sentence[i + 2] if i + 2 < len(sentence) else INVALID,
+  )
   positive = i in sep_indices
   line = '\t'.join([f'{scale}' if positive else f'{-scale}', *feature])
   return line
@@ -154,7 +159,8 @@ def main(test: ArgList = None) -> None:
   sentence, sep_indices = normalize_input(data)
   with multiprocessing.Pool(processes) as p:
     func = functools.partial(
-        process, sentence=sentence, sep_indices=sep_indices, scale=scale)
+      process, sentence=sentence, sep_indices=sep_indices, scale=scale
+    )
     lines = p.map(func, range(1, len(sentence) + 1))
 
   with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
