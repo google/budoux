@@ -156,17 +156,8 @@ def run_retraining_pipeline(
         if os.path.exists(val_encoded):
           remote_args.extend(["--val-data", "/content/val_encoded.txt"])
 
-        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
-          f.write("import subprocess\n")
-          f.write(f"subprocess.run({remote_args!r}, check=True)\n")
-          launcher_path = f.name
-
-        try:
-          runner.exec_script(launcher_path)
-          runner.download_file("/content/weights.txt", weights_path)
-        finally:
-          if os.path.exists(launcher_path):
-            os.remove(launcher_path)
+        runner.exec_cmd(remote_args)
+        runner.download_file("/content/weights.txt", weights_path)
 
     else:
       train_cmd = [

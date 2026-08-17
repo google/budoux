@@ -94,13 +94,25 @@ class TestColabRunner(unittest.TestCase):
       runner.download_file("remote.txt", "local_out.txt")
 
     self.assertFalse(runner._is_active)
-    # Total of 5 subprocess calls executed in sequence:
-    # 1. new (provision session)
-    # 2. upload_file
-    # 3. exec_script
-    # 4. download_file
-    # 5. stop (cleanup session on context exit)
-    self.assertEqual(mock_run.call_count, 5)
+    # Total of 6 subprocess calls executed in sequence:
+    # 1. stop (cleanup existing session before provisioning)
+    # 2. new (provision session)
+    # 3. upload_file
+    # 4. exec_script
+    # 5. download_file
+    # 6. stop (cleanup session on context exit)
+    self.assertEqual(mock_run.call_count, 6)
+
+  @patch("subprocess.run")
+  def test_exec_cmd(self, mock_run: MagicMock) -> None:
+    runner = colab_runner.ColabRunner(
+      session_name="test-sess", binary_path="/usr/bin/colab"
+    )
+    runner.exec_cmd(["echo", "hello"])
+    self.assertEqual(mock_run.call_count, 1)
+    call_args = mock_run.call_args[0][0]
+    self.assertIn("exec", call_args)
+    self.assertIn("test-sess", call_args)
 
 
 if __name__ == "__main__":
