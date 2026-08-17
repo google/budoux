@@ -38,13 +38,20 @@ class TestNormalize(unittest.TestCase):
 
   def test_broken_input1(self) -> None:
     model = {'a:x': 23, 'b': {'x': 37, 'y': 18}}
-    with self.assertRaises(Exception) as cm:
+    with self.assertRaises(ValueError) as cm:
       translate_model.normalize(model)
     self.assertTrue('Unsupported model format' in str(cm.exception))
 
   def test_broken_input2(self) -> None:
     model = {'b': {'x': 37, 'y': {'z': 123}}}
-    with self.assertRaises(Exception) as cm:
+    with self.assertRaises(ValueError) as cm:
+      translate_model.normalize(model)
+    self.assertTrue('Unsupported model format' in str(cm.exception))
+
+  def test_broken_input_attribute_error(self) -> None:
+    # A list does not have a .values() method, which should trigger an AttributeError.
+    model = {'b': ['x', 37]}
+    with self.assertRaises(ValueError) as cm:
       translate_model.normalize(model)
     self.assertTrue('Unsupported model format' in str(cm.exception))
 
