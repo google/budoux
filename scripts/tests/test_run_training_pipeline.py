@@ -104,7 +104,7 @@ class TestRunTrainingPipeline(unittest.TestCase):
       mock_colab_runner_cls.assert_called_once_with(
         session_name="budoux-train-T4", accelerator="T4"
       )
-      self.assertTrue(mock_runner.exec_script.called)
+      self.assertTrue(mock_runner.exec_cmd.called)
 
       uploaded_remote_paths = [
         call[0][1] for call in mock_runner.upload_file.call_args_list
@@ -119,7 +119,7 @@ class TestRunTrainingPipeline(unittest.TestCase):
   ) -> None:
     mock_runner = MagicMock()
     mock_colab_runner_cls.return_value.__enter__.return_value = mock_runner
-    mock_runner.exec_script.side_effect = RuntimeError("Remote execution failed")
+    mock_runner.exec_cmd.side_effect = RuntimeError("Remote execution failed")
 
     with tempfile.TemporaryDirectory() as tmp_dir:
       split_dir = os.path.join(tmp_dir, "splits")

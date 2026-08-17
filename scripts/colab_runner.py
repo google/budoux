@@ -20,6 +20,7 @@ file transfer, script execution, and auto-cleanup via Python context managers.
 import os
 import shutil
 import subprocess
+import tempfile
 import typing
 
 
@@ -90,6 +91,7 @@ class ColabRunner:
 
   def provision_session(self) -> None:
     """Provisions a new remote Colab session with specified accelerator."""
+    self._run_cmd(["stop", "-s", self.session_name], check=False)
     cmd = ["new", "-s", self.session_name]
     # TPU variants start with a small 'v' (e.g. v6e1, v5e1), GPUs use --gpu flag
     if self.accelerator.startswith("v"):
@@ -144,6 +146,38 @@ class ColabRunner:
       cmd.extend(["--output-image", output_image])
     print(f"[Colab CLI] Running remote script execution ({script_path})...", flush=True)
     self._run_cmd(cmd)
+
+  def exec_code(
+    self, code: str, output_image: str | None = None, timeout: float = 43200.0
+  ) -> None:
+    """Executes inline Python code remotely on the Colab VM."""
+    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+      f.write(code)
+      script_path = f.name
+    try:
+      self.exec_script(script_path, output_image=output_image, timeout=timeout)
+    finally:
+      if os.path.exists(script_path):
+        os.remove(script_path)
+
+  def exec_cmd(self, cmd: list[str], timeout: float = 43200.0) -> None:
+    """Executes a shell command remotely on the Colab VM and streams stdout.
+
+    In Colab/Jupyter kernels, commands run via subprocess.run bypass Jupyter's
+    ipykernel.iostream.OutStream handler. By reading p.stdout line-by-line in Python
+    and writing to sys.stdout with immediate flush(), every line routes across the
+    ZeroMQ IOPub socket back to the local CLI client in real time.
+    """
+    code = (
+      "import subprocess, sys\n"
+      f"p = subprocess.Popen({cmd!r}, stdout=subprocess.PIPE,"
+      " stderr=subprocess.STDOUT, text=True)\n"
+      "for line in p.stdout:\n"
+      "    sys.stdout.write(line)\n"
+      "    sys.stdout.flush()\n"
+      "sys.exit(p.wait())\n"
+    )
+    self.exec_code(code, timeout=timeout)
 
   def stop_session(self) -> None:
     """Terminates and cleans up the remote Colab session."""
