@@ -535,3 +535,95 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
 });
+
+describe('HTMLProcessingParser.applyToElement with DocumentFragment', () => {
+  const defaultModel = {
+    UW4: {a: 1001},
+  };
+
+  it('should support applyToElement with a DocumentFragment containing elements.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    const p = doc.createElement('p');
+    p.textContent = 'xyzabcd';
+    fragment.appendChild(p);
+    parser.applyToElement(fragment);
+    expect(fragment.childNodes.length).toBe(1);
+    expect(fragment.firstElementChild).toBe(p);
+    expect(p.style.wordBreak).toBe('keep-all');
+    expect(p.innerHTML).toBe('xyz\u200Babcd');
+  });
+
+  it('should handle multiple block elements without wrapping the fragment in a span.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    const p1 = doc.createElement('p');
+    p1.textContent = 'xyzabcd';
+    const p2 = doc.createElement('p');
+    p2.textContent = 'xyzabcd';
+    fragment.appendChild(p1);
+    fragment.appendChild(p2);
+    parser.applyToElement(fragment);
+    expect(fragment.childNodes.length).toBe(2);
+    expect(fragment.childNodes[0]).toBe(p1);
+    expect(fragment.childNodes[1]).toBe(p2);
+    expect(p1.style.wordBreak).toBe('keep-all');
+    expect(p1.innerHTML).toBe('xyz\u200Babcd');
+    expect(p2.style.wordBreak).toBe('keep-all');
+    expect(p2.innerHTML).toBe('xyz\u200Babcd');
+  });
+
+  it('should wrap top-level text nodes in a span when applied to a DocumentFragment.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    fragment.appendChild(doc.createTextNode('xyzabcd'));
+    parser.applyToElement(fragment);
+    expect(fragment.childNodes.length).toBe(1);
+    const span = fragment.firstElementChild as HTMLElement;
+    expect(span.tagName.toLowerCase()).toBe('span');
+    expect(span.style.wordBreak).toBe('keep-all');
+    expect(span.innerHTML).toBe('xyz\u200Babcd');
+  });
+
+  it('should wrap mixed top-level text and elements in a span.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    fragment.appendChild(doc.createTextNode('xyz'));
+    const strong = doc.createElement('strong');
+    strong.textContent = 'abcd';
+    fragment.appendChild(strong);
+    parser.applyToElement(fragment);
+    expect(fragment.childNodes.length).toBe(1);
+    const span = fragment.firstElementChild as HTMLElement;
+    expect(span.tagName.toLowerCase()).toBe('span');
+    expect(span.style.wordBreak).toBe('keep-all');
+    expect(span.innerHTML).toBe('xyz<strong>\u200Babcd</strong>');
+  });
+
+  it('should handle an empty DocumentFragment gracefully.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    parser.applyToElement(fragment);
+    expect(fragment.childNodes.length).toBe(0);
+  });
+
+  it('should apply className instead of inline style when configured.', () => {
+    const parser = new HTMLProcessingParser(defaultModel, {
+      className: 'budoux-applied',
+    });
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    const p = doc.createElement('p');
+    p.textContent = 'xyzabcd';
+    fragment.appendChild(p);
+    parser.applyToElement(fragment);
+    expect(p.classList.contains('budoux-applied')).toBe(true);
+    expect(p.getAttribute('style')).toBeNull();
+    expect(p.innerHTML).toBe('xyz\u200Babcd');
+  });
+});
