@@ -56,15 +56,7 @@ def run_retraining_pipeline(
       tar_path = os.path.join(tmp_knbc, "knbc.tar.bz2")
       urllib.request.urlretrieve(KNBC_URL, tar_path)
       with tarfile.open(tar_path, "r:bz2") as tar:
-        if hasattr(tarfile, "data_filter"):
-          tar.extractall(path=tmp_knbc, filter="data")
-        else:
-          abs_out = os.path.abspath(tmp_knbc)
-          for member in tar.getmembers():
-            member_path = os.path.abspath(os.path.join(abs_out, member.name))
-            if os.path.commonpath([abs_out, member_path]) != abs_out:
-              raise ValueError(f"Insecure member in tar file: {member.name}")
-          tar.extractall(path=tmp_knbc)
+        tar.extractall(path=tmp_knbc, filter="data")
       source_dir = os.path.join(tmp_knbc, "KNBC_v1.0_090925_utf8")
       outfile = os.path.join(tmp_knbc, "source_knbc.txt")
       subprocess.run(
