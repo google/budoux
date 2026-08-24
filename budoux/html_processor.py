@@ -108,16 +108,18 @@ class HTMLChunkResolver(HTMLParser):
       # See https://html.spec.whatwg.org/multipage/parsing.html#an-introduction-to-error-handling-and-strange-cases-in-the-parser
 
   def handle_data(self, data: str) -> None:
+    out = []
     for char in data:
       if char != self.chunks_joined[self.scan_index]:
         prev_was_whitespace = (
           self.scan_index > 0 and self.chunks_joined[self.scan_index - 1].isspace()
         )
         if not self.to_skip and not char.isspace() and not prev_was_whitespace:
-          self.output += self.separator
+          out.append(self.separator)
         self.scan_index += 1
-      self.output += char
+      out.append(char)
       self.scan_index += 1
+    self.output += "".join(out)
 
 
 def get_text(html: str) -> str:
