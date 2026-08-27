@@ -56,7 +56,7 @@ def run_retraining_pipeline(
       tar_path = os.path.join(tmp_knbc, "knbc.tar.bz2")
       urllib.request.urlretrieve(KNBC_URL, tar_path)
       with tarfile.open(tar_path, "r:bz2") as tar:
-        tar.extractall(path=tmp_knbc)
+        tar.extractall(path=tmp_knbc, filter="data")
       source_dir = os.path.join(tmp_knbc, "KNBC_v1.0_090925_utf8")
       outfile = os.path.join(tmp_knbc, "source_knbc.txt")
       subprocess.run(
