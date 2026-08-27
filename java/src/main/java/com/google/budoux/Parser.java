@@ -133,7 +133,6 @@ public class Parser {
       return new ArrayList<>();
     }
     List<String> result = new ArrayList<>();
-    result.add(String.valueOf(sentence.charAt(0)));
     int totalScore =
         this.model.values().stream()
             .mapToInt(group -> group.values().stream().mapToInt(Integer::intValue).sum())
@@ -151,6 +150,7 @@ public class Parser {
     Map<String, Integer> tw2 = this.model.get("TW2");
     Map<String, Integer> tw3 = this.model.get("TW3");
     Map<String, Integer> tw4 = this.model.get("TW4");
+    int phraseStart = 0;
     for (int i = 1; i < sentence.length(); i++) {
       int score = -totalScore;
       if (i - 2 > 0 && uw1 != null) {
@@ -193,10 +193,11 @@ public class Parser {
         score += 2 * tw4.getOrDefault(sentence.substring(i, i + 3), 0);
       }
       if (score > 0) {
-        result.add("");
+        result.add(sentence.substring(phraseStart, i));
+        phraseStart = i;
       }
-      result.set(result.size() - 1, result.get(result.size() - 1) + sentence.charAt(i));
     }
+    result.add(sentence.substring(phraseStart));
     return result;
   }
 
