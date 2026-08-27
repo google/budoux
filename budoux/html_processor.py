@@ -48,10 +48,16 @@ class TextContentExtractor(HTMLParser):
     output (str): Accumulated text content.
   """
 
-  output = ''
+  def __init__(self) -> None:
+    super().__init__()
+    self._output: list[str] = []
+
+  @property
+  def output(self) -> str:
+    return ''.join(self._output)
 
   def handle_data(self, data: str) -> None:
-    self.output += data
+    self._output.append(data)
 
 
 class HTMLChunkResolver(HTMLParser):
@@ -61,8 +67,6 @@ class HTMLChunkResolver(HTMLParser):
     output (str): The HTML string to output.
   """
 
-  output = ''
-
   def __init__(self, chunks: list[str], separator: str):
     """Initializes the parser.
 
@@ -70,12 +74,17 @@ class HTMLChunkResolver(HTMLParser):
       chunks (List[str]): The chunks to resolve.
       separator (str): The separator string.
     """
-    HTMLParser.__init__(self)
+    super().__init__()
     self.chunks_joined = SEP.join(chunks)
     self.separator = separator
     self.to_skip = False
     self.scan_index = 0
     self.element_stack: queue.LifoQueue[ElementState] = queue.LifoQueue()
+    self._output: list[str] = []
+
+  @property
+  def output(self) -> str:
+    return ''.join(self._output)
 
   def handle_starttag(self, tag: str, attrs: HTMLAttr) -> None:
     attr_pairs = []
@@ -89,12 +98,12 @@ class HTMLChunkResolver(HTMLParser):
     if tag.upper() in SKIP_NODES:
       if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
         self.scan_index += 1
-        self.output += self.separator
+        self._output.append(self.separator)
       self.to_skip = True
-    self.output += f'<{tag}{encoded_attrs}>'
+    self._output.append(f'<{tag}{encoded_attrs}>')
 
   def handle_endtag(self, tag: str) -> None:
-    self.output += f'</{tag}>'
+    self._output.append(f'</{tag}>')
     while not self.element_stack.empty():
       state = self.element_stack.get_nowait()
       if state.tag == tag:
@@ -114,9 +123,9 @@ class HTMLChunkResolver(HTMLParser):
           self.scan_index > 0 and self.chunks_joined[self.scan_index - 1].isspace()
         )
         if not self.to_skip and not char.isspace() and not prev_was_whitespace:
-          self.output += self.separator
+          self._output.append(self.separator)
         self.scan_index += 1
-      self.output += char
+      self._output.append(char)
       self.scan_index += 1
 
 
