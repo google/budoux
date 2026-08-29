@@ -137,3 +137,36 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html, '<wbr>')
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><ul><li>abc</li>\n<li>def</li></ul></span>'
     self.assertEqual(result, expected)
+
+  def test_with_trailing_skip_node(self) -> None:
+    chunks = ['abc']
+    html = '<p>abc</p><script src="x.js"></script>'
+    result = html_processor.resolve(chunks, html)
+    expected = (
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+      '<p>abc</p><script src="x.js"></script></span>'
+    )
+    self.assertEqual(
+      result, expected, 'Empty skip nodes after the text should not cause errors.'
+    )
+
+  def test_with_empty_skip_node_only(self) -> None:
+    chunks = []
+    html = '<style></style>'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><style></style></span>'
+    self.assertEqual(
+      result, expected, 'Skip nodes without text content should not cause errors.'
+    )
+
+  def test_with_boundary_before_trailing_skip_node(self) -> None:
+    chunks = ['abc', 'def']
+    html = '<p>abc</p><nobr></nobr><p>def</p>'
+    result = html_processor.resolve(chunks, html)
+    expected = (
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+      '<p>abc</p>\u200b<nobr></nobr><p>def</p></span>'
+    )
+    self.assertEqual(
+      result, expected, 'A boundary before an empty skip node should be kept.'
+    )
