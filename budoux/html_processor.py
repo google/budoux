@@ -96,7 +96,13 @@ class HTMLChunkResolver(HTMLParser):
     encoded_attrs = ''.join(attr_pairs)
     self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
-      if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
+      # scan_index may be at the end of chunks_joined when the text content is
+      # fully consumed before this element, e.g. `<p>abc</p><script></script>`.
+      if (
+        not self.to_skip
+        and self.scan_index < len(self.chunks_joined)
+        and self.chunks_joined[self.scan_index] == SEP
+      ):
         self.scan_index += 1
         self._output.append(self.separator)
       self.to_skip = True
