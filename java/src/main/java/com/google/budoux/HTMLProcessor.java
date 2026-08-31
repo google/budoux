@@ -121,10 +121,11 @@ final class HTMLProcessor {
       }
       if (node instanceof Element) {
         elementStack.push(toSkip);
-        String attributesEncoded =
-            node.attributes().asList().stream()
-                .map(attribute -> " " + attribute)
-                .collect(Collectors.joining(""));
+        StringBuilder attributesEncodedBuilder = new StringBuilder();
+        for (org.jsoup.nodes.Attribute attribute : node.attributes()) {
+          attributesEncodedBuilder.append(" ").append(attribute);
+        }
+        String attributesEncoded = attributesEncodedBuilder.toString();
         final String nodeName = node.nodeName();
         if (nodeName.equals("br")) {
           // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
