@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -120,11 +121,6 @@ final class HTMLProcessor {
       }
       if (node instanceof Element) {
         elementStack.push(toSkip);
-        StringBuilder attributesEncodedBuilder = new StringBuilder();
-        for (org.jsoup.nodes.Attribute attribute : node.attributes()) {
-          attributesEncodedBuilder.append(" ").append(attribute);
-        }
-        String attributesEncoded = attributesEncodedBuilder.toString();
         final String nodeName = node.nodeName();
         if (nodeName.equals("br")) {
           // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
@@ -139,7 +135,11 @@ final class HTMLProcessor {
           }
           toSkip = true;
         }
-        output.append(String.format("<%s%s>", nodeName, attributesEncoded));
+        output.append('<').append(nodeName);
+        for (Attribute attribute : node.attributes()) {
+          output.append(' ').append(attribute);
+        }
+        output.append('>');
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
         for (int i = 0; i < data.length(); i++) {
