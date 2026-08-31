@@ -291,10 +291,10 @@ def run_agentic_synthesis_pipeline(
       parser = budoux.Parser(json.load(f))
 
   if not client and (issue_id or num_candidates > 0):
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if not api_key:
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key or not api_key.strip():
       raise RuntimeError("GEMINI_API_KEY environment variable not set or empty.")
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(api_key=api_key.strip())
 
   # Step 1: Intent & Bug Verification
   if input_str:
