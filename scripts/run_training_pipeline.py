@@ -37,7 +37,7 @@ def run_retraining_pipeline(
   feature_thres: int = 2,
   split_dir: str = "tmp/splits",
   out_model: str = "",
-  weight_factor: int = 100,
+  weight_factor: int = 20,
   colab: bool = False,
   accelerator: str = "T4",
   session_name: str | None = None,
@@ -246,6 +246,12 @@ def main() -> None:
     help="Output model JSON path (default: budoux/models/<lang>.json)",
   )
   parser.add_argument(
+    "--weight-factor",
+    type=int,
+    default=20,
+    help="Oversampling multiplier for fine-tuning datasets (default: 20)",
+  )
+  parser.add_argument(
     "--colab",
     action="store_true",
     help="Offload JAX AdaBoost training step to remote Colab VM.",
@@ -267,6 +273,7 @@ def main() -> None:
     feature_thres=args.feature_thres,
     split_dir=args.split_dir,
     out_model=args.out_model,
+    weight_factor=args.weight_factor,
     colab=args.colab,
     accelerator=args.accelerator,
     session_name=args.session_name,
