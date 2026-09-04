@@ -30,8 +30,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -121,10 +121,6 @@ final class HTMLProcessor {
       }
       if (node instanceof Element) {
         elementStack.push(toSkip);
-        String attributesEncoded =
-            node.attributes().asList().stream()
-                .map(attribute -> " " + attribute)
-                .collect(Collectors.joining(""));
         final String nodeName = node.nodeName();
         if (nodeName.equals("br")) {
           // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
@@ -139,7 +135,11 @@ final class HTMLProcessor {
           }
           toSkip = true;
         }
-        output.append(String.format("<%s%s>", nodeName, attributesEncoded));
+        output.append('<').append(nodeName);
+        for (Attribute attribute : node.attributes()) {
+          output.append(' ').append(attribute);
+        }
+        output.append('>');
       } else if (node instanceof TextNode) {
         String data = ((TextNode) node).getWholeText();
         for (int i = 0; i < data.length(); i++) {
