@@ -27,6 +27,7 @@ const ZWSP = String.fromCharCode(ZWSP_CODEPOINT);
 const NodeType = {
   ELEMENT_NODE: 1,
   TEXT_NODE: 3,
+  DOCUMENT_FRAGMENT_NODE: 11,
 };
 
 const DomAction = {
@@ -177,11 +178,15 @@ function actionForDisplay(display: string): DomAction {
 }
 
 /**
- * Determine the action for an element.
- * @param element An element to determine the action for.
+ * Determine the action for an element or document fragment.
+ * @param element An element or document fragment to determine the action for.
  * @return The {@link domActions} for the element.
  */
-function actionForElement(element: Element): DomAction {
+function actionForElement(element: Element | DocumentFragment): DomAction {
+  if (isDocumentFragment(element)) {
+    return DomAction.Block;
+  }
+
   const nodeName = element.nodeName;
   const action = domActions[nodeName];
   if (action !== undefined) return action;
@@ -284,6 +289,12 @@ class NodeOrText {
 }
 export class NodeOrTextForTesting extends NodeOrText {}
 
+function isDocumentFragment(
+  node: Element | DocumentFragment
+): node is DocumentFragment {
+  return node.nodeType === NodeType.DOCUMENT_FRAGMENT_NODE;
+}
+
 /**
  * Represents a "paragraph", broken by block boundaries or forced breaks.
  *
@@ -293,10 +304,10 @@ export class NodeOrTextForTesting extends NodeOrText {}
  * forced breaks such as `<br>`.
  */
 class Paragraph {
-  element: HTMLElement;
+  element: HTMLElement | DocumentFragment;
   nodes: NodeOrText[] = [];
 
-  constructor(element: HTMLElement) {
+  constructor(element: HTMLElement | DocumentFragment) {
     this.element = element;
   }
 
@@ -404,7 +415,7 @@ export class HTMLProcessor {
    * @param ele An element to be checked.
    * @return Whether the element has a child text node.
    */
-  static hasChildTextNode(ele: HTMLElement) {
+  static hasChildTextNode(ele: HTMLElement | DocumentFragment) {
     for (const child of ele.childNodes) {
       if (child.nodeType === NodeType.TEXT_NODE) return true;
     }
@@ -412,13 +423,13 @@ export class HTMLProcessor {
   }
 
   /**
-   * Applies markups for semantic line breaks to the given HTML element.
+   * Applies markups for semantic line breaks to the given HTML element or document fragment.
    *
    * It breaks descendant nodes into paragraphs,
    * and applies the BudouX to each paragraph.
-   * @param element The input element.
+   * @param element The input element or document fragment.
    */
-  applyToElement(element: HTMLElement) {
+  applyToElement(element: HTMLElement | DocumentFragment) {
     for (const block of this.getBlocks(element)) {
       assert(!block.isEmpty());
       this.applyToParagraph(block);
@@ -426,19 +437,27 @@ export class HTMLProcessor {
   }
 
   /**
-   * Find paragraphs from a given HTML element.
-   * @param element The root element to find paragraphs.
+   * Find paragraphs from a given HTML element or document fragment.
+   * @param element The root element or document fragment to find paragraphs.
    * @param parent The parent {@link Paragraph} if any.
    * @return A list of {@link Paragraph}s.
    */
   *getBlocks(
-    element: HTMLElement,
+    element: HTMLElement | DocumentFragment,
     parent?: Paragraph
   ): IterableIterator<Paragraph> {
-    assert(element.nodeType === NodeType.ELEMENT_NODE);
+    assert(
+      element.nodeType === NodeType.ELEMENT_NODE ||
+        element.nodeType === NodeType.DOCUMENT_FRAGMENT_NODE
+    );
 
     // Skip if it was once applied to this element.
-    if (this.className && element.classList.contains(this.className)) return;
+    if (
+      !isDocumentFragment(element) &&
+      this.className &&
+      element.classList.contains(this.className)
+    )
+      return;
 
     const action = actionForElement(element);
     if (action === DomAction.Skip) return;
@@ -598,10 +617,22 @@ export class HTMLProcessor {
   }
 
   /**
-   * Applies the block style to the given element.
-   * @param element The element to apply the block style.
+   * Applies the block style to the given element or document fragment.
+   * @param element The element or document fragment to apply the block style.
    */
-  applyBlockStyle(element: HTMLElement): void {
+  applyBlockStyle(element: HTMLElement | DocumentFragment): void {
+    if (isDocumentFragment(element)) {
+      if (HTMLProcessor.hasChildTextNode(element)) {
+        const doc = element.ownerDocument;
+        if (doc) {
+          const wrapper = doc.createElement('span') as unknown as HTMLElement;
+          wrapper.append(...Array.from(element.childNodes));
+          element.append(wrapper);
+          this.applyBlockStyle(wrapper);
+        }
+      }
+      return;
+    }
     if (this.className) {
       element.classList.add(this.className);
       return;
@@ -627,10 +658,10 @@ export class HTMLProcessingParser extends Parser {
   }
 
   /**
-   * Applies markups for semantic line breaks to the given HTML element.
-   * @param parentElement The input element.
+   * Applies markups for semantic line breaks to the given HTML element or document fragment.
+   * @param parentElement The input element or document fragment.
    */
-  applyToElement(parentElement: HTMLElement) {
+  applyToElement(parentElement: HTMLElement | DocumentFragment) {
     this.htmlProcessor.applyToElement(parentElement);
   }
 
