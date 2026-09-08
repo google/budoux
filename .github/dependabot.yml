@@ -30,6 +30,8 @@ updates:
           - "*"
         update-types:
           - "patch"
+    cooldown:
+      default-days: 7
 
   # GitHub Actions updates
   - package-ecosystem: github-actions
@@ -45,6 +47,8 @@ updates:
           - "*"
         update-types:
           - "patch"
+    cooldown:
+      default-days: 7
 
   # JavaScript/npm updates
   - package-ecosystem: npm
@@ -59,6 +63,8 @@ updates:
           - "*"
         update-types:
           - "patch"
+    cooldown:
+      default-days: 7
 
   # Java/Maven updates
   - package-ecosystem: maven
@@ -71,3 +77,5 @@ updates:
           - "*"
         update-types:
           - "patch"
+    cooldown:
+      default-days: 7
