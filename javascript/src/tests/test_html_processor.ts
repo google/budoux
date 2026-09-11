@@ -198,6 +198,31 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
     }
     expect(isEqual).toBe(true);
   });
+
+  it('should skip element if className is already applied', () => {
+    const doc = createDocument();
+    setInnerHtml(
+      doc.body,
+      '<div class="applied">今日は良い天気です</div><div>今日は良い天気です</div>'
+    );
+    const processor = new MockHTMLProcessorBase({
+      separator: '/',
+      className: 'applied',
+    });
+    processor.applyToElement(doc.body);
+    const expected =
+      '<div class="applied">今日は良い天気です</div>' +
+      '<div class="applied">今日は/良い/天気です</div>';
+    const isEqual = isEqualNodeWithStyleNormalized(
+      doc.body,
+      parseFromString(expected).body
+    );
+    if (!isEqual) {
+      console.log('actual:', doc.body.innerHTML);
+      console.log('expected:', expected);
+    }
+    expect(isEqual).toBe(true);
+  });
 });
 
 describe('HTMLProcessor.getBlocks', () => {
@@ -625,5 +650,41 @@ describe('HTMLProcessingParser.applyToElement with DocumentFragment', () => {
     expect(p.classList.contains('budoux-applied')).toBe(true);
     expect(p.getAttribute('style')).toBeNull();
     expect(p.innerHTML).toBe('xyz\u200Babcd');
+  });
+
+  it('should not re-process elements with className when applyToElement is called twice.', () => {
+    const parser = new HTMLProcessingParser(defaultModel, {
+      className: 'budoux-applied',
+    });
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    const p = doc.createElement('p');
+    p.textContent = 'xyzabcd';
+    fragment.appendChild(p);
+    parser.applyToElement(fragment);
+    expect(p.innerHTML).toBe('xyz\u200Babcd');
+
+    // Second call should skip already processed elements.
+    parser.applyToElement(fragment);
+    expect(p.innerHTML).toBe('xyz\u200Babcd');
+  });
+
+  it('should skip child element with className while processing unannotated sibling in DocumentFragment.', () => {
+    const parser = new HTMLProcessingParser(defaultModel, {
+      className: 'budoux-applied',
+    });
+    const doc = createDocument();
+    const fragment = doc.createDocumentFragment();
+    const p1 = doc.createElement('p');
+    p1.className = 'budoux-applied';
+    p1.textContent = 'xyzabcd';
+    const p2 = doc.createElement('p');
+    p2.textContent = 'xyzabcd';
+    fragment.appendChild(p1);
+    fragment.appendChild(p2);
+
+    parser.applyToElement(fragment);
+    expect(p1.innerHTML).toBe('xyzabcd');
+    expect(p2.innerHTML).toBe('xyz\u200Babcd');
   });
 });
