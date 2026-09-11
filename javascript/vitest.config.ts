@@ -28,9 +28,9 @@ export default defineConfig({
         test: {
           environment: 'node',
           include: [
-            'src/tests/test_cli.ts',
-            'src/tests/test_parser.ts',
-            'src/tests/test_html_processor.ts',
+            'src/tests/cli_test.ts',
+            'src/tests/parser_test.ts',
+            'src/tests/html_processor_test.ts',
           ],
         },
       },
@@ -43,9 +43,9 @@ export default defineConfig({
             instances: [{browser: 'chromium'}],
           },
           include: [
-            'src/tests/test_webcomponents.ts',
-            'src/tests/test_parser.ts',
-            'src/tests/test_html_processor.ts',
+            'src/tests/webcomponents_test.ts',
+            'src/tests/parser_test.ts',
+            'src/tests/html_processor_test.ts',
           ],
         },
         resolve: {
