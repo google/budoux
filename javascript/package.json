@@ -99,7 +99,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
     "@types/node": "^26.0.1",
-    "@vitest/browser": "^4.0.18",
+    "@vitest/browser": "^5.0.0",
     "@vitest/browser-playwright": "^4.0.18",
     "esbuild": "^0.28.0",
     "playwright": "^1.58.0",
