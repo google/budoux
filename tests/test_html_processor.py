@@ -101,6 +101,13 @@ class TestResolve(unittest.TestCase):
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">ab<a href="http://example.com">c\u200bd</a>ef</span>'
     self.assertEqual(result, expected)
 
+  def test_with_escaped_characters(self) -> None:
+    chunks = ['a<b>', 'c&d']
+    html = '<a title="&quot;x&quot;">a&lt;b&gt;c&amp;d</a>'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><a title="&quot;x&quot;">a&lt;b&gt;\u200bc&amp;d</a></span>'
+    self.assertEqual(result, expected)
+
   def test_with_nodes_to_skip(self) -> None:
     chunks = ['abc', 'def', 'ghi']
     html = "a<button>bcde</button>fghi"
