@@ -131,7 +131,11 @@ class HTMLChunkResolver(HTMLParser):
           self._output.append(self.separator)
         self.scan_index += 1
       # Re-escape text that `HTMLParser` unescaped, except in raw text elements.
-      self._output.append(html.escape(char) if self.cdata_elem is None else char)
+      self._output.append(
+        html.escape(char, quote=False)
+        if self.cdata_elem not in self.CDATA_CONTENT_ELEMENTS
+        else char
+      )
       self.scan_index += 1
 
 
