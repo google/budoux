@@ -13,6 +13,7 @@
 # limitations under the License.
 """HTML processor."""
 
+import html
 import json
 import os
 import queue
@@ -92,7 +93,7 @@ class HTMLChunkResolver(HTMLParser):
       if attr[1] is None:
         attr_pairs.append(' ' + attr[0])
       else:
-        attr_pairs.append(f' {attr[0]}="{attr[1]}"')
+        attr_pairs.append(f' {attr[0]}="{html.escape(attr[1])}"')
     encoded_attrs = ''.join(attr_pairs)
     self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
@@ -135,7 +136,12 @@ class HTMLChunkResolver(HTMLParser):
         if not self.to_skip and not char.isspace() and not prev_was_whitespace:
           self._output.append(self.separator)
         self.scan_index += 1
-      self._output.append(char)
+      # Re-escape text that `HTMLParser` unescaped, except in raw text elements.
+      self._output.append(
+        html.escape(char, quote=False)
+        if self.cdata_elem not in self.CDATA_CONTENT_ELEMENTS
+        else char
+      )
       self.scan_index += 1
 
 
