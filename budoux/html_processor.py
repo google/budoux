@@ -28,6 +28,23 @@ with open(
 ) as f:
   SKIP_NODES: set[str] = set(json.load(f))
 
+# Elements without an end tag, see https://html.spec.whatwg.org/#void-elements
+VOID_ELEMENTS = {
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'source',
+  'track',
+  'wbr',
+}
+
 
 class ElementState:
   """Represents the state for an element.
@@ -106,12 +123,16 @@ class HTMLChunkResolver(HTMLParser):
         self._output.append(self.separator)
       self.to_skip = True
     self._output.append(f'<{tag}{encoded_attrs}>')
+    if tag in VOID_ELEMENTS:
+      # Void elements like `<input>` have no end tag, so restore the state now.
+      self.to_skip = self.element_stack.get_nowait().to_skip
 
   def handle_startendtag(self, tag: str, attrs: HTMLAttr) -> None:
     # Self-closing tags like `<br/>` have no end tag, so don't output one.
     self.handle_starttag(tag, attrs)
     self._output[-1] = self._output[-1][:-1] + '/>'
-    self.to_skip = self.element_stack.get_nowait().to_skip
+    if tag not in VOID_ELEMENTS:
+      self.to_skip = self.element_stack.get_nowait().to_skip
 
   def handle_endtag(self, tag: str) -> None:
     self._output.append(f'</{tag}>')
