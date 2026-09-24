@@ -96,7 +96,11 @@ class HTMLChunkResolver(HTMLParser):
     encoded_attrs = ''.join(attr_pairs)
     self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
-      if not self.to_skip and self.chunks_joined[self.scan_index] == SEP:
+      if (
+        not self.to_skip
+        and self.scan_index < len(self.chunks_joined)
+        and self.chunks_joined[self.scan_index] == SEP
+      ):
         self.scan_index += 1
         self._output.append(self.separator)
       self.to_skip = True

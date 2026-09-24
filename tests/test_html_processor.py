@@ -115,6 +115,13 @@ class TestResolve(unittest.TestCase):
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200b<button>defghi</button>\u200bjkl</span>'
     self.assertEqual(result, expected)
 
+  def test_with_skip_node_at_end(self) -> None:
+    chunks = ['abc', 'def']
+    html = 'abcdef<button></button>'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200bdef<button></button></span>'
+    self.assertEqual(result, expected)
+
   def test_with_nothing_to_split(self) -> None:
     chunks = ['abcdef']
     html = 'abcdef'
