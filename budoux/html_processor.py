@@ -102,6 +102,12 @@ class HTMLChunkResolver(HTMLParser):
       self.to_skip = True
     self._output.append(f'<{tag}{encoded_attrs}>')
 
+  def handle_startendtag(self, tag: str, attrs: HTMLAttr) -> None:
+    # Self-closing tags like `<br/>` have no end tag, so don't output one.
+    self.handle_starttag(tag, attrs)
+    self._output[-1] = self._output[-1][:-1] + '/>'
+    self.to_skip = self.element_stack.get_nowait().to_skip
+
   def handle_endtag(self, tag: str) -> None:
     self._output.append(f'</{tag}>')
     while not self.element_stack.empty():

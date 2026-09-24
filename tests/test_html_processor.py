@@ -137,3 +137,10 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html, '<wbr>')
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><ul><li>abc</li>\n<li>def</li></ul></span>'
     self.assertEqual(result, expected)
+
+  def test_with_self_closing_tag(self) -> None:
+    chunks = ['abc', 'def']
+    html = 'abc<br/>def'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<br/>\u200bdef</span>'
+    self.assertEqual(result, expected)
