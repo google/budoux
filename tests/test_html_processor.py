@@ -144,3 +144,10 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<br/>\u200bdef</span>'
     self.assertEqual(result, expected)
+
+  def test_with_self_closing_skip_node(self) -> None:
+    chunks = ['abc', 'def', 'ghi']
+    html = 'abc<input type="text" />defghi'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200b<input type="text"/>def\u200bghi</span>'
+    self.assertEqual(result, expected)
