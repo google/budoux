@@ -522,6 +522,14 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
 
+  it('should add a SPAN parent if the input has multiple parents.', () => {
+    const inputHTML = '<b>xyzabc</b><b>xyzabc</b>';
+    const expectedHTML = `<span
+    style="word-break: keep-all; overflow-wrap: anywhere;"
+    ><b>xyz\u200Babc</b><b>xyz\u200Babc</b></span>`;
+    checkEqual(defaultModel, inputHTML, expectedHTML);
+  });
+
   it('should return a blank string if the input is blank.', () => {
     const inputHTML = '';
     const expectedHTML = '';
