@@ -339,8 +339,11 @@ def run_agentic_synthesis_pipeline(
     )
     os.makedirs(dataset_dir, exist_ok=True)
     dataset_file = os.path.join(dataset_dir, f"issue_{issue_id}.txt")
+    train_lines = (
+      output_lines[1:] if (append_quality and len(output_lines) > 1) else output_lines
+    )
     with open(dataset_file, "w", encoding="utf-8") as f:
-      f.write("\n".join(output_lines) + "\n")
+      f.write("\n".join(train_lines) + "\n")
     print(f"[Dataset] Saved dataset to {dataset_file}.")
 
   if append_quality and issue_id and output_lines:
