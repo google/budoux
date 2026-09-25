@@ -440,6 +440,7 @@ To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
    - Remove any unsatisfactory candidate lines.
    - Adjust `▁` (U+2581) phrase boundary markers where needed.
    - Add custom sentences if desired.
+   - **Ensure strict separation between training and test sets:** Do **not** include identical entries (or trivial punctuation-only duplicates) in both the training dataset (`data/finetuning/<lang>/*.txt`) and the test dataset (`tests/quality/<lang>.tsv` or `knbc_test.txt`). Hold out the test phrases in `tests/quality/<lang>.tsv` and use distinct contextual variations in `data/finetuning/<lang>/issue_<id>.txt` so the benchmark evaluates generalization rather than memorization.
 
 3. **Save to Fine-Tuning Corpus:**
    Save the reviewed file into `data/finetuning/ja/issue_468.txt`:
@@ -451,7 +452,7 @@ To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
 
 4. **Run Retraining Pipeline:**
    Execute `run_training_pipeline.py`. It automatically merges all datasets
-   under `data/finetuning/ja/*.txt` (with 100x weighting), retrains the JAX
+   under `data/finetuning/ja/*.txt` (with 20x weighting), retrains the JAX
    model, and verifies quality benchmarks:
 
    ```bash
