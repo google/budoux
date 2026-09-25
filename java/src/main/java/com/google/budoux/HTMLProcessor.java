@@ -154,7 +154,16 @@ final class HTMLProcessor {
             scanIndex++;
           }
           scanIndex++;
-          output.append(c);
+          // Re-escape the text that jsoup has unescaped.
+          if (c == '&') {
+            output.append("&amp;");
+          } else if (c == '<') {
+            output.append("&lt;");
+          } else if (c == '>') {
+            output.append("&gt;");
+          } else {
+            output.append(c);
+          }
         }
       }
     }

@@ -168,4 +168,12 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(this.wrap("<ul><li>abc</li>\n<li>def</li></ul>"), result);
   }
+
+  @Test
+  public void testResolveEscapesText() {
+    List<String> phrases = Arrays.asList("a<b", ">c&d");
+    String html = "a&lt;b&gt;c&amp;d";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("a&lt;b<wbr>&gt;c&amp;d"), result);
+  }
 }
