@@ -179,3 +179,10 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200b<input type="text">def\u200bghi</span>'
     self.assertEqual(result, expected)
+
+  def test_with_stray_void_end_tag_in_skip_node(self) -> None:
+    chunks = ['abc', 'def', 'ghi', 'jkl']
+    html = '<code>abc<br></br>def</code>ghijkl'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><code>abc<br></br>def</code>\u200bghi\u200bjkl</span>'
+    self.assertEqual(result, expected)

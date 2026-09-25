@@ -136,6 +136,8 @@ class HTMLChunkResolver(HTMLParser):
 
   def handle_endtag(self, tag: str) -> None:
     self._output.append(f'</{tag}>')
+    if tag in VOID_ELEMENTS:
+      return
     while not self.element_stack.empty():
       state = self.element_stack.get_nowait()
       if state.tag == tag:
