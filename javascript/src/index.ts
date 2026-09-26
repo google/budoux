@@ -22,7 +22,7 @@ import {HTMLProcessingParser} from './html_processor.js';
 
 export {HTMLProcessingParser, HTMLProcessor} from './html_processor.js';
 export {Parser} from './parser.js';
-export {jaModel, zhHansModel, zhHantModel};
+export {jaModel, thModel, zhHansModel, zhHantModel};
 
 /**
  * Loads a parser equipped with the default Japanese model.
