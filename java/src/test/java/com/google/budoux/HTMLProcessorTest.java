@@ -176,4 +176,12 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(this.wrap("a&lt;b<wbr>&gt;c&amp;d"), result);
   }
+
+  @Test
+  public void testResolveWithScript() {
+    List<String> phrases = Arrays.asList("abc", "def");
+    String html = "abc<script>if (a < b) f();</script>def";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc<wbr><script>if (a < b) f();</script>def"), result);
+  }
 }

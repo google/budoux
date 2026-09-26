@@ -32,7 +32,7 @@ import java.util.Locale;
 import java.util.Set;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -165,15 +165,17 @@ final class HTMLProcessor {
             output.append(c);
           }
         }
+      } else if (node instanceof DataNode) {
+        // Keep the contents of `<script>` and `<style>` as is.
+        output.append(((DataNode) node).getWholeData());
       }
     }
 
     @Override
     public void tail(Node node, int depth) {
-      if (node.nodeName().equals("body") || node instanceof TextNode || node instanceof Comment) {
+      if (node.nodeName().equals("body") || !(node instanceof Element)) {
         return;
       }
-      // Assume node instanceof Element;
       toSkip = elementStack.pop();
       Element element = (Element) node;
       if (element.tag().isSelfClosing()) {
