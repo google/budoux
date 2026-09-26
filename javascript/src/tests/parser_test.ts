@@ -15,6 +15,7 @@
  */
 
 import {describe, expect, it} from 'vitest';
+import {thModel} from '../index.js';
 import {Parser} from '../parser.js';
 
 describe('Parser.parse', () => {
@@ -42,5 +43,13 @@ describe('Parser.parse', () => {
     const parser = new Parser({});
     const result = parser.parse('');
     expect(result).toEqual([]);
+  });
+});
+
+describe('thModel', () => {
+  it('should be exported to create a Thai parser.', () => {
+    const parser = new Parser(thModel);
+    const result = parser.parse('วันนี้อากาศดี');
+    expect(result).toEqual(['วัน', 'นี้', 'อากาศ', 'ดี']);
   });
 });
