@@ -179,6 +179,7 @@ def get_text(html: str) -> str:
   """
   text_content_extractor = TextContentExtractor()
   text_content_extractor.feed(html)
+  text_content_extractor.close()
   return text_content_extractor.output
 
 
@@ -195,5 +196,6 @@ def resolve(phrases: list[str], html: str, separator: str = '\u200b') -> str:
   """
   resolver = HTMLChunkResolver(phrases, separator)
   resolver.feed(html)
+  resolver.close()
   result = f'<span style="{PARENT_CSS_STYLE}">{resolver.output}</span>'
   return result

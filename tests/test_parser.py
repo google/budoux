@@ -112,6 +112,16 @@ class TestParser(unittest.TestCase):
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html, 'Should work with emojis.')
 
+    input_html = 'xyzab&c'
+    expected_html = (
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+      'xyz\u200bab&amp;c</span>'
+    )
+    output_html = p.translate_html_string(input_html)
+    self.assertEqual(
+      output_html, expected_html, 'Should keep trailing text with an ampersand.'
+    )
+
 
 class TestDefaultParser(unittest.TestCase):
   def test_load_default_japanese_parser(self) -> None:
