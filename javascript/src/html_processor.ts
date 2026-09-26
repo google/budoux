@@ -531,7 +531,10 @@ export class HTMLProcessor {
     assert(boundaries.every((x, i) => i === 0 || x > boundaries[i - 1]));
     assert(boundaries[boundaries.length - 1] < text.length);
 
-    const adjustedBoundaries = paragraph.excludeForcedOpportunities(boundaries);
+    // Don't insert separators before or after whitespace, as in Python and Java.
+    const adjustedBoundaries = paragraph
+      .excludeForcedOpportunities(boundaries)
+      .filter(i => !/\s/.test(text[i - 1]) && !/\s/.test(text[i]));
 
     // Add a sentinel to help iterating.
     adjustedBoundaries.push(text.length + 1);
