@@ -674,12 +674,15 @@ export class HTMLProcessingParser extends Parser {
   translateHTMLString(html: string) {
     if (html === '') return html;
     const doc = parseFromString(html);
-    if (HTMLProcessor.hasChildTextNode(doc.body)) {
+    if (
+      HTMLProcessor.hasChildTextNode(doc.body) ||
+      doc.body.children.length !== 1
+    ) {
       const wrapper = doc.createElement('span') as unknown as HTMLElement;
       wrapper.append(...doc.body.childNodes);
       doc.body.append(wrapper);
     }
-    this.applyToElement(doc.body.childNodes[0] as HTMLElement);
+    this.applyToElement(doc.body.firstElementChild as HTMLElement);
     return doc.body.innerHTML;
   }
 }
