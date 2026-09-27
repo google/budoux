@@ -23,7 +23,7 @@ import {
   NodeOrTextForTesting,
   type ParagraphForTesting,
 } from '../html_processor.js';
-import {loadDefaultJapaneseParser} from '../index.js';
+import {jaModel, loadDefaultJapaneseParser} from '../index.js';
 import {createDocument, isBrowser, setInnerHtml} from './testutils.js';
 
 const parser = loadDefaultJapaneseParser();
@@ -480,6 +480,21 @@ describe('HTMLProcessingParser.applyToElement', () => {
       UW4: {a: 1001}, // means "should separate right before 'a'".
     };
     checkEqual(model, inputHTML, expectedHTML);
+  });
+  it('should not insert ZWSPs before or after whitespace.', () => {
+    const inputHTML = '<p>xyza\nabca</p>';
+    // Separate right before 'a', except after the '\n'.
+    let expectedHTML = `<p style="${style}">xyz\u200Ba\nabc\u200Ba</p>`;
+    checkEqual({UW4: {a: 1001}}, inputHTML, expectedHTML);
+    // Separate right after 'a', except before the '\n'.
+    expectedHTML = `<p style="${style}">xyza\na\u200Bbca</p>`;
+    checkEqual({UW3: {a: 1001}}, inputHTML, expectedHTML);
+    // Keep the style even if all boundaries are next to whitespace.
+    expectedHTML = `<p style="${style}">xyz\nabc</p>`;
+    checkEqual({UW4: {a: 1001}}, '<p>xyz\nabc</p>', expectedHTML);
+    // The HTML from #659.
+    const html = '<p>\n  これは\n  <b>テスト</b>\n  です。\n</p>';
+    checkEqual(jaModel, html, html.replace('<p>', `<p style="${style}">`));
   });
 });
 
