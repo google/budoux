@@ -17,6 +17,8 @@
 package com.google.budoux;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -48,6 +50,21 @@ public class ParserTest {
     List<String> result = parser.parse("今日は天気です。");
     List<String> expected = Arrays.asList("今日は", "天気です。");
     assertEquals(expected, result);
+  }
+
+  @Test
+  public void testLoadByFileName() {
+    Parser parser = Parser.loadByFileName("/models/ja.json");
+    assertNotNull(parser);
+    List<String> result = parser.parse("今日は天気です。");
+    List<String> expected = Arrays.asList("今日は", "天気です。");
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void testLoadByFileNameNonExistentFile() {
+    assertThrows(
+        NullPointerException.class, () -> Parser.loadByFileName("/models/non_existent.json"));
   }
 
   @Test
