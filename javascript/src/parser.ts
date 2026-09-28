@@ -33,11 +33,13 @@ export class Parser {
         new Map(Object.entries(v)),
       ])
     );
-    this.baseScore =
-      -0.5 *
-      [...this.model.values()]
-        .flatMap((group: Map<string, number>) => [...group.values()])
-        .reduce((prev: number, curr: number) => prev + curr, 0);
+    let totalScore = 0;
+    for (const group of this.model.values()) {
+      for (const score of group.values()) {
+        totalScore += score;
+      }
+    }
+    this.baseScore = -0.5 * totalScore;
   }
 
   /**
