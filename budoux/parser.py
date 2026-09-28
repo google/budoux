@@ -38,7 +38,7 @@ class Parser:
       model (Dict[str, Dict[str, int]]): A dict mapping a feature and its score.
     """
     self._model = model
-    self._base_score = -sum(sum(g.values()) for g in self._model.values()) * 0.5
+    self._base_score = -sum([sum(g.values()) for g in self._model.values()]) * 0.5
 
   @property
   def model(self) -> dict[str, dict[str, int]]:
