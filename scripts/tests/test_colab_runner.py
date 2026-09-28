@@ -114,6 +114,26 @@ class TestColabRunner(unittest.TestCase):
     self.assertIn("exec", call_args)
     self.assertIn("test-sess", call_args)
 
+  @patch("scripts.colab_runner.ColabRunner.exec_code")
+  def test_exec_cmd_escapes_special_characters(self, mock_exec_code: MagicMock) -> None:
+    runner = colab_runner.ColabRunner(
+      session_name="test-sess", binary_path="/usr/bin/colab"
+    )
+    dangerous_cmd = [
+      "echo",
+      "hello\nworld",
+      "'; import os; os.system('evil'); '",
+      '"; print("hacked"); "',
+      "\\",
+    ]
+    runner.exec_cmd(dangerous_cmd)
+    mock_exec_code.assert_called_once()
+    code_arg = mock_exec_code.call_args[0][0]
+    self.assertIn("json.loads(", code_arg)
+    self.assertNotIn(
+      "os.system", code_arg.replace("'; import os; os.system('evil'); '", "")
+    )
+
 
 if __name__ == "__main__":
   unittest.main()

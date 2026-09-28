@@ -17,6 +17,7 @@ Implements binary resolution (env var -> PATH), remote session provisioning,
 file transfer, script execution, and auto-cleanup via Python context managers.
 """
 
+import json
 import os
 import shutil
 import subprocess
@@ -168,9 +169,10 @@ class ColabRunner:
     and writing to sys.stdout with immediate flush(), every line routes across the
     ZeroMQ IOPub socket back to the local CLI client in real time.
     """
+    cmd_json = json.dumps(json.dumps(cmd))
     code = (
-      "import subprocess, sys\n"
-      f"p = subprocess.Popen({cmd!r}, stdout=subprocess.PIPE,"
+      "import json, subprocess, sys\n"
+      f"p = subprocess.Popen(json.loads({cmd_json}), stdout=subprocess.PIPE,"
       " stderr=subprocess.STDOUT, text=True)\n"
       "for line in p.stdout:\n"
       "    sys.stdout.write(line)\n"
