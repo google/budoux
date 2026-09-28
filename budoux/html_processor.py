@@ -151,21 +151,32 @@ class HTMLChunkResolver(HTMLParser):
       # See https://html.spec.whatwg.org/multipage/parsing.html#an-introduction-to-error-handling-and-strange-cases-in-the-parser
 
   def handle_data(self, data: str) -> None:
+    chunks_joined = self.chunks_joined
+    scan_index = self.scan_index
+    to_skip = self.to_skip
+    separator = self.separator
+    output = self._output
+    skip_escape = self.cdata_elem in self.CDATA_CONTENT_ELEMENTS
+
     for char in data:
-      if char != self.chunks_joined[self.scan_index]:
-        prev_was_whitespace = (
-          self.scan_index > 0 and self.chunks_joined[self.scan_index - 1].isspace()
-        )
-        if not self.to_skip and not char.isspace() and not prev_was_whitespace:
-          self._output.append(self.separator)
-        self.scan_index += 1
+      if char != chunks_joined[scan_index]:
+        prev_was_whitespace = scan_index > 0 and chunks_joined[scan_index - 1].isspace()
+        if not to_skip and not char.isspace() and not prev_was_whitespace:
+          output.append(separator)
+        scan_index += 1
       # Re-escape text that `HTMLParser` unescaped, except in raw text elements.
-      self._output.append(
-        html.escape(char, quote=False)
-        if self.cdata_elem not in self.CDATA_CONTENT_ELEMENTS
-        else char
-      )
-      self.scan_index += 1
+      if skip_escape:
+        output.append(char)
+      elif char == '&':
+        output.append('&amp;')
+      elif char == '<':
+        output.append('&lt;')
+      elif char == '>':
+        output.append('&gt;')
+      else:
+        output.append(char)
+      scan_index += 1
+    self.scan_index = scan_index
 
 
 def get_text(html: str) -> str:
