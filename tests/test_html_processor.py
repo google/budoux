@@ -37,6 +37,42 @@ class TestTextContentExtractor(unittest.TestCase):
     )
 
 
+class TestGetText(unittest.TestCase):
+  def test_get_text_with_html(self) -> None:
+    input = '<p><a href="#">Hello</a>, <b>World</b>!</p>'
+    expected = 'Hello, World!'
+    self.assertEqual(
+      html_processor.get_text(input),
+      expected,
+      'Should strip HTML tags and return text content.',
+    )
+
+  def test_get_text_plain_text(self) -> None:
+    input = 'Hello, World!'
+    expected = 'Hello, World!'
+    self.assertEqual(
+      html_processor.get_text(input), expected, 'Should return plain text unchanged.'
+    )
+
+  def test_get_text_empty(self) -> None:
+    input = ''
+    expected = ''
+    self.assertEqual(
+      html_processor.get_text(input),
+      expected,
+      'Should return empty string for empty input.',
+    )
+
+  def test_get_text_with_entities(self) -> None:
+    input = '<p>a &amp; b &lt; c</p>'
+    expected = 'a & b < c'
+    self.assertEqual(
+      html_processor.get_text(input),
+      expected,
+      'Should decode HTML entities in text content.',
+    )
+
+
 class TestHTMLChunkResolver(unittest.TestCase):
   def test_output(self) -> None:
     input = '<p>ab<b>cde</b>f</p>'
