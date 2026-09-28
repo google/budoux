@@ -39,37 +39,68 @@ class TestTextContentExtractor(unittest.TestCase):
 
 class TestGetText(unittest.TestCase):
   def test_get_text_with_html(self) -> None:
-    input = '<p><a href="#">Hello</a>, <b>World</b>!</p>'
+    html_input = '<p><a href="#">Hello</a>, <b>World</b>!</p>'
     expected = 'Hello, World!'
     self.assertEqual(
-      html_processor.get_text(input),
+      html_processor.get_text(html_input),
       expected,
       'Should strip HTML tags and return text content.',
     )
 
   def test_get_text_plain_text(self) -> None:
-    input = 'Hello, World!'
+    html_input = 'Hello, World!'
     expected = 'Hello, World!'
     self.assertEqual(
-      html_processor.get_text(input), expected, 'Should return plain text unchanged.'
+      html_processor.get_text(html_input),
+      expected,
+      'Should return plain text unchanged.',
     )
 
   def test_get_text_empty(self) -> None:
-    input = ''
+    html_input = ''
     expected = ''
     self.assertEqual(
-      html_processor.get_text(input),
+      html_processor.get_text(html_input),
       expected,
       'Should return empty string for empty input.',
     )
 
   def test_get_text_with_entities(self) -> None:
-    input = '<p>a &amp; b &lt; c</p>'
+    html_input = '<p>a &amp; b &lt; c</p>'
     expected = 'a & b < c'
     self.assertEqual(
-      html_processor.get_text(input),
+      html_processor.get_text(html_input),
       expected,
       'Should decode HTML entities in text content.',
+    )
+
+  def test_get_text_with_comments(self) -> None:
+    html_input = '<p>Hello <!-- comment -->World</p>'
+    expected = 'Hello World'
+    self.assertEqual(
+      html_processor.get_text(html_input), expected, 'Should ignore HTML comments.'
+    )
+
+  def test_get_text_with_special_elements(self) -> None:
+    html_input = (
+      '<script>console.log("hi");</script>'
+      '<style>body { color: red; }</style>'
+      '<textarea>some text</textarea>'
+    )
+    expected = 'console.log("hi");body { color: red; }some text'
+    self.assertEqual(
+      html_processor.get_text(html_input),
+      expected,
+      'Should extract text from script, style, and textarea elements.',
+    )
+
+  def test_get_text_unclosed_tags_and_entities(self) -> None:
+    html_input = '<p>Hello &amp'
+    expected = 'Hello &'
+    self.assertEqual(
+      html_processor.get_text(html_input),
+      expected,
+      'Should flush unclosed entities on parser close.',
     )
 
 
