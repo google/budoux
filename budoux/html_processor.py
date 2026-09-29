@@ -16,7 +16,6 @@
 import html
 import json
 import os
-import queue
 from html.parser import HTMLParser
 
 from .utils import SEP
@@ -97,7 +96,7 @@ class HTMLChunkResolver(HTMLParser):
     self.separator = separator
     self.to_skip = False
     self.scan_index = 0
-    self.element_stack: queue.LifoQueue[ElementState] = queue.LifoQueue()
+    self.element_stack: list[ElementState] = []
     self._output: list[str] = []
 
   @property
@@ -112,7 +111,7 @@ class HTMLChunkResolver(HTMLParser):
       else:
         attr_pairs.append(f' {attr[0]}="{html.escape(attr[1])}"')
     encoded_attrs = ''.join(attr_pairs)
-    self.element_stack.put(ElementState(tag, self.to_skip))
+    self.element_stack.append(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
       if (
         not self.to_skip
@@ -125,21 +124,21 @@ class HTMLChunkResolver(HTMLParser):
     self._output.append(f'<{tag}{encoded_attrs}>')
     if tag in VOID_ELEMENTS:
       # Void elements like `<input>` have no end tag, so restore the state now.
-      self.to_skip = self.element_stack.get_nowait().to_skip
+      self.to_skip = self.element_stack.pop().to_skip
 
   def handle_startendtag(self, tag: str, attrs: HTMLAttr) -> None:
     # Self-closing tags like `<br/>` have no end tag, so don't output one.
     self.handle_starttag(tag, attrs)
     self._output[-1] = self._output[-1][:-1] + '/>'
     if tag not in VOID_ELEMENTS:
-      self.to_skip = self.element_stack.get_nowait().to_skip
+      self.to_skip = self.element_stack.pop().to_skip
 
   def handle_endtag(self, tag: str) -> None:
     self._output.append(f'</{tag}>')
     if tag in VOID_ELEMENTS:
       return
-    while not self.element_stack.empty():
-      state = self.element_stack.get_nowait()
+    while self.element_stack:
+      state = self.element_stack.pop()
       if state.tag == tag:
         self.to_skip = state.to_skip
         break
