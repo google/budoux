@@ -186,3 +186,17 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><code>abc<br></br>def</code>\u200bghi\u200bjkl</span>'
     self.assertEqual(result, expected)
+
+  def test_with_sep_char_in_skip_node(self) -> None:
+    chunks = ['abc▁def']
+    html = '<p>abc<code>▁</code>def</p>'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><p>abc<code>▁</code>def</p></span>'
+    self.assertEqual(result, expected)
+
+  def test_with_sep_char_at_chunk_boundary(self) -> None:
+    chunks = ['今日は', '▁天気です。']
+    html = '<p>今日は▁天気です。</p>'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><p>今日は\u200b▁天気です。</p></span>'
+    self.assertEqual(result, expected)

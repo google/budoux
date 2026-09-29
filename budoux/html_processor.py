@@ -14,12 +14,11 @@
 """HTML processor."""
 
 import html
+import itertools
 import json
 import os
 import queue
 from html.parser import HTMLParser
-
-from .utils import SEP
 
 HTMLAttr = list[tuple[str, str | None]]
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: anywhere;'
@@ -93,7 +92,8 @@ class HTMLChunkResolver(HTMLParser):
       separator (str): The separator string.
     """
     super().__init__()
-    self.chunks_joined = SEP.join(chunks)
+    self.text = ''.join(chunks)
+    self.boundaries = set(itertools.accumulate(len(c) for c in chunks[:-1]))
     self.separator = separator
     self.to_skip = False
     self.scan_index = 0
@@ -114,12 +114,8 @@ class HTMLChunkResolver(HTMLParser):
     encoded_attrs = ''.join(attr_pairs)
     self.element_stack.put(ElementState(tag, self.to_skip))
     if tag.upper() in SKIP_NODES:
-      if (
-        not self.to_skip
-        and self.scan_index < len(self.chunks_joined)
-        and self.chunks_joined[self.scan_index] == SEP
-      ):
-        self.scan_index += 1
+      if not self.to_skip and self.scan_index in self.boundaries:
+        self.boundaries.remove(self.scan_index)
         self._output.append(self.separator)
       self.to_skip = True
     self._output.append(f'<{tag}{encoded_attrs}>')
@@ -152,13 +148,12 @@ class HTMLChunkResolver(HTMLParser):
 
   def handle_data(self, data: str) -> None:
     for char in data:
-      if char != self.chunks_joined[self.scan_index]:
+      if self.scan_index in self.boundaries:
         prev_was_whitespace = (
-          self.scan_index > 0 and self.chunks_joined[self.scan_index - 1].isspace()
+          self.scan_index > 0 and self.text[self.scan_index - 1].isspace()
         )
         if not self.to_skip and not char.isspace() and not prev_was_whitespace:
           self._output.append(self.separator)
-        self.scan_index += 1
       # Re-escape text that `HTMLParser` unescaped, except in raw text elements.
       self._output.append(
         html.escape(char, quote=False)
