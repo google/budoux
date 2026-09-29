@@ -39,6 +39,15 @@ describe('Parser.parse', () => {
     expect(result).toEqual(['a', 'bcdea', 'bcd']);
   });
 
+  it('should not separate inside a surrogate pair.', () => {
+    const model = {
+      UW4: {a: -10000}, // means "should separate everywhere except before 'a'".
+    };
+    const parser = new Parser(model);
+    const result = parser.parse('𠮷野家');
+    expect(result).toEqual(['𠮷', '野', '家']);
+  });
+
   it('should return an empty list when the input is a blank string.', () => {
     const parser = new Parser({});
     const result = parser.parse('');

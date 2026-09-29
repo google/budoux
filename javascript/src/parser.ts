@@ -82,6 +82,8 @@ export class Parser {
     const tw4 = this.model.get('TW4');
 
     for (let i = 1; i < sentence.length; i++) {
+      // Don't separate the two halves of a surrogate pair.
+      if ((sentence.codePointAt(i - 1) ?? 0) > 0xffff) continue;
       let score = this.baseScore;
       // NOTE: Score values in models may be negative.
       score += uw1?.get(sentence.substring(i - 3, i - 2)) || 0;
