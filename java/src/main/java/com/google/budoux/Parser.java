@@ -27,6 +27,8 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +47,20 @@ import java.util.Map;
  * </pre>
  */
 public class Parser {
-  private final Map<String, Map<String, Integer>> model;
+  private final int totalScore;
+  private final Map<String, Integer> uw1;
+  private final Map<String, Integer> uw2;
+  private final Map<String, Integer> uw3;
+  private final Map<String, Integer> uw4;
+  private final Map<String, Integer> uw5;
+  private final Map<String, Integer> uw6;
+  private final Map<String, Integer> bw1;
+  private final Map<String, Integer> bw2;
+  private final Map<String, Integer> bw3;
+  private final Map<String, Integer> tw1;
+  private final Map<String, Integer> tw2;
+  private final Map<String, Integer> tw3;
+  private final Map<String, Integer> tw4;
 
   /**
    * Constructs a BudouX parser.
@@ -53,7 +68,32 @@ public class Parser {
    * @param model the model data.
    */
   public Parser(Map<String, Map<String, Integer>> model) {
-    this.model = model;
+    int sum = 0;
+    for (Map<String, Integer> group : model.values()) {
+      for (int weight : group.values()) {
+        sum += weight;
+      }
+    }
+    this.totalScore = sum;
+    this.uw1 = copyGroup(model, "UW1");
+    this.uw2 = copyGroup(model, "UW2");
+    this.uw3 = copyGroup(model, "UW3");
+    this.uw4 = copyGroup(model, "UW4");
+    this.uw5 = copyGroup(model, "UW5");
+    this.uw6 = copyGroup(model, "UW6");
+    this.bw1 = copyGroup(model, "BW1");
+    this.bw2 = copyGroup(model, "BW2");
+    this.bw3 = copyGroup(model, "BW3");
+    this.tw1 = copyGroup(model, "TW1");
+    this.tw2 = copyGroup(model, "TW2");
+    this.tw3 = copyGroup(model, "TW3");
+    this.tw4 = copyGroup(model, "TW4");
+  }
+
+  private static Map<String, Integer> copyGroup(
+      Map<String, Map<String, Integer>> model, String key) {
+    Map<String, Integer> group = model.get(key);
+    return group != null ? new HashMap<>(group) : Collections.emptyMap();
   }
 
   /**
@@ -111,18 +151,6 @@ public class Parser {
   }
 
   /**
-   * Gets the score for the specified feature of the given sequence.
-   *
-   * @param featureKey the feature key to examine.
-   * @param sequence the sequence to look up the score.
-   * @return the contribution score to support a phrase break.
-   */
-  private int getScore(String featureKey, String sequence) {
-    Map<String, Integer> group = this.model.get(featureKey);
-    return group != null ? group.getOrDefault(sequence, 0) : 0;
-  }
-
-  /**
    * Parses a sentence into phrases.
    *
    * @param sentence the sentence to break by phrase.
@@ -133,64 +161,42 @@ public class Parser {
       return new ArrayList<>();
     }
     List<String> result = new ArrayList<>();
-    int totalScore =
-        this.model.values().stream()
-            .mapToInt(group -> group.values().stream().mapToInt(Integer::intValue).sum())
-            .sum();
-    Map<String, Integer> uw1 = this.model.get("UW1");
-    Map<String, Integer> uw2 = this.model.get("UW2");
-    Map<String, Integer> uw3 = this.model.get("UW3");
-    Map<String, Integer> uw4 = this.model.get("UW4");
-    Map<String, Integer> uw5 = this.model.get("UW5");
-    Map<String, Integer> uw6 = this.model.get("UW6");
-    Map<String, Integer> bw1 = this.model.get("BW1");
-    Map<String, Integer> bw2 = this.model.get("BW2");
-    Map<String, Integer> bw3 = this.model.get("BW3");
-    Map<String, Integer> tw1 = this.model.get("TW1");
-    Map<String, Integer> tw2 = this.model.get("TW2");
-    Map<String, Integer> tw3 = this.model.get("TW3");
-    Map<String, Integer> tw4 = this.model.get("TW4");
     int phraseStart = 0;
-    for (int i = 1; i < sentence.length(); i++) {
-      int score = -totalScore;
-      if (i - 2 > 0 && uw1 != null) {
-        score += 2 * uw1.getOrDefault(sentence.substring(i - 3, i - 2), 0);
+    int length = sentence.length();
+    for (int i = 1; i < length; i++) {
+      int score = -this.totalScore;
+      if (i - 2 > 0) {
+        score += 2 * this.uw1.getOrDefault(sentence.substring(i - 3, i - 2), 0);
       }
-      if (i - 1 > 0 && uw2 != null) {
-        score += 2 * uw2.getOrDefault(sentence.substring(i - 2, i - 1), 0);
+      if (i - 1 > 0) {
+        score += 2 * this.uw2.getOrDefault(sentence.substring(i - 2, i - 1), 0);
       }
-      if (uw3 != null) {
-        score += 2 * uw3.getOrDefault(sentence.substring(i - 1, i), 0);
+      score += 2 * this.uw3.getOrDefault(sentence.substring(i - 1, i), 0);
+      score += 2 * this.uw4.getOrDefault(sentence.substring(i, i + 1), 0);
+      if (i + 1 < length) {
+        score += 2 * this.uw5.getOrDefault(sentence.substring(i + 1, i + 2), 0);
       }
-      if (uw4 != null) {
-        score += 2 * uw4.getOrDefault(sentence.substring(i, i + 1), 0);
+      if (i + 2 < length) {
+        score += 2 * this.uw6.getOrDefault(sentence.substring(i + 2, i + 3), 0);
       }
-      if (i + 1 < sentence.length() && uw5 != null) {
-        score += 2 * uw5.getOrDefault(sentence.substring(i + 1, i + 2), 0);
+      if (i > 1) {
+        score += 2 * this.bw1.getOrDefault(sentence.substring(i - 2, i), 0);
       }
-      if (i + 2 < sentence.length() && uw6 != null) {
-        score += 2 * uw6.getOrDefault(sentence.substring(i + 2, i + 3), 0);
+      score += 2 * this.bw2.getOrDefault(sentence.substring(i - 1, i + 1), 0);
+      if (i + 1 < length) {
+        score += 2 * this.bw3.getOrDefault(sentence.substring(i, i + 2), 0);
       }
-      if (i > 1 && bw1 != null) {
-        score += 2 * bw1.getOrDefault(sentence.substring(i - 2, i), 0);
+      if (i - 2 > 0) {
+        score += 2 * this.tw1.getOrDefault(sentence.substring(i - 3, i), 0);
       }
-      if (bw2 != null) {
-        score += 2 * bw2.getOrDefault(sentence.substring(i - 1, i + 1), 0);
+      if (i - 1 > 0) {
+        score += 2 * this.tw2.getOrDefault(sentence.substring(i - 2, i + 1), 0);
       }
-      if (i + 1 < sentence.length() && bw3 != null) {
-        score += 2 * bw3.getOrDefault(sentence.substring(i, i + 2), 0);
+      if (i + 1 < length) {
+        score += 2 * this.tw3.getOrDefault(sentence.substring(i - 1, i + 2), 0);
       }
-      if (i - 2 > 0 && tw1 != null) {
-        score += 2 * tw1.getOrDefault(sentence.substring(i - 3, i), 0);
-      }
-      if (i - 1 > 0 && tw2 != null) {
-        score += 2 * tw2.getOrDefault(sentence.substring(i - 2, i + 1), 0);
-      }
-      if (i + 1 < sentence.length() && tw3 != null) {
-        score += 2 * tw3.getOrDefault(sentence.substring(i - 1, i + 2), 0);
-      }
-      if (i + 2 < sentence.length() && tw4 != null) {
-        score += 2 * tw4.getOrDefault(sentence.substring(i, i + 3), 0);
+      if (i + 2 < length) {
+        score += 2 * this.tw4.getOrDefault(sentence.substring(i, i + 3), 0);
       }
       if (score > 0) {
         result.add(sentence.substring(phraseStart, i));
