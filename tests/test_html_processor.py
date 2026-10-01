@@ -65,6 +65,16 @@ class TestHTMLChunkResolver(unittest.TestCase):
       resolver.output, expected, 'WBR tags should not be inserted if in NOBR.'
     )
 
+  def test_unmatched_end_tag_preserves_skip_state(self) -> None:
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def', 'ghi'], '<wbr>')
+    resolver.feed('<nobr>abc</span>def</nobr>ghi')
+    self.assertEqual(resolver.output, '<nobr>abc</span>def</nobr><wbr>ghi')
+
+  def test_unmatched_end_tag_preserves_parent_stack(self) -> None:
+    resolver = html_processor.HTMLChunkResolver(['abc', 'def', 'ghi'], '<wbr>')
+    resolver.feed('<div><nobr>abc</span>def</div>ghi')
+    self.assertEqual(resolver.output, '<div><nobr>abc</span>def</div><wbr>ghi')
+
   def test_after_nobr(self) -> None:
     input = '<p>ab<nobr>xy</nobr>abcdef</p>'
     expected = '<p>ab<nobr>xy</nobr>abc<wbr>def</p>'

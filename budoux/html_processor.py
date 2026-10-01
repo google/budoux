@@ -133,6 +133,8 @@ class HTMLChunkResolver(HTMLParser):
     self._output.append(f'</{tag}>')
     if tag in VOID_ELEMENTS:
       return
+    if not any(state.tag == tag for state in self.element_stack):
+      return
     while self.element_stack:
       state = self.element_stack.pop()
       if state.tag == tag:
