@@ -15,7 +15,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "budoux": "file:../javascript",
-    "dompurify": "^3.4.15"
+    "dompurify": "^3.4.16"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",
