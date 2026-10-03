@@ -38,6 +38,7 @@ def run_retraining_pipeline(
   split_dir: str = "tmp/splits",
   out_model: str = "",
   weight_factor: int = 20,
+  patience: int | None = None,
   colab: bool = False,
   accelerator: str = "T4",
   session_name: str | None = None,
@@ -155,6 +156,8 @@ def run_retraining_pipeline(
 
         if os.path.exists(val_encoded):
           remote_args.extend(["--val-data", "/content/val_encoded.txt"])
+        if patience is not None:
+          remote_args.extend(["--patience", str(patience)])
 
         runner.exec_cmd(remote_args)
         runner.download_file("/content/weights.txt", weights_path)
@@ -173,6 +176,8 @@ def run_retraining_pipeline(
       ]
       if os.path.exists(val_encoded):
         train_cmd.extend(["--val-data", val_encoded])
+      if patience is not None:
+        train_cmd.extend(["--patience", str(patience)])
       subprocess.run(train_cmd, check=True)
 
     print(f"[Export] Exporting compact JSON model to {out_model}...")
@@ -252,6 +257,12 @@ def main() -> None:
     help="Oversampling multiplier for fine-tuning datasets (default: 20)",
   )
   parser.add_argument(
+    "--patience",
+    type=int,
+    default=None,
+    help="Number of evaluation spans without improvement before early stopping.",
+  )
+  parser.add_argument(
     "--colab",
     action="store_true",
     help="Offload JAX AdaBoost training step to remote Colab VM.",
@@ -274,6 +285,7 @@ def main() -> None:
     split_dir=args.split_dir,
     out_model=args.out_model,
     weight_factor=args.weight_factor,
+    patience=args.patience,
     colab=args.colab,
     accelerator=args.accelerator,
     session_name=args.session_name,
