@@ -39,6 +39,7 @@ def run_retraining_pipeline(
   out_model: str = "",
   weight_factor: int = 20,
   patience: int | None = None,
+  top_k: int | None = None,
   colab: bool = False,
   accelerator: str = "T4",
   session_name: str | None = None,
@@ -181,10 +182,16 @@ def run_retraining_pipeline(
       subprocess.run(train_cmd, check=True)
 
     print(f"[Export] Exporting compact JSON model to {out_model}...")
-    subprocess.run(
-      [sys.executable, "scripts/build_model.py", weights_path, "-o", out_model],
-      check=True,
-    )
+    build_cmd = [
+      sys.executable,
+      "scripts/build_model.py",
+      weights_path,
+      "-o",
+      out_model,
+    ]
+    if top_k is not None:
+      build_cmd.extend(["--top-k", str(top_k)])
+    subprocess.run(build_cmd, check=True)
 
     print("[Evaluation] Evaluating quality suite benchmark...")
     quality_file = os.path.join("tests", "quality", f"{lang}.tsv")
@@ -263,6 +270,12 @@ def main() -> None:
     help="Number of evaluation spans without improvement before early stopping.",
   )
   parser.add_argument(
+    "--top-k",
+    type=int,
+    default=None,
+    help="Maximum number of features to retain in the exported model.",
+  )
+  parser.add_argument(
     "--colab",
     action="store_true",
     help="Offload JAX AdaBoost training step to remote Colab VM.",
@@ -286,6 +299,7 @@ def main() -> None:
     out_model=args.out_model,
     weight_factor=args.weight_factor,
     patience=args.patience,
+    top_k=args.top_k,
     colab=args.colab,
     accelerator=args.accelerator,
     session_name=args.session_name,

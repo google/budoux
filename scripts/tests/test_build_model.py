@@ -109,3 +109,28 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.weight_file, 'weight.txt')
     self.assertEqual(output.outfile, 'foo.json')
     self.assertEqual(output.scale, 200)
+
+  def test_cmdargs_with_top_k(self) -> None:
+    output = build_model.parse_args(['weight.txt', '--top-k', '500'])
+    self.assertEqual(output.top_k, 500)
+
+
+class TestPruneModel(unittest.TestCase):
+  def test_prune_more_than_k(self) -> None:
+    model = {'AB': {'x': 10.5, 'y': -8.2, 'z': 0.1}, 'BC': {'a': 5.0, 'b': -15.0}}
+    pruned = build_model.prune_model(model, 3)
+    self.assertDictEqual(
+      pruned,
+      {'BC': {'b': -15.0}, 'AB': {'x': 10.5, 'y': -8.2}},
+      'should retain top 3 features by absolute score.',
+    )
+
+  def test_prune_fewer_than_k(self) -> None:
+    model = {'AB': {'x': 1.0}}
+    pruned = build_model.prune_model(model, 5)
+    self.assertDictEqual(pruned, model, 'should retain all features if total <= k.')
+
+  def test_prune_zero_or_negative_k(self) -> None:
+    model = {'AB': {'x': 1.0}}
+    self.assertDictEqual(build_model.prune_model(model, 0), {})
+    self.assertDictEqual(build_model.prune_model(model, -1), {})

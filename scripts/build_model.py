@@ -66,6 +66,36 @@ def round_model(
   return model_rounded
 
 
+def prune_model(
+  model: dict[str, dict[str, float]], top_k: int
+) -> dict[str, dict[str, float]]:
+  """Prunes the model to keep only the top-k features with largest absolute score.
+
+  Args:
+    model (dict[str, dict[str, float]]): The model to prune.
+    top_k (int): Maximum number of features to retain.
+
+  Returns:
+    model_pruned (dict[str, dict[str, float]]): The pruned model.
+  """
+  if top_k <= 0:
+    return {}
+  all_features = [
+    (fg, fc, score) for fg, features in model.items() for fc, score in features.items()
+  ]
+  if len(all_features) <= top_k:
+    return model
+
+  all_features.sort(key=lambda item: abs(item[2]), reverse=True)
+  selected_features = all_features[:top_k]
+
+  model_pruned: dict[str, dict[str, float]] = {}
+  for fg, fc, score in selected_features:
+    model_pruned.setdefault(fg, {})
+    model_pruned[fg][fc] = score
+  return model_pruned
+
+
 def parse_args(test: list[str] | None = None) -> argparse.Namespace:
   """Parses commandline arguments.
 
@@ -90,6 +120,12 @@ def parse_args(test: list[str] | None = None) -> argparse.Namespace:
   parser.add_argument(
     '--scale', help='A scale factor for the output scores', default=1000, type=int
   )
+  parser.add_argument(
+    '--top-k',
+    help='Maximum number of features to keep (magnitude pruning).',
+    default=None,
+    type=int,
+  )
   if test is None:
     return parser.parse_args()
   else:
@@ -101,9 +137,12 @@ def main() -> None:
   weights_filename = args.weight_file
   model_filename = args.outfile
   scale = args.scale
+  top_k = args.top_k
   with open(weights_filename) as f:
     weights = f.readlines()
   model = aggregate_scores(weights)
+  if top_k is not None:
+    model = prune_model(model, top_k)
   model_rounded = round_model(model, scale)
   with open(model_filename, 'w', encoding='utf-8') as f:
     json.dump(model_rounded, f, ensure_ascii=False, separators=(',', ':'))
