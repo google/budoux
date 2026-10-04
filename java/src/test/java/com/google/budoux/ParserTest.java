@@ -43,6 +43,18 @@ public class ParserTest {
   }
 
   @Test
+  public void testParseSurrogatePair() {
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw4 = new HashMap<>();
+    uw4.put("a", -10000); // means "should separate everywhere except before 'a'".
+    model.put("UW4", uw4);
+    Parser parser = new Parser(model);
+    List<String> result = parser.parse("𠮷野家");
+    List<String> expected = Arrays.asList("𠮷", "野", "家");
+    assertEquals(expected, result);
+  }
+
+  @Test
   public void testLoadDefaultJapaneseParser() {
     Parser parser = Parser.loadDefaultJapaneseParser();
     List<String> result = parser.parse("今日は天気です。");
