@@ -164,6 +164,10 @@ public class Parser {
     int phraseStart = 0;
     int length = sentence.length();
     for (int i = 1; i < length; i++) {
+      // Don't separate the two halves of a surrogate pair.
+      if (Character.isSurrogatePair(sentence.charAt(i - 1), sentence.charAt(i))) {
+        continue;
+      }
       int score = -this.totalScore;
       if (i - 2 > 0) {
         score += 2 * this.uw1.getOrDefault(sentence.substring(i - 3, i - 2), 0);
