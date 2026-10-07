@@ -15,6 +15,8 @@
 
 import argparse
 import array
+import os
+import shutil
 import typing
 from collections import Counter
 from functools import partial
@@ -240,6 +242,8 @@ def fit(
   weights_filename: str,
   log_filename: str,
   out_span: int,
+  patience: int | None = None,
+  min_delta: float = 0.0001,
 ) -> jax.Array:
   """Trains an AdaBoost binary classifier.
 
@@ -251,6 +255,10 @@ def fit(
     weights_filename (str): A file path to write the learned weights.
     log_filename (str): A file path to log the accuracy along with training.
     out_span (int): Iteration span to output metics and weights.
+    patience (Optional[int]): Number of evaluations without improvement before
+      stopping early.
+    min_delta (float): Minimum change in validation F-score to qualify as an
+      improvement.
 
   Returns:
     scores (jax.Array): The contribution scores.
@@ -272,8 +280,11 @@ def fit(
   Y_train = dataset_train.Y > 0
   Y_test = dataset_val.Y > 0 if dataset_val else None
   w = jnp.abs(dataset_train.Y) / jnp.sum(jnp.abs(dataset_train.Y))
+  best_val_fscore = -1.0
+  patience_counter = 0
+  best_weights_path = weights_filename + '.best'
 
-  def output_progress(t: int) -> None:
+  def output_progress(t: int) -> bool:
     with open(weights_filename, 'a') as f:
       f.write('\n'.join(f'{p[0]}\t{p[1]:.6f}' for p in feature_score_buffer) + '\n')
     feature_score_buffer.clear()
@@ -306,7 +317,25 @@ def fit(
           f'\t{metrics_test.accuracy:.5f}\t{metrics_test.precision:.5f}\t{metrics_test.recall:.5f}\t{metrics_test.fscore:.5f}'
         )
 
+        if patience is not None:
+          nonlocal best_val_fscore, patience_counter
+          current_fscore = float(metrics_test.fscore)
+          if current_fscore > best_val_fscore + min_delta:
+            best_val_fscore = current_fscore
+            patience_counter = 0
+            shutil.copyfile(weights_filename, best_weights_path)
+          else:
+            patience_counter += 1
+            if patience_counter >= patience:
+              print(
+                f'Early stopping triggered at iteration {t}: validation fscore'
+                f' did not improve for {patience} consecutive evaluations.'
+              )
+              f.write('\n')
+              return True
+
       f.write('\n')
+    return False
 
   for t in range(iters):
     w, scores, best_feature_index, score = update(
@@ -316,9 +345,18 @@ def fit(
     feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))
     if (t + 1) % out_span == 0:
+      stopped = output_progress(t + 1)
+      if stopped:
+        break
+  else:
+    if len(feature_score_buffer) > 0:
       output_progress(t + 1)
-  if len(feature_score_buffer) > 0:
-    output_progress(t + 1)
+
+  if patience is not None and os.path.exists(best_weights_path):
+    shutil.move(best_weights_path, weights_filename)
+    print(f'Restored best weights with validation fscore {best_val_fscore:.5f}')
+  elif os.path.exists(best_weights_path):
+    os.remove(best_weights_path)
   return scores
 
 
@@ -370,6 +408,18 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
   parser.add_argument(
     '--val-data', help='File path for the encoded validation data.', type=str
   )
+  parser.add_argument(
+    '--patience',
+    help='Number of evaluation spans without improvement before early stopping.',
+    type=int,
+    default=None,
+  )
+  parser.add_argument(
+    '--min-delta',
+    help='Minimum improvement in validation fscore required to reset patience.',
+    type=float,
+    default=0.0001,
+  )
   if test is None:
     return parser.parse_args()
   else:
@@ -385,6 +435,8 @@ def main() -> None:
   iterations = int(args.iter)
   out_span = int(args.out_span)
   val_data: str | None = args.val_data
+  patience: int | None = args.patience
+  min_delta: float = args.min_delta
 
   dataset_train, features, dataset_val = preprocess(
     data_filename, feature_thres, val_data
@@ -397,6 +449,8 @@ def main() -> None:
     weights_filename,
     log_filename,
     out_span,
+    patience=patience,
+    min_delta=min_delta,
   )
   print(
     f'Training done. Export the model by passing {weights_filename} to build_model.py'

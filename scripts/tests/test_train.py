@@ -84,6 +84,14 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.iter, 10)
     self.assertEqual(output.out_span, 50)
     self.assertEqual(output.val_data, 'val_encoded.txt')
+    self.assertEqual(output.patience, None)
+    self.assertEqual(output.min_delta, 0.0001)
+
+  def test_cmdargs_with_patience(self) -> None:
+    cmdargs = ['encoded.txt', '--patience', '3', '--min-delta', '0.001']
+    output = train.parse_args(cmdargs)
+    self.assertEqual(output.patience, 3)
+    self.assertEqual(output.min_delta, 0.001)
 
 
 class TestPreprocess(unittest.TestCase):
@@ -246,6 +254,37 @@ class TestFit(unittest.TestCase):
     self.assertEqual(scores.shape[0], len(features))
     loaded_scores = jnp.array([model.get(feature, 0) for feature in features])
     self.assertTrue(jnp.all(jnp.isclose(scores, loaded_scores)))
+
+  def test_fit_with_early_stopping(self) -> None:
+    dataset_train = train.Dataset(
+      jnp.asarray([0, 0, 1, 2, 2, 3]),
+      jnp.asarray([0, 1, 0, 0, 1, 1]),
+      jnp.asarray([1, -1, 1, -1]),
+    )
+    dataset_val = train.Dataset(
+      jnp.asarray([0, 1]), jnp.asarray([0, 1]), jnp.asarray([1, -1])
+    )
+    features = ['foo', 'bar']
+    with (
+      tempfile.NamedTemporaryFile(delete=False) as tf_w,
+      tempfile.NamedTemporaryFile(delete=False) as tf_l,
+    ):
+      self.addCleanup(os.remove, tf_w.name)
+      self.addCleanup(os.remove, tf_l.name)
+      train.fit(
+        dataset_train,
+        dataset_val,
+        features,
+        iters=50,
+        weights_filename=tf_w.name,
+        log_filename=tf_l.name,
+        out_span=2,
+        patience=2,
+      )
+      with open(tf_l.name) as f:
+        log_lines = f.readlines()
+      # Headers plus fewer iterations than 50 // 2 + 1 = 26
+      self.assertLess(len(log_lines), 26)
 
 
 class TestExtractFeatures(unittest.TestCase):
