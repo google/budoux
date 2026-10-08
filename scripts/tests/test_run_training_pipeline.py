@@ -45,6 +45,35 @@ class TestRunTrainingPipeline(unittest.TestCase):
 
       self.assertGreaterEqual(mock_run.call_count, 4)
 
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_learning_rate_forwarding(
+    self, mock_run: typing.Any
+  ) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      os.makedirs(split_dir, exist_ok=True)
+      with open(os.path.join(split_dir, "knbc_train.txt"), "w") as f:
+        f.write("test sentence\n")
+
+      out_model = os.path.join(tmp_dir, "model.json")
+      run_training_pipeline.run_retraining_pipeline(
+        lang="ja",
+        iterations=10,
+        split_dir=split_dir,
+        out_model=out_model,
+        learning_rate=0.5,
+      )
+
+      train_calls = [
+        call[0][0]
+        for call in mock_run.call_args_list
+        if "scripts/train.py" in call[0][0]
+      ]
+      self.assertEqual(len(train_calls), 1)
+      self.assertIn("--learning-rate", train_calls[0])
+      lr_idx = train_calls[0].index("--learning-rate")
+      self.assertEqual(train_calls[0][lr_idx + 1], "0.5")
+
   def test_run_retraining_pipeline_generates_valid_json(self) -> None:
     pytest.importorskip("jax")
     with tempfile.TemporaryDirectory() as tmp_dir:
