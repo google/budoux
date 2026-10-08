@@ -31,6 +31,8 @@ DEFAULT_LOG_NAME = 'train.log'
 DEFAULT_FEATURE_THRES = 10
 DEFAULT_ITERATION = 10000
 DEFAULT_OUT_SPAN = 100
+DEFAULT_ALGORITHM = 'adaboost'
+ALGORITHMS = ('adaboost', 'logitboost')
 ArgList = list[str] | None
 
 
@@ -234,6 +236,59 @@ def update(
   return w, scores, best_feature_index, score
 
 
+@partial(jax.jit, static_argnums=[4, 5])
+def update_logitboost(
+  F: jax.Array,
+  scores: jax.Array,
+  rows: jax.Array,
+  cols: jax.Array,
+  M: int,
+  N: int,
+  Y: jax.Array,
+) -> tuple[jax.Array, jax.Array, int, float]:
+  """Calculates the new ensemble score vector and contribution scores via LogitBoost.
+
+  Args:
+    F (jax.Array): Cumulative prediction score vector for training examples.
+    scores (jax.Array): Contribution scores of features.
+    rows (jax.Array): Row indices of True values in the input data.
+    cols (jax.Array): Column indices of True values in the input data.
+    M (int): Number of features.
+    N (int): Number of training examples.
+    Y (jax.Array): The target output (float 0.0 or 1.0).
+
+  Returns:
+    A tuple of following items:
+    - F (jax.Array): The new cumulative score vector.
+    - scores (jax.Array): The new contribution scores.
+    - best_feature_index (int): The index of the best feature.
+    - score (float): The newly added score for the best feature.
+  """
+  p = jax.nn.sigmoid(2.0 * F)
+  p_clipped = jnp.clip(p, 1e-6, 1.0 - 1e-6)
+  g = Y - p
+  h = jnp.clip(p_clipped * (1.0 - p_clipped), 1e-4, 0.25)
+  denom = jnp.sum(h) + EPS
+
+  g_sum = jnp.sum(g)
+  g_sparse = jax.ops.segment_sum(g.take(rows), cols, M)
+  G = 2.0 * g_sparse - g_sum
+
+  best_feature_index: int = jnp.argmax(jnp.abs(G))  # type: ignore
+  best_G = G.at[best_feature_index].get()
+  score: float = 0.5 * (best_G / denom)  # type: ignore
+
+  X_best = (
+    jnp.zeros(N, dtype=bool)
+    .at[jnp.where(cols == best_feature_index, rows, N)]
+    .set(True, mode='drop')
+  )
+  z_best = 2.0 * X_best.astype(jnp.float32) - 1.0
+  F_new = F + score * z_best
+  scores_new = scores.at[best_feature_index].add(score)
+  return F_new, scores_new, best_feature_index, score
+
+
 def fit(
   dataset_train: Dataset,
   dataset_val: Dataset | None,
@@ -244,8 +299,9 @@ def fit(
   out_span: int,
   patience: int | None = None,
   min_delta: float = 0.0001,
+  algorithm: str = DEFAULT_ALGORITHM,
 ) -> jax.Array:
-  """Trains an AdaBoost binary classifier.
+  """Trains an AdaBoost or LogitBoost binary classifier.
 
   Args:
     dataset_train (Dataset): A training dataset.
@@ -259,10 +315,15 @@ def fit(
       stopping early.
     min_delta (float): Minimum change in validation F-score to qualify as an
       improvement.
+    algorithm (str): Boosting algorithm to use ('adaboost' or 'logitboost').
 
   Returns:
     scores (jax.Array): The contribution scores.
   """
+  algorithm = algorithm.lower()
+  if algorithm not in ALGORITHMS:
+    raise ValueError(f"Unknown algorithm: {algorithm}. Must be one of {ALGORITHMS}")
+
   with open(weights_filename, 'w') as f:
     f.write('')
   with open(log_filename, 'w') as f:
@@ -279,10 +340,15 @@ def fit(
   N_test = dataset_val.Y.shape[0] if dataset_val else 0
   Y_train = dataset_train.Y > 0
   Y_test = dataset_val.Y > 0 if dataset_val else None
-  w = jnp.abs(dataset_train.Y) / jnp.sum(jnp.abs(dataset_train.Y))
   best_val_fscore = -1.0
   patience_counter = 0
   best_weights_path = weights_filename + '.best'
+
+  if algorithm == 'logitboost':
+    F = jnp.zeros(N_train, dtype=jnp.float32)
+    Y_train_float = Y_train.astype(jnp.float32)
+  else:
+    w = jnp.abs(dataset_train.Y) / jnp.sum(jnp.abs(dataset_train.Y))
 
   def output_progress(t: int) -> bool:
     with open(weights_filename, 'a') as f:
@@ -338,10 +404,16 @@ def fit(
     return False
 
   for t in range(iters):
-    w, scores, best_feature_index, score = update(
-      w, scores, dataset_train.X_rows, dataset_train.X_cols, Y_train
-    )
-    w.block_until_ready()
+    if algorithm == 'logitboost':
+      F, scores, best_feature_index, score = update_logitboost(
+        F, scores, dataset_train.X_rows, dataset_train.X_cols, M, N_train, Y_train_float
+      )
+      F.block_until_ready()
+    else:
+      w, scores, best_feature_index, score = update(
+        w, scores, dataset_train.X_rows, dataset_train.X_cols, Y_train
+      )
+      w.block_until_ready()
     feature = features[best_feature_index]
     feature_score_buffer.append((feature, score))
     if (t + 1) % out_span == 0:
@@ -420,6 +492,12 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
     type=float,
     default=0.0001,
   )
+  parser.add_argument(
+    '--algorithm',
+    help=f'Boosting algorithm to use. (choices: {", ".join(ALGORITHMS)}, default: {DEFAULT_ALGORITHM})',
+    choices=ALGORITHMS,
+    default=DEFAULT_ALGORITHM,
+  )
   if test is None:
     return parser.parse_args()
   else:
@@ -437,6 +515,7 @@ def main() -> None:
   val_data: str | None = args.val_data
   patience: int | None = args.patience
   min_delta: float = args.min_delta
+  algorithm: str = args.algorithm
 
   dataset_train, features, dataset_val = preprocess(
     data_filename, feature_thres, val_data
@@ -451,6 +530,7 @@ def main() -> None:
     out_span,
     patience=patience,
     min_delta=min_delta,
+    algorithm=algorithm,
   )
   print(
     f'Training done. Export the model by passing {weights_filename} to build_model.py'

@@ -59,6 +59,7 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.iter, train.DEFAULT_ITERATION)
     self.assertEqual(output.out_span, train.DEFAULT_OUT_SPAN)
     self.assertEqual(output.val_data, None)
+    self.assertEqual(output.algorithm, train.DEFAULT_ALGORITHM)
 
   def test_cmdargs_full(self) -> None:
     cmdargs = [
@@ -75,6 +76,8 @@ class TestArgParse(unittest.TestCase):
       '50',
       '--val-data',
       'val_encoded.txt',
+      '--algorithm',
+      'logitboost',
     ]
     output = train.parse_args(cmdargs)
     self.assertEqual(output.encoded_train_data, 'encoded.txt')
@@ -84,6 +87,7 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.iter, 10)
     self.assertEqual(output.out_span, 50)
     self.assertEqual(output.val_data, 'val_encoded.txt')
+    self.assertEqual(output.algorithm, 'logitboost')
     self.assertEqual(output.patience, None)
     self.assertEqual(output.min_delta, 0.0001)
 
@@ -92,6 +96,12 @@ class TestArgParse(unittest.TestCase):
     output = train.parse_args(cmdargs)
     self.assertEqual(output.patience, 3)
     self.assertEqual(output.min_delta, 0.001)
+
+  def test_cmdargs_invalid_algorithm(self) -> None:
+    cmdargs = ['encoded.txt', '--algorithm', 'invalid']
+    with self.assertRaises(SystemExit) as cm:
+      train.parse_args(cmdargs)
+    self.assertEqual(cm.exception.code, 2)
 
 
 class TestPreprocess(unittest.TestCase):
@@ -202,6 +212,26 @@ class TestUpdate(unittest.TestCase):
     self.assertTrue(added_score > 0)
 
 
+class TestUpdateLogitBoost(unittest.TestCase):
+  X = jnp.array([[1, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 1, 0]])
+
+  def test_standard_setup(self) -> None:
+    rows, cols = jnp.where(self.X == 1)
+    M = self.X.shape[-1]
+    N = self.X.shape[0]
+    Y = jnp.array([1.0, 1.0, 0.0, 0.0, 1.0])
+    F = jnp.zeros(N, dtype=jnp.float32)
+    scores = jnp.zeros(M)
+    new_F, new_scores, best_feature_index, added_score = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y
+    )
+    self.assertFalse(scores.argmax() == 1)
+    self.assertTrue(new_scores.argmax() == 1)
+    self.assertEqual(best_feature_index, 1)
+    self.assertTrue(added_score > 0)
+    self.assertFalse(jnp.all(new_F == 0))
+
+
 class TestFit(unittest.TestCase):
   def test_fit(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
@@ -285,6 +315,66 @@ class TestFit(unittest.TestCase):
         log_lines = f.readlines()
       # Headers plus fewer iterations than 50 // 2 + 1 = 26
       self.assertLess(len(log_lines), 26)
+
+  def test_fit_logitboost(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    X = jnp.array([[0, 1, 1, 1], [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 0, 1]])
+    Y = jnp.array([0, 0, 1, 1])
+    rows, cols = jnp.where(X == 1)
+    dataset = train.Dataset(rows, cols, Y)
+    features = ['a', 'b', 'c']
+    iters = 5
+    out_span = 2
+    scores = train.fit(
+      dataset,
+      dataset,
+      features,
+      iters,
+      weights_file_path,
+      log_file_path,
+      out_span,
+      algorithm='logitboost',
+    )
+    with open(weights_file_path) as f:
+      weights = [line.split('\t') for line in f.read().splitlines() if line.strip()]
+    top_feature = weights[0][0]
+    self.assertEqual(
+      top_feature,
+      'b',
+      msg='The most effective feature should be selected in LogitBoost.',
+    )
+    self.assertEqual(
+      len(weights),
+      iters,
+      msg='The number of lines should equal to the iteration count.',
+    )
+    self.assertEqual(scores.shape[0], len(features))
+
+  def test_fit_invalid_algorithm(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    dataset = train.Dataset(jnp.array([0]), jnp.array([0]), jnp.array([1]))
+    with self.assertRaises(ValueError) as cm:
+      train.fit(
+        dataset,
+        None,
+        ['a'],
+        1,
+        weights_file_path,
+        log_file_path,
+        1,
+        algorithm='unknown',
+      )
+    self.assertIn('Unknown algorithm', str(cm.exception))
 
 
 class TestExtractFeatures(unittest.TestCase):

@@ -40,6 +40,7 @@ def run_retraining_pipeline(
   weight_factor: int = 20,
   patience: int | None = None,
   top_k: int | None = None,
+  algorithm: str = "adaboost",
   colab: bool = False,
   accelerator: str = "T4",
   session_name: str | None = None,
@@ -153,6 +154,8 @@ def run_retraining_pipeline(
           str(feature_thres),
           "--out-span",
           str(out_span),
+          "--algorithm",
+          algorithm,
         ]
 
         if os.path.exists(val_encoded):
@@ -174,6 +177,8 @@ def run_retraining_pipeline(
         str(iterations),
         "--feature-thres",
         str(feature_thres),
+        "--algorithm",
+        algorithm,
       ]
       if os.path.exists(val_encoded):
         train_cmd.extend(["--val-data", val_encoded])
@@ -276,9 +281,14 @@ def main() -> None:
     help="Maximum number of features to retain in the exported model.",
   )
   parser.add_argument(
-    "--colab",
-    action="store_true",
-    help="Offload JAX AdaBoost training step to remote Colab VM.",
+    "--algorithm",
+    type=str,
+    default="adaboost",
+    choices=["adaboost", "logitboost"],
+    help="Boosting algorithm to use (adaboost or logitboost, default: adaboost)",
+  )
+  parser.add_argument(
+    "--colab", action="store_true", help="Offload JAX training step to remote Colab VM."
   )
   parser.add_argument(
     "--accelerator",
@@ -300,6 +310,7 @@ def main() -> None:
     weight_factor=args.weight_factor,
     patience=args.patience,
     top_k=args.top_k,
+    algorithm=args.algorithm,
     colab=args.colab,
     accelerator=args.accelerator,
     session_name=args.session_name,
