@@ -111,6 +111,17 @@ class TestFindConflicts(unittest.TestCase):
 
     self.assertEqual(len(lines), 0)
 
+  def test_strict_mode_raises_on_unresolved_conflicts(self) -> None:
+    with open(self.input_file, 'w', encoding='utf-8') as f:
+      f.write("1\tUW1:a\tUW2:b\n")
+      f.write("-1\tUW1:a\tUW2:b\n")
+
+    with self.assertRaises(ValueError) as ctx:
+      find_conflicts.find_conflicts(
+        self.input_file, self.output_file, threshold=1.0, strict=True
+      )
+    self.assertIn("unresolved conflicting feature set(s)", str(ctx.exception))
+
 
 if __name__ == '__main__':
   unittest.main()

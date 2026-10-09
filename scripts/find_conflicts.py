@@ -41,13 +41,16 @@ def _reconstruct_text_from_unigram(features: str) -> str:
   return f"{left} / {right}"
 
 
-def find_conflicts(data_path: str, output_path: str, threshold: float = 1.0) -> None:
+def find_conflicts(
+  data_path: str, output_path: str, threshold: float = 1.0, strict: bool = False
+) -> None:
   """Finds and prints conflicting entries in the encoded data file.
 
   Args:
     data_path: The path to the encoded data file.
     output_path: The path to save the cleaned encoded data file.
     threshold: The minimum ratio to keep the majority label (default 1.0 = unanimity).
+    strict: If True, raises ValueError if any conflicting feature set fails the threshold.
   """
 
   features_to_pos_weight: dict[str, int] = defaultdict(int)
@@ -86,6 +89,7 @@ def find_conflicts(data_path: str, output_path: str, threshold: float = 1.0) -> 
   deleted_points = 0
   resolved_features = set()
   majority_features = {}
+  unresolved_features = []
 
   if conflicts:
     print(f"Found {len(conflicts)} unique feature sets with conflicting labels:\n")
@@ -131,9 +135,16 @@ def find_conflicts(data_path: str, output_path: str, threshold: float = 1.0) -> 
           features_to_pos_count[features] + features_to_neg_count[features]
         )
         resolved_features.add(features)
+        unresolved_features.append(features)
       print("-" * 40)
   else:
     print("No conflicts found.")
+
+  if strict and unresolved_features:
+    raise ValueError(
+      f"Found {len(unresolved_features)} unresolved conflicting feature set(s) "
+      f"failing threshold {threshold:.1%} in {data_path}."
+    )
 
   if deleted_points > 0:
     percent = (deleted_points / total_data_points) * 100
@@ -175,9 +186,14 @@ def main() -> None:
     default=1.0,
     help='Threshold ratio for majority vote (default: 1.0 [Delete All]).',
   )
+  parser.add_argument(
+    '--strict',
+    action='store_true',
+    help='Exit with error if unresolved conflicts (threshold not met) exist.',
+  )
   args = parser.parse_args()
 
-  find_conflicts(args.encoded_data, args.output, args.threshold)
+  find_conflicts(args.encoded_data, args.output, args.threshold, strict=args.strict)
 
 
 if __name__ == '__main__':

@@ -45,6 +45,9 @@ jobs:
       - name: Run ruff check
         run: |
           ruff check
+      - name: Run data linter
+        run: |
+          python scripts/lint_data.py
   typescript-style-check:
     runs-on: ubuntu-latest
     steps:
