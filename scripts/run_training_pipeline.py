@@ -41,6 +41,7 @@ def run_retraining_pipeline(
   patience: int | None = None,
   top_k: int | None = None,
   algorithm: str = "adaboost",
+  learning_rate: float | None = None,
   colab: bool = False,
   accelerator: str = "T4",
   session_name: str | None = None,
@@ -162,6 +163,8 @@ def run_retraining_pipeline(
           remote_args.extend(["--val-data", "/content/val_encoded.txt"])
         if patience is not None:
           remote_args.extend(["--patience", str(patience)])
+        if learning_rate is not None:
+          remote_args.extend(["--learning-rate", str(learning_rate)])
 
         runner.exec_cmd(remote_args)
         runner.download_file("/content/weights.txt", weights_path)
@@ -184,6 +187,8 @@ def run_retraining_pipeline(
         train_cmd.extend(["--val-data", val_encoded])
       if patience is not None:
         train_cmd.extend(["--patience", str(patience)])
+      if learning_rate is not None:
+        train_cmd.extend(["--learning-rate", str(learning_rate)])
       subprocess.run(train_cmd, check=True)
 
     print(f"[Export] Exporting compact JSON model to {out_model}...")
@@ -288,6 +293,14 @@ def main() -> None:
     help="Boosting algorithm to use (adaboost or logitboost, default: adaboost)",
   )
   parser.add_argument(
+    "--learning-rate",
+    "-lr",
+    dest="learning_rate",
+    type=float,
+    default=None,
+    help="Learning rate (shrinkage factor) for LogitBoost training.",
+  )
+  parser.add_argument(
     "--colab", action="store_true", help="Offload JAX training step to remote Colab VM."
   )
   parser.add_argument(
@@ -311,6 +324,7 @@ def main() -> None:
     patience=args.patience,
     top_k=args.top_k,
     algorithm=args.algorithm,
+    learning_rate=args.learning_rate,
     colab=args.colab,
     accelerator=args.accelerator,
     session_name=args.session_name,

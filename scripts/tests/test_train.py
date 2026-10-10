@@ -60,6 +60,7 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.out_span, train.DEFAULT_OUT_SPAN)
     self.assertEqual(output.val_data, None)
     self.assertEqual(output.algorithm, train.DEFAULT_ALGORITHM)
+    self.assertEqual(output.learning_rate, train.DEFAULT_LEARNING_RATE)
 
   def test_cmdargs_full(self) -> None:
     cmdargs = [
@@ -78,6 +79,8 @@ class TestArgParse(unittest.TestCase):
       'val_encoded.txt',
       '--algorithm',
       'logitboost',
+      '--learning-rate',
+      '0.5',
     ]
     output = train.parse_args(cmdargs)
     self.assertEqual(output.encoded_train_data, 'encoded.txt')
@@ -88,8 +91,18 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.out_span, 50)
     self.assertEqual(output.val_data, 'val_encoded.txt')
     self.assertEqual(output.algorithm, 'logitboost')
+    self.assertEqual(output.learning_rate, 0.5)
     self.assertEqual(output.patience, None)
     self.assertEqual(output.min_delta, 0.0001)
+
+  def test_cmdargs_with_learning_rate(self) -> None:
+    cmdargs = ['encoded.txt', '--learning-rate', '0.2']
+    output = train.parse_args(cmdargs)
+    self.assertEqual(output.learning_rate, 0.2)
+
+    cmdargs_short = ['encoded.txt', '-lr', '0.1']
+    output_short = train.parse_args(cmdargs_short)
+    self.assertEqual(output_short.learning_rate, 0.1)
 
   def test_cmdargs_with_patience(self) -> None:
     cmdargs = ['encoded.txt', '--patience', '3', '--min-delta', '0.001']
@@ -231,6 +244,54 @@ class TestUpdateLogitBoost(unittest.TestCase):
     self.assertTrue(added_score > 0)
     self.assertFalse(jnp.all(new_F == 0))
 
+  def test_sample_weights(self) -> None:
+    rows, cols = jnp.where(self.X == 1)
+    M = self.X.shape[-1]
+    N = self.X.shape[0]
+    Y = jnp.array([1.0, 1.0, 0.0, 0.0, 1.0])
+    F = jnp.zeros(N, dtype=jnp.float32)
+    scores = jnp.zeros(M)
+    # Heavy weight on sample index 0 (feature 0 and 2 are active)
+    weights = jnp.array([100.0, 1.0, 1.0, 1.0, 1.0])
+    _, _, best_feature_index, _ = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, sample_weights=weights
+    )
+    self.assertIn(best_feature_index, [0, 2])
+
+  def test_learning_rate(self) -> None:
+    rows, cols = jnp.where(self.X == 1)
+    M = self.X.shape[-1]
+    N = self.X.shape[0]
+    Y = jnp.array([1.0, 1.0, 0.0, 0.0, 1.0])
+    F = jnp.zeros(N, dtype=jnp.float32)
+    scores = jnp.zeros(M)
+    _, _, feat_1, score_1 = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, learning_rate=1.0
+    )
+    _, _, feat_half, score_half = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, learning_rate=0.5
+    )
+    self.assertEqual(feat_1, feat_half)
+    self.assertAlmostEqual(score_half, score_1 * 0.5, places=5)
+
+  def test_scale_invariance(self) -> None:
+    rows, cols = jnp.where(self.X == 1)
+    M = self.X.shape[-1]
+    N = self.X.shape[0]
+    Y = jnp.array([1.0, 1.0, 0.0, 0.0, 1.0])
+    F = jnp.zeros(N, dtype=jnp.float32)
+    scores = jnp.zeros(M)
+    w_unit = jnp.ones(N)
+    w_scaled = 5.0 * jnp.ones(N)
+    _, _, feat_unit, score_unit = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, sample_weights=w_unit
+    )
+    _, _, feat_scaled, score_scaled = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, sample_weights=w_scaled
+    )
+    self.assertEqual(feat_unit, feat_scaled)
+    self.assertAlmostEqual(score_unit, score_scaled, places=5)
+
 
 class TestFit(unittest.TestCase):
   def test_fit(self) -> None:
@@ -354,6 +415,73 @@ class TestFit(unittest.TestCase):
       msg='The number of lines should equal to the iteration count.',
     )
     self.assertEqual(scores.shape[0], len(features))
+
+  def test_fit_logitboost_weighted(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    dataset = train.Dataset(jnp.array([0, 1]), jnp.array([0, 1]), jnp.array([10, 1]))
+    features = ['a', 'b']
+    train.fit(
+      dataset,
+      None,
+      features,
+      iters=1,
+      weights_filename=weights_file_path,
+      log_filename=log_file_path,
+      out_span=1,
+      algorithm='logitboost',
+    )
+    with open(weights_file_path) as f:
+      weights = [line.split('\t') for line in f.read().splitlines() if line.strip()]
+    self.assertEqual(weights[0][0], 'a')
+
+  def test_fit_logitboost_learning_rate(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    dataset = train.Dataset(jnp.array([0, 1]), jnp.array([0, 1]), jnp.array([1, 1]))
+    features = ['a', 'b']
+    scores = train.fit(
+      dataset,
+      None,
+      features,
+      iters=2,
+      weights_filename=weights_file_path,
+      log_filename=log_file_path,
+      out_span=1,
+      algorithm='logitboost',
+      learning_rate=0.5,
+    )
+    self.assertEqual(scores.shape[0], len(features))
+
+  def test_fit_invalid_learning_rate(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    dataset = train.Dataset(jnp.array([0]), jnp.array([0]), jnp.array([1]))
+    with self.assertRaises(ValueError) as cm:
+      train.fit(
+        dataset,
+        None,
+        ['a'],
+        1,
+        weights_file_path,
+        log_file_path,
+        1,
+        algorithm='logitboost',
+        learning_rate=0.0,
+      )
+    self.assertIn('learning_rate must be positive', str(cm.exception))
 
   def test_fit_invalid_algorithm(self) -> None:
     with tempfile.NamedTemporaryFile(delete=False) as tf:
