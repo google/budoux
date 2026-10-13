@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import { Parser, jaModel, thModel, zhHansModel, zhHantModel } from 'budoux';
+import { Parser, jaModel, jaWordModel, thModel, zhHansModel, zhHantModel } from 'budoux';
 
 const parsers: { [key: string]: Parser } = {
   'ja': new Parser(jaModel),
+  'ja-word': new Parser(jaWordModel),
   'zh-hans': new Parser(zhHansModel),
   'zh-hant': new Parser(zhHantModel),
   'th': new Parser(thModel),

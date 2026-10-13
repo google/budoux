@@ -15,15 +15,17 @@
  */
 
 import DOMPurify from 'dompurify';
-import { loadDefaultParsers } from 'budoux';
+import { HTMLProcessingParser, jaWordModel, loadDefaultParsers } from 'budoux';
 
 const parsers = loadDefaultParsers();
+parsers.set('ja-word', new HTMLProcessingParser(jaWordModel));
 const defaultInputs = new Map([
   ['ja', 'Google の使命は、世界中の情報を<strong>整理</strong>し、<em>世界中の人がアクセス</em>できて使えるようにすることです。'],
+  ['ja-word', 'Google の使命は、世界中の情報を<strong>整理</strong>し、<em>世界中の人がアクセス</em>できて使えるようにすることです。'],
   ['zh-hans', '我们的使命是<strong>整合</strong>全球信息，<em>供大众使用</em>，让人人受益。'],
   ['zh-hant', '我們的使命是<strong>匯整</strong>全球資訊，<em>供大眾使用</em>，使人人受惠。'],
-  ['th', 'พันธกิจของเราคือการจัดระเบียบข้อมูลในโลกนี้และทำให้เข้าถึงได้ง่ายในทุกที่และมีประโยชน์']
-])
+  ['th', 'พันธกิจของเราคือการจัดระเบียบข้อมูลในโลกนี้และทำให้เข้าถึงได้ง่ายในทุกที่และมีประโยชน์'],
+]);
 const inputTextElement = document.getElementById('input') as HTMLTextAreaElement;
 const outputContainerElement = document.getElementById('output') as HTMLElement;
 const fontSizeElement = document.getElementById('fontsize') as HTMLInputElement;
