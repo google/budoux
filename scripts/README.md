@@ -32,18 +32,19 @@ flowchart TB
         direction TB
         OUTPUT_FLAGS -->|"(--save-dataset)"| SYNTH_STORE["data/finetuning/ja/issue_*.txt<br>(Issue-specific Samples)"]
         OUTPUT_FLAGS -->|"(--append-quality)"| REG_TSV["tests/quality/ja.tsv<br>(Canonical Test Suite)"]
+        SYNTH_STORE --> LINT_PY["Dataset Integrity Check<br>(lint_data.py)"]
     end
 
     %% Phase 4: Data Merging & Training Loop
-    subgraph P4 ["4. Data Merging & JAX Training Loop (run_training_pipeline.py)"]
+    subgraph P4 ["4. Data Encoding & JAX Training Loop (run_training_pipeline.py)"]
         direction TB
-        KNBC_TRAIN --> MERGE_DATA["Data Merging & Weighting<br>(1x base corpus, 100x fine-tuning samples)"]
-        SYNTH_STORE --> MERGE_DATA
+        KNBC_TRAIN -->|"encode_data.py --scale 1"| BASE_ENC["tmp/base_encoded.txt"]
+        LINT_PY -->|"encode_data.py --scale auto"| FT_ENC["tmp/ft_encoded.txt"]
         
-        MERGE_DATA --> COMBINED_TXT["tmp/weighted_train.txt"]
-        COMBINED_TXT --> ENCODE_PY["Feature Encoding<br>(encode_data.py)"]
-        ENCODE_PY --> CONFLICT_PY["Conflict Resolution<br>(find_conflicts.py -t 0.8)"]
-        CONFLICT_PY --> TRAIN_PY["JAX AdaBoost Training<br>(train.py --iter=200000)"]
+        BASE_ENC --> ENCODED_TXT["tmp/encoded.txt"]
+        FT_ENC --> ENCODED_TXT
+        ENCODED_TXT --> CONFLICT_PY["Conflict Resolution<br>(find_conflicts.py -t 0.8)"]
+        CONFLICT_PY --> TRAIN_PY["JAX Boosting Training<br>(train.py --algorithm=logitboost --iter=200000)"]
         
         TRAIN_PY --> BUILD_PY["Model Compilation<br>(build_model.py)"]
     end
@@ -254,7 +255,10 @@ optional `--log` arg.
 You can use these metrics to evaluate if the model is underfitting or
 overfitting during the training.
 
-The machine learning algorithm employed behind is [AdaBoost](https://en.wikipedia.org/wiki/AdaBoost),
+The machine learning algorithm employed behind is [AdaBoost](https://en.wikipedia.org/wiki/AdaBoost)
+or [LogitBoost](https://en.wikipedia.org/wiki/LogitBoost) (configurable via
+`--algorithm=adaboost|logitboost`, with `--learning-rate` shrinkage for
+LogitBoost and optional `--patience` validation-based early stopping),
 which calculates how much each feature contributes to the end of a segment.
 Each contribution is reprensented by a score, which can be a positive or
 negative value; a positive value means positive contribution, while a negative
@@ -368,7 +372,8 @@ covered by the data encoding section in detail.
 The keys in the second layer (e.g. `日` and `天`) are the corresponding feature
 values.
 
-You can generate a model file by simply passing the weight file to [`build_model.py`](https://github.com/google/budoux/tree/main/scripts/build_model.py).
+You can generate a model file by simply passing the weight file to [`build_model.py`](https://github.com/google/budoux/tree/main/scripts/build_model.py)
+(optionally passing `--top-k` to prune the exported model to the top $K$ features by weight magnitude).
 
 ```bash
 python scripts/build_model.py weights.txt -o model.json
@@ -392,9 +397,9 @@ This script is where to add code when we need to support other formats.
 
 When a model file misclassifies character transition boundaries in specific edge
 cases (for example, missing phrase segmentations across newly observed character
-combinations), resolving the discrepancy requires performing full AdaBoost
-linear retraining using `train.py` across updated feature records
-(`encoded.txt`).
+combinations), resolving the discrepancy requires performing full boosting
+linear retraining (`LogitBoost` or `AdaBoost`) using `train.py` across updated
+feature records (`encoded.txt`).
 
 Historically, partial gradient-descent fine-tuning over established base JSON
 models (`finetune.py`) was supported. However, because partial fine-tuning
@@ -402,16 +407,16 @@ optimizes existing $n$-gram weights strictly across pre-established vocabulary
 keys, it cannot register or weight out-of-vocabulary character transition
 features across newly triaged phrases.
 
-Therefore, full AdaBoost model optimization via `train.py` paired with
-statistical conflict resolution (`find_conflicts.py -t 0.8`) and model building
-(`build_model.py`) is the sole canonical methodology for updating and tuning
-BudouX segmentation models.
+Therefore, full boosting model optimization via `train.py` paired with
+dataset linting (`lint_data.py`), statistical conflict resolution
+(`find_conflicts.py -t 0.8`), and model building (`build_model.py`) is the sole
+canonical methodology for updating and tuning BudouX segmentation models.
 
 ### End-to-End Retraining & Data Synthesis
 
-To automate dataset partitioning (80:10:10 train/val/test splits), oversampled
-fine-tuning data merging, JAX model fitting, and holdout quality benchmarking,
-run:
+To automate dataset partitioning (80:10:10 train/val/test splits), auto-balanced
+fine-tuning weight scaling, JAX model fitting (defaulting to `logitboost`), and
+holdout quality benchmarking, run:
 
 ```bash
 python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
@@ -448,18 +453,21 @@ To remediate a model defect reported in a GitHub issue (e.g., Issue #468):
      `data/finetuning/<lang>/issue_<id>.txt` so the benchmark evaluates
      generalization rather than memorization.
 
-3. **Save to Fine-Tuning Corpus:**
-   Save the reviewed file into `data/finetuning/ja/issue_468.txt`:
+3. **Save to Fine-Tuning Corpus and Verify Integrity:**
+   Save the reviewed file into `data/finetuning/ja/issue_468.txt` and run the
+   dataset linter to verify there are no formatting errors or boundary
+   contradictions:
 
    ```bash
    mkdir -p data/finetuning/ja
    cp staging_468.txt data/finetuning/ja/issue_468.txt
+   python scripts/lint_data.py
    ```
 
 4. **Run Retraining Pipeline:**
-   Execute `run_training_pipeline.py`. It automatically merges all datasets
-   under `data/finetuning/ja/*.txt` (with 20x weighting), retrains the JAX
-   model, and verifies quality benchmarks:
+   Execute `run_training_pipeline.py`. It automatically encodes all datasets
+   under `data/finetuning/ja/*.txt` with corpus-ratio auto-balanced sample
+   weights, retrains the JAX LogitBoost model, and verifies quality benchmarks:
 
    ```bash
    python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
