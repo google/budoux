@@ -163,6 +163,37 @@ class TestRunTrainingPipeline(unittest.TestCase):
         )
       self.assertEqual(str(cm.exception), "Remote execution failed")
 
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_auto_balance(self, mock_run: MagicMock) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      os.makedirs(split_dir, exist_ok=True)
+      with open(os.path.join(split_dir, "knbc_train.txt"), "w") as f:
+        f.write("test sentence\n")
+
+      out_model = os.path.join(tmp_dir, "model.json")
+      run_training_pipeline.run_retraining_pipeline(
+        lang="ja",
+        iterations=10,
+        split_dir=split_dir,
+        out_model=out_model,
+        weight_factor=None,
+      )
+
+      # Check that subprocess.run was called for encode_data with --scale
+      encode_calls = [
+        call[0][0]
+        for call in mock_run.call_args_list
+        if "scripts/encode_data.py" in call[0][0]
+      ]
+      self.assertGreaterEqual(len(encode_calls), 1)
+      # Find the call for ft_raw
+      ft_calls = [
+        call for call in encode_calls if any("ft_raw.txt" in str(arg) for arg in call)
+      ]
+      if ft_calls:
+        self.assertIn("--scale", ft_calls[0])
+
 
 if __name__ == "__main__":
   unittest.main()

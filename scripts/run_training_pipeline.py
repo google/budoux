@@ -26,7 +26,7 @@ import urllib.request
 LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, LIB_PATH)
 
-from scripts import colab_runner
+from scripts import colab_runner, encode_data
 
 KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
 
@@ -37,10 +37,10 @@ def run_retraining_pipeline(
   feature_thres: int = 2,
   split_dir: str = "tmp/splits",
   out_model: str = "",
-  weight_factor: int = 20,
+  weight_factor: int | None = None,
   patience: int | None = None,
   top_k: int | None = None,
-  algorithm: str = "adaboost",
+  algorithm: str = "logitboost",
   learning_rate: float | None = None,
   colab: bool = False,
   accelerator: str = "T4",
@@ -77,32 +77,81 @@ def run_retraining_pipeline(
       )
 
   with tempfile.TemporaryDirectory() as tmp:
-    weighted_train = os.path.join(tmp, "weighted_train.txt")
     finetuning_pattern = os.path.join("data", "finetuning", lang, "*.txt")
+    ft_files = sorted(glob.glob(finetuning_pattern))
+    knbc_train = os.path.join(split_dir, "knbc_train.txt")
 
-    print(
-      f"[Merge] Combining fine-tuning data ({finetuning_pattern}) with {weight_factor}x weight..."
-    )
-    with open(weighted_train, "w", encoding="utf-8") as out_f:
-      for ft_file in sorted(glob.glob(finetuning_pattern)):
+    scale = 1
+    if weight_factor is not None:
+      scale = weight_factor
+      print(f"[Scale] Using specified fine-tuning scale: {scale}x")
+    elif ft_files and os.path.exists(knbc_train):
+      with open(knbc_train, encoding="utf-8") as in_f:
+        base_s, _ = encode_data.normalize_input(in_f.read())
+      ft_text = ""
+      for ft_file in ft_files:
         with open(ft_file, encoding="utf-8") as in_f:
-          content = in_f.read()
-        out_f.writelines(content for _ in range(weight_factor))
-      knbc_train = os.path.join(split_dir, "knbc_train.txt")
-      if os.path.exists(knbc_train):
-        with open(knbc_train, encoding="utf-8") as in_f:
-          shutil.copyfileobj(in_f, out_f)
+          ft_text += in_f.read()
+      ft_s, _ = encode_data.normalize_input(ft_text)
+      n_base = len(base_s)
+      n_ft = len(ft_s)
+      # Equalize total sample weight mass between the large base corpus
+      # (n_base * 1) and the small fine-tuning corpus (n_ft * scale) so that
+      # targeted fine-tuning boundaries are not drowned out during conflict
+      # filtering and boosting. Clamp to >= 1 in case n_ft > n_base.
+      scale = max(1, round(n_base / n_ft)) if n_ft > 0 else 1
+      print(
+        f"[Scale] Auto-balanced fine-tuning scale: {scale}x (base={n_base}, ft={n_ft})"
+      )
 
     encoded_train = os.path.join(tmp, "encoded.txt")
+    base_encoded = os.path.join(tmp, "base_encoded.txt")
+    ft_encoded = os.path.join(tmp, "ft_encoded.txt")
     cleaned_train = os.path.join(tmp, "cleaned.txt")
     val_encoded = os.path.join(tmp, "val_encoded.txt")
     weights_path = os.path.join(tmp, "weights.txt")
 
     print("[Encode] Encoding feature boundaries...")
-    subprocess.run(
-      [sys.executable, "scripts/encode_data.py", weighted_train, "-o", encoded_train],
-      check=True,
-    )
+    if os.path.exists(knbc_train):
+      subprocess.run(
+        [
+          sys.executable,
+          "scripts/encode_data.py",
+          knbc_train,
+          "-o",
+          base_encoded,
+          "--scale",
+          "1",
+        ],
+        check=True,
+      )
+
+    if ft_files:
+      ft_raw = os.path.join(tmp, "ft_raw.txt")
+      with open(ft_raw, "w", encoding="utf-8") as out_f:
+        for ft_file in ft_files:
+          with open(ft_file, encoding="utf-8") as in_f:
+            shutil.copyfileobj(in_f, out_f)
+      subprocess.run(
+        [
+          sys.executable,
+          "scripts/encode_data.py",
+          ft_raw,
+          "-o",
+          ft_encoded,
+          "--scale",
+          str(scale),
+        ],
+        check=True,
+      )
+
+    with open(encoded_train, "w", encoding="utf-8") as out_f:
+      if os.path.exists(base_encoded):
+        with open(base_encoded, encoding="utf-8") as in_f:
+          shutil.copyfileobj(in_f, out_f)
+      if os.path.exists(ft_encoded):
+        with open(ft_encoded, encoding="utf-8") as in_f:
+          shutil.copyfileobj(in_f, out_f)
 
     print("[Filter] Resolving conflict boundaries...")
     subprocess.run(
@@ -270,8 +319,8 @@ def main() -> None:
   parser.add_argument(
     "--weight-factor",
     type=int,
-    default=20,
-    help="Oversampling multiplier for fine-tuning datasets (default: 20)",
+    default=None,
+    help="Oversampling weight scale for fine-tuning datasets (default: auto-balanced based on corpus size ratio)",
   )
   parser.add_argument(
     "--patience",
@@ -288,9 +337,9 @@ def main() -> None:
   parser.add_argument(
     "--algorithm",
     type=str,
-    default="adaboost",
+    default="logitboost",
     choices=["adaboost", "logitboost"],
-    help="Boosting algorithm to use (adaboost or logitboost, default: adaboost)",
+    help="Boosting algorithm to use (adaboost or logitboost, default: logitboost)",
   )
   parser.add_argument(
     "--learning-rate",
