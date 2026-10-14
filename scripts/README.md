@@ -39,7 +39,7 @@ flowchart TB
     subgraph P4 ["4. Data Encoding & JAX Training Loop (run_training_pipeline.py)"]
         direction TB
         KNBC_TRAIN -->|"encode_data.py --scale 1"| BASE_ENC["tmp/base_encoded.txt"]
-        LINT_PY -->|"encode_data.py --scale auto"| FT_ENC["tmp/ft_encoded.txt"]
+        LINT_PY -->|"encode_data.py --scale <scale>"| FT_ENC["tmp/ft_encoded.txt"]
         
         BASE_ENC --> ENCODED_TXT["tmp/encoded.txt"]
         FT_ENC --> ENCODED_TXT
@@ -373,7 +373,8 @@ The keys in the second layer (e.g. `日` and `天`) are the corresponding featur
 values.
 
 You can generate a model file by simply passing the weight file to [`build_model.py`](https://github.com/google/budoux/tree/main/scripts/build_model.py)
-(optionally passing `--top-k` to prune the exported model to the top $K$ features by weight magnitude).
+(optionally passing `--top-k` to prune the exported model to the top $K$
+features by weight magnitude).
 
 ```bash
 python scripts/build_model.py weights.txt -o model.json
