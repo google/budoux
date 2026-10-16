@@ -102,6 +102,23 @@ class TestParseDirectInput(unittest.TestCase):
     self.assertTrue(target.is_reproducible)
 
 
+class TestFetchGithubIssueContext(unittest.TestCase):
+  def test_fetch_valid_issue_id(self) -> None:
+    mock_requests = MagicMock()
+    mock_requests.get.return_value.json.return_value = {"body": "Issue body"}
+    body = synthesize_samples.fetch_github_issue_context("1389", mock_requests)
+    self.assertEqual(body, "Issue body")
+    mock_requests.get.assert_called_once_with(
+      "https://api.github.com/repos/google/budoux/issues/1389", timeout=10
+    )
+
+  def test_fetch_invalid_issue_id_raises(self) -> None:
+    mock_requests = MagicMock()
+    for invalid in ("", "abc", "#1389", "https://github.com/google/budoux/issues/1389"):
+      with self.assertRaises(ValueError):
+        synthesize_samples.fetch_github_issue_context(invalid, mock_requests)
+
+
 class TestVerifyBugReproduction(unittest.TestCase):
   def test_verify_bug_reproduction_detects_bug(self) -> None:
     target = synthesize_samples.IntentTarget(

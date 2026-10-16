@@ -108,10 +108,9 @@ def parse_direct_input(input_str: str) -> IntentTarget:
 
 def fetch_github_issue_context(issue_id: str, requests_mod: Any = requests) -> str:
   """Safely retrieves public GitHub issue description content."""
-  issue_num = re.sub(r"[^\d]", "", issue_id)
-  if not issue_num:
+  if not issue_id.isdigit():
     raise ValueError(f"Invalid issue parameter value: {issue_id}")
-  url = f"https://api.github.com/repos/google/budoux/issues/{issue_num}"
+  url = f"https://api.github.com/repos/google/budoux/issues/{issue_id}"
   response = requests_mod.get(url, timeout=10)
   response.raise_for_status()
   data = response.json()
@@ -370,7 +369,7 @@ def build_parser() -> argparse.ArgumentParser:
   group.add_argument(
     "--input", "-i", type=str, help="Target string (e.g. 'いよいよ/はじまる')"
   )
-  group.add_argument("--issue", type=str, help="GitHub bug report number or URL ID")
+  group.add_argument("--issue", type=str, help="GitHub issue ID (e.g. '1389')")
   p.add_argument(
     "--lang", type=str, default="ja", help="Target model language (default: ja)"
   )
