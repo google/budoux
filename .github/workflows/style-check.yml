@@ -28,26 +28,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install ".[dev]"
-          pip install ".[jaxcpu]"
+        run: uv sync --locked --extra dev --extra jaxcpu
       - name: Run ruff format
         run: |
-          ruff format --check .
+          uv run ruff format --check .
       - name: Run pyrefly
         run: |
-          pyrefly check
+          uv run pyrefly check
       - name: Run ruff check
         run: |
-          ruff check
+          uv run ruff check
       - name: Run data linter
         run: |
-          python scripts/lint_data.py
+          uv run python scripts/lint_data.py
   typescript-style-check:
     runs-on: ubuntu-latest
     steps:
@@ -62,7 +60,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20'
-      - run: npm install
+      - run: npm ci
         working-directory: ./javascript
       - run: npm run lint
         working-directory: ./javascript

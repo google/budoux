@@ -19,8 +19,8 @@
 
 version: 2
 updates:
-  # Python/pip updates
-  - package-ecosystem: pip
+  # Python/uv updates
+  - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
