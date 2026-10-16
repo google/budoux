@@ -159,6 +159,8 @@ def find_conflicts(
   ):
     for line in fin:
       cols = line.strip('\n').split('\t')
+      if len(cols) < 2:
+        continue
       label = int(cols[0])
       features = '\t'.join(sorted(cols[1:]))
       if features in resolved_features:
@@ -173,11 +175,12 @@ def find_conflicts(
     print(f"Cleaned data saved to {output_path}")
 
 
-def main() -> None:
+def parse_args(test: list[str] | None = None) -> argparse.Namespace:
+  """Parses commandline arguments."""
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument('encoded_data', help='File path for the encoded data.')
   parser.add_argument(
-    '-o', '--output', help='File path to save the cleaned encoded data.', default=None
+    '-o', '--output', help='File path to save the cleaned encoded data.', required=True
   )
   parser.add_argument(
     '-t',
@@ -191,8 +194,11 @@ def main() -> None:
     action='store_true',
     help='Exit with error if unresolved conflicts (threshold not met) exist.',
   )
-  args = parser.parse_args()
+  return parser.parse_args(test)
 
+
+def main() -> None:
+  args = parse_args()
   find_conflicts(args.encoded_data, args.output, args.threshold, strict=args.strict)
 
 
