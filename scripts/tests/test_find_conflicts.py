@@ -122,6 +122,18 @@ class TestFindConflicts(unittest.TestCase):
       )
     self.assertIn("unresolved conflicting feature set(s)", str(ctx.exception))
 
+  def test_parse_args_requires_output(self) -> None:
+    with self.assertRaises(SystemExit) as ctx:
+      find_conflicts.parse_args([self.input_file])
+    self.assertEqual(ctx.exception.code, 2)
+
+  def test_parse_args_with_output(self) -> None:
+    args = find_conflicts.parse_args([self.input_file, '-o', self.output_file])
+    self.assertEqual(args.encoded_data, self.input_file)
+    self.assertEqual(args.output, self.output_file)
+    self.assertEqual(args.threshold, 1.0)
+    self.assertFalse(args.strict)
+
 
 if __name__ == '__main__':
   unittest.main()
