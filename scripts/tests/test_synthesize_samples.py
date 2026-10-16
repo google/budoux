@@ -25,9 +25,10 @@ LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux
+from budoux import utils
 from scripts import synthesize_samples
 
-SEP = budoux.utils.SEP  # Canonical character separator '▁'
+SEP = utils.SEP  # Canonical character separator '▁'
 
 
 class TestAlignToBaseParserSplits(unittest.TestCase):

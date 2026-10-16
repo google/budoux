@@ -40,8 +40,9 @@ from google import genai
 from pydantic import BaseModel, Field
 
 import budoux
+from budoux import utils
 
-SEP = budoux.utils.SEP
+SEP = utils.SEP
 
 # ==============================================================================
 # Structured Pydantic Models (Contractual Type Boundaries)
@@ -107,7 +108,7 @@ def parse_direct_input(input_str: str) -> IntentTarget:
 
 def fetch_github_issue_context(issue_id: str, requests_mod: Any = requests) -> str:
   """Safely retrieves public GitHub issue description content."""
-  issue_num = re.sub(r"[^\d]", "", str(issue_id))
+  issue_num = re.sub(r"[^\d]", "", issue_id)
   if not issue_num:
     raise ValueError(f"Invalid issue parameter value: {issue_id}")
   url = f"https://api.github.com/repos/google/budoux/issues/{issue_num}"
