@@ -24,7 +24,7 @@ import unittest
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-import budoux
+from budoux import utils
 from budoux.evaluate_model import evaluate
 
 
@@ -60,7 +60,7 @@ class TestEvaluateModel(unittest.TestCase):
     # Precision: 2/(2+0) = 1.0
     # Recall: 2/(2+1) = 0.6666666666666666
     # Fscore: 2 * 1.0 * 0.666... / (1.0 + 0.666...) = 0.8
-    test_content = f'B{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+    test_content = f'B{utils.SEP}A{utils.SEP}B{utils.SEP}A\n'
     with open(self.test_data_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
@@ -72,7 +72,7 @@ class TestEvaluateModel(unittest.TestCase):
     self.assertAlmostEqual(metrics['fscore'], 0.8)
 
   def test_evaluate_model_pathlike(self) -> None:
-    test_content = f'B{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+    test_content = f'B{utils.SEP}A{utils.SEP}B{utils.SEP}A\n'
     with open(self.test_data_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
@@ -95,7 +95,7 @@ class TestEvaluateModel(unittest.TestCase):
     # Precision: 0/2 = 0.0
     # Recall: 0/1 = 0.0
     # Fscore: 0.0
-    test_content = f'B/A{budoux.utils.SEP}B/A\n'
+    test_content = f'B/A{utils.SEP}B/A\n'
     with open(self.test_data_path, 'w', encoding='utf-8') as f:
       f.write(test_content)
 
@@ -131,8 +131,8 @@ class TestEvaluateModel(unittest.TestCase):
     tsv_path = os.path.join(self.temp_dir.name, 'test_data.tsv')
     test_content = (
       '# comment line\n'
-      f'gh123\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
-      f'gh124\tmeta_info\tB{budoux.utils.SEP}A{budoux.utils.SEP}B{budoux.utils.SEP}A\n'
+      f'gh123\tB{utils.SEP}A{utils.SEP}B{utils.SEP}A\n'
+      f'gh124\tmeta_info\tB{utils.SEP}A{utils.SEP}B{utils.SEP}A\n'
     )
     with open(tsv_path, 'w', encoding='utf-8') as f:
       f.write(test_content)

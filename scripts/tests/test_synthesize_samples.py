@@ -25,9 +25,10 @@ LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
 sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux
+from budoux import utils
 from scripts import synthesize_samples
 
-SEP = budoux.utils.SEP  # Canonical character separator '▁'
+SEP = utils.SEP  # Canonical character separator '▁'
 
 
 class TestAlignToBaseParserSplits(unittest.TestCase):
@@ -99,6 +100,23 @@ class TestParseDirectInput(unittest.TestCase):
     self.assertEqual(target.expected_split, "もはや")
     self.assertFalse(target.is_positive)
     self.assertTrue(target.is_reproducible)
+
+
+class TestFetchGithubIssueContext(unittest.TestCase):
+  def test_fetch_valid_issue_id(self) -> None:
+    mock_requests = MagicMock()
+    mock_requests.get.return_value.json.return_value = {"body": "Issue body"}
+    body = synthesize_samples.fetch_github_issue_context("1389", mock_requests)
+    self.assertEqual(body, "Issue body")
+    mock_requests.get.assert_called_once_with(
+      "https://api.github.com/repos/google/budoux/issues/1389", timeout=10
+    )
+
+  def test_fetch_invalid_issue_id_raises(self) -> None:
+    mock_requests = MagicMock()
+    for invalid in ("", "abc", "#1389", "https://github.com/google/budoux/issues/1389"):
+      with self.assertRaises(ValueError):
+        synthesize_samples.fetch_github_issue_context(invalid, mock_requests)
 
 
 class TestVerifyBugReproduction(unittest.TestCase):
