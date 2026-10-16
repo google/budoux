@@ -15,14 +15,9 @@
  */
 
 import DOMPurify from 'dompurify';
-import { loadDefaultJapaneseParser, loadDefaultSimplifiedChineseParser, loadDefaultTraditionalChineseParser, loadDefaultThaiParser } from 'budoux';
+import { loadDefaultParsers } from 'budoux';
 
-const parsers = new Map([
-  ['ja', loadDefaultJapaneseParser()],
-  ['zh-hans', loadDefaultSimplifiedChineseParser()],
-  ['zh-hant', loadDefaultTraditionalChineseParser()],
-  ['th', loadDefaultThaiParser()]
-]);
+const parsers = loadDefaultParsers();
 const defaultInputs = new Map([
   ['ja', 'Google の使命は、世界中の情報を<strong>整理</strong>し、<em>世界中の人がアクセス</em>できて使えるようにすることです。'],
   ['zh-hans', '我们的使命是<strong>整合</strong>全球信息，<em>供大众使用</em>，让人人受益。'],
