@@ -46,7 +46,7 @@ source = { editable = "." }
 dev = [
     { name = "build" },
     { name = "google-genai" },
-    { name = "jax", marker = "python_full_version >= '3.12'" },
+    { name = "jax", marker = "python_full_version >= '3.12' and python_full_version < '3.15'" },
     { name = "pydantic" },
     { name = "pyrefly" },
     { name = "pytest" },
@@ -58,7 +58,7 @@ dev = [
     { name = "types-setuptools" },
 ]
 jaxcpu = [
-    { name = "jax", marker = "python_full_version >= '3.12'" },
+    { name = "jax", marker = "python_full_version >= '3.12' and python_full_version < '3.15'" },
 ]
 
 [package.dev-dependencies]
@@ -70,8 +70,8 @@ dev = [
 requires-dist = [
     { name = "build", marker = "extra == 'dev'" },
     { name = "google-genai", marker = "extra == 'dev'" },
-    { name = "jax", marker = "python_full_version >= '3.12' and extra == 'dev'", specifier = ">=0.9.0" },
-    { name = "jax", marker = "python_full_version >= '3.12' and extra == 'jaxcpu'", specifier = ">=0.9.0" },
+    { name = "jax", marker = "python_full_version >= '3.12' and python_full_version < '3.15' and extra == 'dev'", specifier = ">=0.9.0" },
+    { name = "jax", marker = "python_full_version >= '3.12' and python_full_version < '3.15' and extra == 'jaxcpu'", specifier = ">=0.9.0" },
     { name = "pydantic", marker = "extra == 'dev'" },
     { name = "pyrefly", marker = "extra == 'dev'", specifier = ">=1.2.0" },
     { name = "pytest", marker = "extra == 'dev'" },
