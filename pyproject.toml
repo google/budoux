@@ -30,7 +30,7 @@ redundant-cast = "warn"
 
 [project.optional-dependencies]
 jaxcpu = [
-    "jax>=0.9.0; python_version >= '3.12' and python_version < '3.15'",
+    "jax>=0.9.0; python_version >= '3.12'",
 ]
 dev = [
     "build",
@@ -42,7 +42,7 @@ dev = [
     "twine",
     "types-regex",
     "types-setuptools",
-    "jax>=0.9.0; python_version >= '3.12' and python_version < '3.15'",
+    "jax>=0.9.0; python_version >= '3.12'",
     "pyrefly>=1.2.0",
     "ruff>=0.16.2",
 ]

@@ -51,5 +51,5 @@ jobs:
       - name: Run unittest
         run: uv run pytest ./tests
       - name: Run unittest with Jax
-        if: ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.11' && matrix.python-version != '3.15' }}
+        if: ${{ matrix.os != 'windows-latest' && matrix.python-version != '3.11' }}
         run: uv run pytest ./scripts/tests
