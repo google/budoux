@@ -163,8 +163,7 @@ class TestDefaultParser(unittest.TestCase):
         '大众',
         '使用，',
         '让',
-        '人',
-        '人',
+        '人人',
         '受益。',
       ],
     )
@@ -186,8 +185,7 @@ class TestDefaultParser(unittest.TestCase):
         '大眾',
         '使用，',
         '使',
-        '人',
-        '人',
+        '人人',
         '受惠。',
       ],
     )
