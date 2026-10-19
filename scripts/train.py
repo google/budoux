@@ -74,7 +74,7 @@ def extract_features(data_path: str, thres: int) -> list[str]:
     A list of features
   """
   counter: Counter[str] = Counter()
-  with open(data_path) as f:
+  with open(data_path, encoding='utf-8') as f:
     for row in f:
       cols = row.strip().split('\t')
       if len(cols) < 2:
@@ -98,7 +98,7 @@ def load_dataset(data_path: str, findex: dict[str, int]) -> Dataset:
   Y = array.array('i')
   X_rows = array.array('I')
   X_cols = array.array('I')
-  with open(data_path) as f:
+  with open(data_path, encoding='utf-8') as f:
     i = 0
     for row in f:
       cols = row.strip().split('\t')
@@ -337,9 +337,9 @@ def fit(
   if learning_rate <= 0:
     raise ValueError(f"learning_rate must be positive, got {learning_rate}")
 
-  with open(weights_filename, 'w') as f:
+  with open(weights_filename, 'w', encoding='utf-8') as f:
     f.write('')
-  with open(log_filename, 'w') as f:
+  with open(log_filename, 'w', encoding='utf-8') as f:
     f.write('iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore')
     if dataset_val:
       f.write('\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore')
@@ -365,14 +365,14 @@ def fit(
     w = jnp.abs(dataset_train.Y) / jnp.sum(jnp.abs(dataset_train.Y))
 
   def output_progress(t: int) -> bool:
-    with open(weights_filename, 'a') as f:
+    with open(weights_filename, 'a', encoding='utf-8') as f:
       f.write('\n'.join(f'{p[0]}\t{p[1]:.6f}' for p in feature_score_buffer) + '\n')
     feature_score_buffer.clear()
 
     print(f'=== {t} ===')
     print()
 
-    with open(log_filename, 'a') as f:
+    with open(log_filename, 'a', encoding='utf-8') as f:
       pred_train = pred(scores, dataset_train.X_rows, dataset_train.X_cols, N_train)
       metrics_train = get_metrics(pred_train, Y_train)
       print(f'train accuracy:\t{metrics_train.accuracy:.5f}')
