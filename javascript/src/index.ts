@@ -15,6 +15,7 @@
  */
 
 import {model as jaModel} from './data/models/ja.js';
+import {model as jaWordModel} from './data/models/ja_word.js';
 import {model as thModel} from './data/models/th.js';
 import {model as zhHansModel} from './data/models/zh-hans.js';
 import {model as zhHantModel} from './data/models/zh-hant.js';
@@ -22,7 +23,7 @@ import {HTMLProcessingParser} from './html_processor.js';
 
 export {HTMLProcessingParser, HTMLProcessor} from './html_processor.js';
 export {Parser} from './parser.js';
-export {jaModel, thModel, zhHansModel, zhHantModel};
+export {jaModel, jaWordModel, thModel, zhHansModel, zhHantModel};
 
 /**
  * Loads a parser equipped with the default Japanese model.
