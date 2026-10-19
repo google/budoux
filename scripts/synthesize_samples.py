@@ -54,12 +54,6 @@ class IntentTarget(BaseModel):
 
   target_phrase: str = Field(..., description="Raw target phrase string.")
   expected_split: str = Field(..., description="Expected string separated with ▁.")
-  is_positive: bool = Field(
-    ..., description="True if forced break across slash, False if cohesive word."
-  )
-  is_reproducible: bool = Field(
-    default=True, description="Whether current runtime model exhibits the reported bug."
-  )
 
 
 class CandidateBatch(BaseModel):
@@ -79,7 +73,6 @@ class ExpertEvaluation(BaseModel):
     "",
     description="The polished candidate string with proper native boundary splits applied.",
   )
-  rejection_reason: str = Field("", description="Explanation if rejected.")
 
 
 class EvaluationBatch(BaseModel):
@@ -96,14 +89,8 @@ class EvaluationBatch(BaseModel):
 def parse_direct_input(input_str: str) -> IntentTarget:
   """Parses a direct --input parameter into an IntentTarget representation."""
   normalized = input_str.strip().replace(" / ", SEP).replace("/", SEP)
-  is_positive = SEP in normalized
   raw = normalized.replace(SEP, "")
-  return IntentTarget(
-    target_phrase=raw,
-    expected_split=normalized,
-    is_positive=is_positive,
-    is_reproducible=True,
-  )
+  return IntentTarget(target_phrase=raw, expected_split=normalized)
 
 
 def fetch_github_issue_context(issue_id: str, requests_mod: Any = requests) -> str:
@@ -184,8 +171,8 @@ Examine this GitHub bug issue description:
 {issue_text}
 ---
 Determine the primary problematic phrase and its desired canonical split formatted with '▁'.
-If a phrase was mistakenly split internally and should stay unbroken (e.g., 'もはや'), return target_phrase='もはや', expected_split='もはや', is_positive=False.
-If a phrase needed a boundary across separate words that was missing or shifted (e.g., 'いよいよ/はじまる'), format expected_split inserting '▁' at the intended break location and set is_positive=True.
+If a phrase was mistakenly split internally and should stay unbroken (e.g., 'もはや'), return target_phrase='もはや', expected_split='もはや'.
+If a phrase needed a boundary across separate words that was missing or shifted (e.g., 'いよいよ/はじまる'), format expected_split inserting '▁' at the intended break location.
 """
   config = genai.types.GenerateContentConfig(
     response_mime_type="application/json", response_schema=IntentTarget, temperature=0.1
@@ -304,9 +291,7 @@ def run_agentic_synthesis_pipeline(
     context = fetch_github_issue_context(issue_id)
     target = extract_intent_target(context, client)
 
-  bug_exists = verify_bug_reproduction(target, parser)
-  target.is_reproducible = bug_exists
-  if not bug_exists:
+  if not verify_bug_reproduction(target, parser):
     print(
       f"[Intent Agent] No bug found: model already parses '{target.expected_split}' correctly."
     )

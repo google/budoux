@@ -34,10 +34,7 @@ SEP = utils.SEP  # Canonical character separator '▁'
 class TestAlignToBaseParserSplits(unittest.TestCase):
   def test_align_to_base_parser_splits_negative_phrase(self) -> None:
     target = synthesize_samples.IntentTarget(
-      target_phrase="もはや",
-      expected_split="もはや",
-      is_positive=False,
-      is_reproducible=True,
+      target_phrase="もはや", expected_split="もはや"
     )
     mock_parser = MagicMock(spec=budoux.Parser)
     mock_parser.parse.return_value = [
@@ -58,10 +55,7 @@ class TestAlignToBaseParserSplits(unittest.TestCase):
 
   def test_align_to_base_parser_splits_positive_phrase(self) -> None:
     target = synthesize_samples.IntentTarget(
-      target_phrase="いよいよはじまる",
-      expected_split=f"いよいよ{SEP}はじまる",
-      is_positive=True,
-      is_reproducible=True,
+      target_phrase="いよいよはじまる", expected_split=f"いよいよ{SEP}はじまる"
     )
     mock_parser = MagicMock(spec=budoux.Parser)
     mock_parser.parse.return_value = ["いよいよは", "じまる", "決戦だ。"]
@@ -75,10 +69,7 @@ class TestAlignToBaseParserSplits(unittest.TestCase):
 
   def test_align_to_base_parser_splits_discards_missing_target(self) -> None:
     target = synthesize_samples.IntentTarget(
-      target_phrase="もはや",
-      expected_split="もはや",
-      is_positive=False,
-      is_reproducible=True,
+      target_phrase="もはや", expected_split="もはや"
     )
     mock_parser = MagicMock(spec=budoux.Parser)
     cands = ["関係のない完全に異なる文章です。"]
@@ -91,15 +82,11 @@ class TestParseDirectInput(unittest.TestCase):
     target = synthesize_samples.parse_direct_input("いよいよ/はじまる")
     self.assertEqual(target.target_phrase, "いよいよはじまる")
     self.assertEqual(target.expected_split, f"いよいよ{SEP}はじまる")
-    self.assertTrue(target.is_positive)
-    self.assertTrue(target.is_reproducible)
 
   def test_parse_direct_input_negative(self) -> None:
     target = synthesize_samples.parse_direct_input("もはや")
     self.assertEqual(target.target_phrase, "もはや")
     self.assertEqual(target.expected_split, "もはや")
-    self.assertFalse(target.is_positive)
-    self.assertTrue(target.is_reproducible)
 
 
 class TestFetchGithubIssueContext(unittest.TestCase):
@@ -122,9 +109,7 @@ class TestFetchGithubIssueContext(unittest.TestCase):
 class TestVerifyBugReproduction(unittest.TestCase):
   def test_verify_bug_reproduction_detects_bug(self) -> None:
     target = synthesize_samples.IntentTarget(
-      target_phrase="いよいよはじまる",
-      expected_split=f"いよいよ{SEP}はじまる",
-      is_positive=True,
+      target_phrase="いよいよはじまる", expected_split=f"いよいよ{SEP}はじまる"
     )
     mock_parser = MagicMock(spec=budoux.Parser)
     mock_parser.parse.return_value = ["いよいよは", "じまる"]
@@ -134,7 +119,7 @@ class TestVerifyBugReproduction(unittest.TestCase):
 
   def test_verify_bug_reproduction_no_bug(self) -> None:
     target = synthesize_samples.IntentTarget(
-      target_phrase="もはや", expected_split="もはや", is_positive=False
+      target_phrase="もはや", expected_split="もはや"
     )
     mock_parser = MagicMock(spec=budoux.Parser)
     mock_parser.parse.return_value = ["もはや"]
