@@ -28,8 +28,6 @@ import itertools
 import json
 import typing
 
-ArgList = list[str] | None
-
 
 def translate_icu(model: dict[str, dict[str, int]]) -> str:
   """Translates a model to the ICU Resource Bundle format.
@@ -108,8 +106,6 @@ def main() -> None:
     print(json.dumps(model, ensure_ascii=False, separators=(',', ':')))
   elif format == 'icu':
     print(translate_icu(model))
-  else:
-    pass
 
 
 if __name__ == '__main__':

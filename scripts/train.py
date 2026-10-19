@@ -17,7 +17,6 @@ import argparse
 import array
 import os
 import shutil
-import typing
 from collections import Counter
 from functools import partial
 from typing import NamedTuple
@@ -74,7 +73,7 @@ def extract_features(data_path: str, thres: int) -> list[str]:
   Returns:
     A list of features
   """
-  counter: typing.Counter[str] = Counter()
+  counter: Counter[str] = Counter()
   with open(data_path) as f:
     for row in f:
       cols = row.strip().split('\t')
@@ -238,44 +237,6 @@ def update(
 
 
 @partial(jax.jit, static_argnums=[4, 5])
-def _update_logitboost_jit(
-  F: jax.Array,
-  scores: jax.Array,
-  rows: jax.Array,
-  cols: jax.Array,
-  M: int,
-  N: int,
-  Y: jax.Array,
-  sample_weights: jax.Array,
-  learning_rate: float,
-) -> tuple[jax.Array, jax.Array, int, float]:
-  """Calculates the new ensemble score vector and contribution scores via LogitBoost."""
-  p = jax.nn.sigmoid(2.0 * F)
-  p_clipped = jnp.clip(p, 1e-6, 1.0 - 1e-6)
-  p_var = jnp.clip(p_clipped * (1.0 - p_clipped), 1e-4, 0.25)
-  g = sample_weights * (Y - p)
-  h = sample_weights * p_var
-  denom = jnp.sum(h) + EPS
-
-  g_sum = jnp.sum(g)
-  g_sparse = jax.ops.segment_sum(g.take(rows), cols, M)
-  G = 2.0 * g_sparse - g_sum
-
-  best_feature_index: int = jnp.argmax(jnp.abs(G))  # type: ignore
-  best_G = G.at[best_feature_index].get()
-  score: float = learning_rate * 0.5 * (best_G / denom)  # type: ignore
-
-  X_best = (
-    jnp.zeros(N, dtype=bool)
-    .at[jnp.where(cols == best_feature_index, rows, N)]
-    .set(True, mode='drop')
-  )
-  z_best = 2.0 * X_best.astype(jnp.float32) - 1.0
-  F_new = F + score * z_best
-  scores_new = scores.at[best_feature_index].add(score)
-  return F_new, scores_new, best_feature_index, score
-
-
 def update_logitboost(
   F: jax.Array,
   scores: jax.Array,
@@ -310,12 +271,30 @@ def update_logitboost(
   """
   if sample_weights is None:
     sample_weights = jnp.ones(N, dtype=jnp.float32)
-  return typing.cast(
-    tuple[jax.Array, jax.Array, int, float],
-    _update_logitboost_jit(
-      F, scores, rows, cols, M, N, Y, sample_weights, learning_rate
-    ),
+  p = jax.nn.sigmoid(2.0 * F)
+  p_clipped = jnp.clip(p, 1e-6, 1.0 - 1e-6)
+  p_var = jnp.clip(p_clipped * (1.0 - p_clipped), 1e-4, 0.25)
+  g = sample_weights * (Y - p)
+  h = sample_weights * p_var
+  denom = jnp.sum(h) + EPS
+
+  g_sum = jnp.sum(g)
+  g_sparse = jax.ops.segment_sum(g.take(rows), cols, M)
+  G = 2.0 * g_sparse - g_sum
+
+  best_feature_index: int = jnp.argmax(jnp.abs(G))  # type: ignore
+  best_G = G.at[best_feature_index].get()
+  score: float = learning_rate * 0.5 * (best_G / denom)  # type: ignore
+
+  X_best = (
+    jnp.zeros(N, dtype=bool)
+    .at[jnp.where(cols == best_feature_index, rows, N)]
+    .set(True, mode='drop')
   )
+  z_best = 2.0 * X_best.astype(jnp.float32) - 1.0
+  F_new = F + score * z_best
+  scores_new = scores.at[best_feature_index].add(score)
+  return F_new, scores_new, best_feature_index, score
 
 
 def fit(
@@ -440,7 +419,7 @@ def fit(
 
   for t in range(iters):
     if algorithm == 'logitboost':
-      F, scores, best_feature_index, score = _update_logitboost_jit(
+      F, scores, best_feature_index, score = update_logitboost(
         F,
         scores,
         dataset_train.X_rows,

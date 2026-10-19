@@ -79,8 +79,6 @@ def lint_dataset(paths: list[str], check_conflicts: bool = True) -> list[str]:
     defaultdict(lambda: defaultdict(list))
   )
 
-  total_sentences = 0
-
   for fpath in target_files:
     try:
       with open(fpath, encoding="utf-8") as f:
@@ -93,8 +91,6 @@ def lint_dataset(paths: list[str], check_conflicts: bool = True) -> list[str]:
       line = raw_line.strip()
       if not line or line.startswith("#"):
         continue
-
-      total_sentences += 1
 
       # 1. Format checks
       if utils.SEP + utils.SEP in line:

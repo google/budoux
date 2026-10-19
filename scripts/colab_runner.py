@@ -123,14 +123,11 @@ class ColabRunner:
     )
     self._run_cmd(cmd)
 
-  def exec_script(
-    self, script_path: str, output_image: str | None = None, timeout: float = 43200.0
-  ) -> None:
+  def exec_script(self, script_path: str, timeout: float = 43200.0) -> None:
     """Executes a local Python script remotely on the Colab VM.
 
     Args:
       script_path: Path to the local Python script.
-      output_image: Optional local path for intercepted Matplotlib plots.
       timeout: Execution timeout in seconds (default: 43200.0).
     """
     cmd = [
@@ -142,20 +139,16 @@ class ColabRunner:
       "--timeout",
       str(timeout),
     ]
-    if output_image:
-      cmd.extend(["--output-image", output_image])
     print(f"[Colab CLI] Running remote script execution ({script_path})...", flush=True)
     self._run_cmd(cmd)
 
-  def exec_code(
-    self, code: str, output_image: str | None = None, timeout: float = 43200.0
-  ) -> None:
+  def exec_code(self, code: str, timeout: float = 43200.0) -> None:
     """Executes inline Python code remotely on the Colab VM."""
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
       f.write(code)
       script_path = f.name
     try:
-      self.exec_script(script_path, output_image=output_image, timeout=timeout)
+      self.exec_script(script_path, timeout=timeout)
     finally:
       if os.path.exists(script_path):
         os.remove(script_path)
