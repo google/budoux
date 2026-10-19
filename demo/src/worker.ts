@@ -18,7 +18,7 @@ import { Parser, jaModel, jaWordModel, thModel, zhHansModel, zhHantModel } from 
 
 const parsers: { [key: string]: Parser } = {
   'ja': new Parser(jaModel),
-  'ja-word': new Parser(jaWordModel),
+  'ja_word': new Parser(jaWordModel),
   'zh-hans': new Parser(zhHansModel),
   'zh-hant': new Parser(zhHantModel),
   'th': new Parser(thModel),

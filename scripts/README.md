@@ -102,11 +102,14 @@ for your purpose when you build a custom model.
 You can make a source data file by hand or running data preparation scripts
 (`prepare_*.py`) that extracts segmented sentences from a corpus.
 Currently, this directory provides data preparation scripts such as
-[`prepare_knbc.py`](https://github.com/google/budoux/tree/main/scripts/prepare_knbc.py)
+[`prepare_knbc.py`](https://github.com/google/budoux/tree/main/scripts/prepare_knbc.py),
+[`prepare_unicode.py`](https://github.com/google/budoux/tree/main/scripts/prepare_unicode.py),
 and [`prepare_wisesight.py`](https://github.com/google/budoux/tree/main/scripts/prepare_wisesight.py).
-For Japanese, `prepare_knbc.py` generates a source text file from
-[Kyoto University and NTT Blog (KNBC) Corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/),
+For Japanese phrase segmentation, `prepare_knbc.py` generates a source text file
+from [Kyoto University and NTT Blog (KNBC) Corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/),
 which segments Japanese sentences by phrase.
+For Japanese word segmentation (`ja_word`), `prepare_unicode.py` extracts
+segmented sentences from the [Unicode Test Corpora](https://github.com/unicode-org/test-corpora).
 When we support other corpora as data sources, we should add the data
 preparation scripts for them in this directory with the `prepare_` prefix.
 
