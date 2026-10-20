@@ -171,15 +171,6 @@ class TestPreprocess(unittest.TestCase):
     self.assertEqual(train_dataset.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertIsNone(val_dataset)
 
-  def test_utf8_feature_extraction(self) -> None:
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
-      train_data_path = tf.name
-      self.addCleanup(os.remove, tf.name)
-    with open(train_data_path, 'w', encoding='utf-8') as f:
-      f.write('1\tBW1:今日\tBC1:は\n-1\tBW1:今日\n1\tBW1:今日\tBC1:は\tBC2:良\n')
-    features = train.extract_features(train_data_path, 1)
-    self.assertEqual(features, ['BW1:今日', 'BC1:は'])
-
 
 class TestPred(unittest.TestCase):
   def test_standard_setup(self) -> None:
@@ -541,6 +532,15 @@ class TestExtractFeatures(unittest.TestCase):
       f.write('2\tfoo\n-3\tbar\n1\tbaz\n')
     result = train.extract_features(entries_file_path, 1)
     self.assertEqual(result, ['bar', 'foo'])
+
+  def test_utf8_feature_extraction(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      train_data_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with open(train_data_path, 'w', encoding='utf-8') as f:
+      f.write('1\tBW1:今日\tBC1:は\n-1\tBW1:今日\n1\tBW1:今日\tBC1:は\tBC2:良\n')
+    features = train.extract_features(train_data_path, 1)
+    self.assertEqual(features, ['BW1:今日', 'BC1:は'])
 
 
 class TestLoadDataset(unittest.TestCase):
