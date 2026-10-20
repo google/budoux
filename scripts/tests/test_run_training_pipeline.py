@@ -74,6 +74,55 @@ class TestRunTrainingPipeline(unittest.TestCase):
       lr_idx = train_calls[0].index("--learning-rate")
       self.assertEqual(train_calls[0][lr_idx + 1], "0.5")
 
+  def test_build_train_cmd_required_args(self) -> None:
+    cmd = run_training_pipeline._build_train_cmd(
+      executable=["python3", "-u"],
+      script_path="scripts/train.py",
+      train_data="cleaned.txt",
+      weights_path="weights.txt",
+      log_path="train.log",
+      iterations=100,
+      feature_thres=2,
+      algorithm="logitboost",
+    )
+    self.assertEqual(
+      cmd,
+      [
+        "python3",
+        "-u",
+        "scripts/train.py",
+        "cleaned.txt",
+        "-o",
+        "weights.txt",
+        "--log",
+        "train.log",
+        "--iter",
+        "100",
+        "--feature-thres",
+        "2",
+        "--algorithm",
+        "logitboost",
+      ],
+    )
+
+  def test_build_train_cmd_optional_args(self) -> None:
+    cmd = run_training_pipeline._build_train_cmd(
+      executable=["python3"],
+      script_path="scripts/train.py",
+      train_data="cleaned.txt",
+      weights_path="weights.txt",
+      log_path="train.log",
+      iterations=100,
+      feature_thres=2,
+      algorithm="logitboost",
+      val_data="val.txt",
+      patience=5,
+      learning_rate=0.3,
+    )
+    self.assertEqual(
+      cmd[-6:], ["--val-data", "val.txt", "--patience", "5", "--learning-rate", "0.3"]
+    )
+
   def test_run_retraining_pipeline_generates_valid_json(self) -> None:
     pytest.importorskip("jax")
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -133,7 +182,24 @@ class TestRunTrainingPipeline(unittest.TestCase):
       mock_colab_runner_cls.assert_called_once_with(
         session_name="budoux-train-T4", accelerator="T4"
       )
-      self.assertTrue(mock_runner.exec_cmd.called)
+      mock_runner.exec_cmd.assert_called_once_with(
+        [
+          "python3",
+          "-u",
+          "/content/train.py",
+          "/content/cleaned.txt",
+          "-o",
+          "/content/weights.txt",
+          "--log",
+          "/content/train.log",
+          "--iter",
+          "10",
+          "--feature-thres",
+          "2",
+          "--algorithm",
+          "logitboost",
+        ]
+      )
 
       uploaded_remote_paths = [
         call[0][1] for call in mock_runner.upload_file.call_args_list
