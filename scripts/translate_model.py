@@ -99,7 +99,7 @@ def main() -> None:
   args = parser.parse_args()
   model_path: str = args.model
   format: str = args.format
-  with open(model_path) as f:
+  with open(model_path, encoding='utf-8') as f:
     model = json.load(f)
   model = normalize(model)
   if format == 'json':

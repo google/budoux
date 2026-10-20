@@ -204,7 +204,7 @@ def process_knbc(
     if file[-11:] != '-morph.html':
       continue
     parser = KNBCHTMLParser(granularity)
-    with open(os.path.join(html_dir, file)) as f:
+    with open(os.path.join(html_dir, file), encoding='utf-8') as f:
       data = f.read()
     parser.feed(data)
     chunks = parser.chunks

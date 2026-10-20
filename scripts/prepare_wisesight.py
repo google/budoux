@@ -50,7 +50,10 @@ def main() -> None:
   source_filepath = args.source_filepath
   target_filepath = args.outfile
 
-  with open(target_filepath, 'w') as outfile, open(source_filepath) as infile:
+  with (
+    open(target_filepath, 'w', encoding='utf-8') as outfile,
+    open(source_filepath, encoding='utf-8') as infile,
+  ):
     for line in infile:
       line = line.strip()
       line = re.sub(r'https?://[^ ]+', '', line)  # Remove URLs

@@ -138,7 +138,7 @@ def main() -> None:
   model_filename = args.outfile
   scale = args.scale
   top_k = args.top_k
-  with open(weights_filename) as f:
+  with open(weights_filename, encoding='utf-8') as f:
     weights = f.readlines()
   model = aggregate_scores(weights)
   if top_k is not None:
