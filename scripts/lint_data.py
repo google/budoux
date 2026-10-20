@@ -29,19 +29,6 @@ from budoux import utils
 from scripts import encode_data
 
 
-def reconstruct_context(features: tuple[str, ...]) -> str:
-  """Reconstructs readable 6-character context from unigram features."""
-  unigrams: dict[int, str] = {}
-  for feat in features:
-    if feat.startswith("UW"):
-      parts = feat.split(":", 1)
-      if len(parts) == 2 and parts[0][2:].isdigit():
-        unigrams[int(parts[0][2:])] = parts[1]
-  left = "".join(unigrams.get(i, " ") for i in range(1, 4))
-  right = "".join(unigrams.get(i, " ") for i in range(4, 7))
-  return f"{left} | {right}"
-
-
 def collect_files(paths: list[str]) -> list[str]:
   """Expands directory and file paths into a sorted list of text files."""
   files: list[str] = []
@@ -119,18 +106,7 @@ def lint_dataset(paths: list[str], check_conflicts: bool = True) -> list[str]:
       if check_conflicts:
         sentence, sep_indices = encode_data.normalize_input(line)
         for i in range(1, len(sentence) + 1):
-          feat = tuple(
-            sorted(
-              encode_data.get_feature(
-                sentence[i - 3] if i > 2 else encode_data.INVALID,
-                sentence[i - 2] if i > 1 else encode_data.INVALID,
-                sentence[i - 1],
-                sentence[i] if i < len(sentence) else encode_data.INVALID,
-                sentence[i + 1] if i + 1 < len(sentence) else encode_data.INVALID,
-                sentence[i + 2] if i + 2 < len(sentence) else encode_data.INVALID,
-              )
-            )
-          )
+          feat = tuple(sorted(encode_data.get_features_at(sentence, i)))
           is_break = i in sep_indices
           label = 1 if is_break else -1
           feature_labels[feat][label].append((fpath, line_num, line, i))
@@ -142,7 +118,7 @@ def lint_dataset(paths: list[str], check_conflicts: bool = True) -> list[str]:
       if len(label_map) > 1
     }
     for feat, label_map in conflicts.items():
-      context_str = reconstruct_context(feat)
+      context_str = encode_data.reconstruct_context(feat)
       pos_instances = label_map[1]
       neg_instances = label_map[-1]
 
