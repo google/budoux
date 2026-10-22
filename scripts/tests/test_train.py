@@ -292,6 +292,35 @@ class TestUpdateLogitBoost(unittest.TestCase):
     self.assertEqual(feat_unit, feat_scaled)
     self.assertAlmostEqual(score_unit, score_scaled, places=5)
 
+  def test_zero_drift_paired_balance(self) -> None:
+    # Feature 0 is purely positive (20 rows where Y=1.0, g_act > 0) and
+    # feature 1 is purely negative (20 rows where Y=0.0, g_act < 0).
+    X = jnp.tile(jnp.array([[1, 0], [0, 1]]), (20, 1))
+    rows, cols = jnp.where(X == 1)
+    M = 2
+    N = X.shape[0]
+    Y = jnp.tile(jnp.array([1.0, 0.0]), 20)
+    F = jnp.zeros(N, dtype=jnp.float32)
+    scores = jnp.zeros(M)
+
+    # Steps 1-2: scores.sum() < 0.5, so valid selects feature 0 (positive steps)
+    # until scores.sum() > 0.5 (base_score < 0).
+    F, scores, feat_1, score_1 = train.update_logitboost(F, scores, rows, cols, M, N, Y)
+    self.assertEqual(feat_1, 0)
+    self.assertGreater(float(score_1), 0.25)
+    F, scores, feat_2, score_2 = train.update_logitboost(F, scores, rows, cols, M, N, Y)
+    self.assertEqual(feat_2, 0)
+    self.assertGreater(float(score_2), 0.25)
+    self.assertGreater(float(jnp.sum(scores)), 0.5)
+
+    # Step 3: Since scores.sum() > 0.5, valid flips to negative-gradient
+    # features and selects feature 1 (score_3 < 0), keeping 0 < scores.sum() < 1.0.
+    F, scores, feat_3, score_3 = train.update_logitboost(F, scores, rows, cols, M, N, Y)
+    self.assertEqual(feat_3, 1)
+    self.assertLess(float(score_3), 0.0)
+    self.assertGreater(float(jnp.sum(scores)), 0.0)
+    self.assertLess(float(jnp.sum(scores)), 1.0)
+
 
 class TestFit(unittest.TestCase):
   def test_fit(self) -> None:
@@ -304,7 +333,7 @@ class TestFit(unittest.TestCase):
     # Prepare a dataset that the 2nd feature (= the 2nd col in X) perfectly
     # correlates with Y in a negative way.
     X = jnp.array([[0, 1, 1, 1], [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 0, 1]])
-    Y = jnp.array([0, 0, 1, 1])
+    Y = jnp.array([-1, -1, 1, 1])
     rows, cols = jnp.where(X == 1)
     dataset = train.Dataset(rows, cols, Y)
     features = ['a', 'b', 'c']
@@ -385,7 +414,7 @@ class TestFit(unittest.TestCase):
       log_file_path = tf.name
       self.addCleanup(os.remove, tf.name)
     X = jnp.array([[0, 1, 1, 1], [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 0, 1]])
-    Y = jnp.array([0, 0, 1, 1])
+    Y = jnp.array([-1, -1, 1, 1])
     rows, cols = jnp.where(X == 1)
     dataset = train.Dataset(rows, cols, Y)
     features = ['a', 'b', 'c']

@@ -375,9 +375,7 @@ covered by the data encoding section in detail.
 The keys in the second layer (e.g. `日` and `天`) are the corresponding feature
 values.
 
-You can generate a model file by simply passing the weight file to [`build_model.py`](https://github.com/google/budoux/tree/main/scripts/build_model.py)
-(optionally passing `--top-k` to prune the exported model to the top $K$
-features by weight magnitude).
+You can generate a model file by simply passing the weight file to [`build_model.py`](https://github.com/google/budoux/tree/main/scripts/build_model.py).
 
 ```bash
 python scripts/build_model.py weights.txt -o model.json

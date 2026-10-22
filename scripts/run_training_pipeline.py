@@ -33,13 +33,12 @@ KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
 
 def run_retraining_pipeline(
   lang: str = "ja",
-  iterations: int = 200000,
+  iterations: int = 10000,
   feature_thres: int = 2,
   split_dir: str = "tmp/splits",
   out_model: str = "",
   weight_factor: int | None = None,
   patience: int | None = None,
-  top_k: int | None = None,
   algorithm: str = "logitboost",
   learning_rate: float | None = None,
   colab: bool = False,
@@ -248,8 +247,6 @@ def run_retraining_pipeline(
       "-o",
       out_model,
     ]
-    if top_k is not None:
-      build_cmd.extend(["--top-k", str(top_k)])
     subprocess.run(build_cmd, check=True)
 
     print("[Evaluation] Evaluating quality suite benchmark...")
@@ -295,8 +292,8 @@ def main() -> None:
   parser.add_argument(
     "--iter",
     type=int,
-    default=200000,
-    help="Number of training iterations (default: 200000)",
+    default=10000,
+    help="Number of training iterations (default: 10000)",
   )
   parser.add_argument(
     "--feature-thres",
@@ -327,12 +324,6 @@ def main() -> None:
     type=int,
     default=None,
     help="Number of evaluation spans without improvement before early stopping.",
-  )
-  parser.add_argument(
-    "--top-k",
-    type=int,
-    default=None,
-    help="Maximum number of features to retain in the exported model.",
   )
   parser.add_argument(
     "--algorithm",
@@ -371,7 +362,6 @@ def main() -> None:
     out_model=args.out_model,
     weight_factor=args.weight_factor,
     patience=args.patience,
-    top_k=args.top_k,
     algorithm=args.algorithm,
     learning_rate=args.learning_rate,
     colab=args.colab,
