@@ -210,3 +210,10 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;"><p>今日は\u200b▁天気です。</p></span>'
     self.assertEqual(result, expected)
+
+  def test_with_existing_separators(self) -> None:
+    chunks = ['abc', 'def\u200b', 'ghi']
+    html = 'abc<wbr>def\u200bghi'
+    result = html_processor.resolve(chunks, html)
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<wbr>def\u200bghi</span>'
+    self.assertEqual(result, expected)

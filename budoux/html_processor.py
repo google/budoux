@@ -93,6 +93,8 @@ class HTMLChunkResolver(HTMLParser):
     super().__init__()
     self.text = ''.join(chunks)
     self.boundaries = set(itertools.accumulate(len(c) for c in chunks[:-1]))
+    # Don't add a separator where the source already has a ZWSP or `<wbr>`.
+    self.boundaries -= {i + 1 for i, c in enumerate(self.text) if c == '\u200b'}
     self.separator = separator
     self.to_skip = False
     self.scan_index = 0
@@ -112,6 +114,8 @@ class HTMLChunkResolver(HTMLParser):
         attr_pairs.append(f' {attr[0]}="{html.escape(attr[1])}"')
     encoded_attrs = ''.join(attr_pairs)
     self.element_stack.append(ElementState(tag, self.to_skip))
+    if tag == 'wbr':
+      self.boundaries.discard(self.scan_index)
     if tag.upper() in SKIP_NODES:
       if not self.to_skip and self.scan_index in self.boundaries:
         self.boundaries.remove(self.scan_index)
