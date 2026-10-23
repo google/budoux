@@ -18,27 +18,14 @@ but different labels.
 """
 
 import argparse
+import os
+import sys
 from collections import defaultdict
 
+LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(LIB_PATH))
 
-def _reconstruct_text_from_unigram(features: str) -> str:
-  """Reconstructs the human-readable text from unigrams."""
-  feature_list = features.split('\t')
-  unigrams = {}
-  for feat in feature_list:
-    if not feat.startswith('UW'):
-      continue
-    parts = feat.split(':', 1)
-    if len(parts) != 2:
-      continue
-    idx = int(parts[0][2:])
-    unigrams[idx] = parts[1]
-
-  # We expect UW1 to UW6
-  full_width_space = chr(0x3000)
-  left = "".join([unigrams.get(i, full_width_space) for i in range(1, 4)])
-  right = "".join([unigrams.get(i, full_width_space) for i in range(4, 7)])
-  return f"{left} / {right}"
+from scripts import encode_data
 
 
 def find_conflicts(
@@ -94,7 +81,8 @@ def find_conflicts(
   if conflicts:
     print(f"Found {len(conflicts)} unique feature sets with conflicting labels:\n")
     for features in conflicts:
-      print(f"Features: {_reconstruct_text_from_unigram(features)}")
+      context_str = encode_data.reconstruct_context(features.split('\t'))
+      print(f"Features: {context_str}")
       pos_w = features_to_pos_weight[features]
       neg_w = features_to_neg_weight[features]
       total_w = pos_w + neg_w

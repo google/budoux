@@ -19,6 +19,7 @@ import itertools
 import multiprocessing
 import os
 import sys
+from collections.abc import Iterable
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
@@ -67,6 +68,46 @@ def get_feature(w1: str, w2: str, w3: str, w4: str, w5: str, w6: str) -> list[st
     if INVALID in value:
       del raw_feature[key]
   return [f'{item[0]}:{item[1]}' for item in raw_feature.items()]
+
+
+def get_features_at(sentence: str, i: int) -> list[str]:
+  """Generates features around the break point at index `i` in `sentence`.
+
+  Args:
+    sentence (str): A character sequence without separator markers.
+    i (int): Break point index (`1 <= i <= len(sentence)`).
+
+  Returns:
+    The extracted features (`list[str]`).
+  """
+  return get_feature(
+    sentence[i - 3] if i > 2 else INVALID,
+    sentence[i - 2] if i > 1 else INVALID,
+    sentence[i - 1],
+    sentence[i] if i < len(sentence) else INVALID,
+    sentence[i + 1] if i + 1 < len(sentence) else INVALID,
+    sentence[i + 2] if i + 2 < len(sentence) else INVALID,
+  )
+
+
+def reconstruct_context(features: Iterable[str]) -> str:
+  """Reconstructs a readable 6-character context string from unigram features.
+
+  Args:
+    features: An iterable of feature strings (e.g. `'UW1:a'`, `'UW2:b'`, ...).
+
+  Returns:
+    A formatted 6-character context string (`"<left> | <right>"`).
+  """
+  unigrams: dict[int, str] = {}
+  for feat in features:
+    if feat.startswith('UW'):
+      parts = feat.split(':', 1)
+      if len(parts) == 2 and parts[0][2:].isdigit():
+        unigrams[int(parts[0][2:])] = parts[1]
+  left = ''.join(unigrams.get(i, ' ') for i in range(1, 4))
+  right = ''.join(unigrams.get(i, ' ') for i in range(4, 7))
+  return f'{left} | {right}'
 
 
 def parse_args(test: ArgList = None) -> argparse.Namespace:
@@ -118,14 +159,7 @@ def process(i: int, sentence: str, sep_indices: set[int], scale: int) -> str:
     sep_indices (typing.Set[int]): A set of separator indices.
     scale (int): A weight scale for the entries.
   """
-  feature = get_feature(
-    sentence[i - 3] if i > 2 else INVALID,
-    sentence[i - 2] if i > 1 else INVALID,
-    sentence[i - 1],
-    sentence[i] if i < len(sentence) else INVALID,
-    sentence[i + 1] if i + 1 < len(sentence) else INVALID,
-    sentence[i + 2] if i + 2 < len(sentence) else INVALID,
-  )
+  feature = get_features_at(sentence, i)
   positive = i in sep_indices
   line = '\t'.join([f'{scale}' if positive else f'{-scale}', *feature])
   return line

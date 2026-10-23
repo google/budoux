@@ -67,6 +67,46 @@ class TestGetFeature(unittest.TestCase):
       'Should omit the Bigram feature that covers an invalid character.',
     )
 
+  def test_get_features_at_middle(self) -> None:
+    sentence = 'abcdef'
+    self.assertEqual(
+      set(encode_data.get_features_at(sentence, 3)),
+      set(encode_data.get_feature('a', 'b', 'c', 'd', 'e', 'f')),
+    )
+
+  def test_get_features_at_start_boundary(self) -> None:
+    sentence = 'abcdef'
+    feat_start = set(encode_data.get_features_at(sentence, 1))
+    self.assertIn('UW3:a', feat_start)
+    self.assertIn('UW4:b', feat_start)
+    self.assertFalse(
+      any(f.startswith(('UW1:', 'UW2:', 'BW1:', 'TW1:')) for f in feat_start)
+    )
+
+  def test_get_features_at_end_boundary(self) -> None:
+    sentence = 'abcdef'
+    feat_end = set(encode_data.get_features_at(sentence, 6))
+    self.assertIn('UW1:d', feat_end)
+    self.assertIn('UW2:e', feat_end)
+    self.assertIn('UW3:f', feat_end)
+    self.assertFalse(
+      any(f.startswith(('UW4:', 'UW5:', 'UW6:', 'BW2:')) for f in feat_end)
+    )
+
+
+class TestReconstructContext(unittest.TestCase):
+  def test_full_context(self) -> None:
+    features = ['UW1:a', 'UW2:b', 'UW3:c', 'UW4:d', 'UW5:e', 'UW6:f', 'BW1:bc']
+    self.assertEqual(encode_data.reconstruct_context(features), 'abc | def')
+
+  def test_partial_context_pads_with_spaces(self) -> None:
+    features = ['UW3:a', 'UW4:b', 'UW5:c']
+    self.assertEqual(encode_data.reconstruct_context(features), '  a | bc ')
+
+  def test_ignores_malformed_unigram_features(self) -> None:
+    features = ['UWX:ignored', 'UW1']
+    self.assertEqual(encode_data.reconstruct_context(features), '    |    ')
+
 
 class TestArgParse(unittest.TestCase):
   def test_cmdargs_invalid_option(self) -> None:
