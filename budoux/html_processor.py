@@ -94,7 +94,9 @@ class HTMLChunkResolver(HTMLParser):
     self.text = ''.join(chunks)
     self.boundaries = set(itertools.accumulate(len(c) for c in chunks[:-1]))
     # Don't add a separator where the source already has a ZWSP or `<wbr>`.
-    self.boundaries -= {i + 1 for i, c in enumerate(self.text) if c == '\u200b'}
+    self.boundaries -= {i for i, c in enumerate(self.text) if c == '\u200b'} | {
+      i + 1 for i, c in enumerate(self.text) if c == '\u200b'
+    }
     self.separator = separator
     self.to_skip = False
     self.scan_index = 0

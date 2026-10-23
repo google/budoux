@@ -217,3 +217,21 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html)
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<wbr>def\u200bghi</span>'
     self.assertEqual(result, expected)
+
+  def test_with_existing_separators_at_start_of_chunk(self) -> None:
+    chunks = ['abc', '\u200bdef']
+    html = 'abc\u200bdef'
+    result = html_processor.resolve(chunks, html)
+    expected = (
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200bdef</span>'
+    )
+    self.assertEqual(result, expected)
+
+  def test_with_standalone_existing_separator(self) -> None:
+    chunks = ['abc', '\u200b', 'def']
+    html = 'abc\u200bdef'
+    result = html_processor.resolve(chunks, html)
+    expected = (
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200bdef</span>'
+    )
+    self.assertEqual(result, expected)
