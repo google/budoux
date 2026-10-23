@@ -16,13 +16,8 @@
 import json
 import os
 import pathlib
-import sys
 import tempfile
 import unittest
-
-# module hack to allow importing budoux from workspace root
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import utils
 from budoux.evaluate_model import evaluate
@@ -143,7 +138,3 @@ class TestEvaluateModel(unittest.TestCase):
     self.assertAlmostEqual(metrics['recall'], 2 / 3)
     self.assertAlmostEqual(metrics['fscore'], 0.8)
     self.assertEqual(len(metrics['errors']), 2)
-
-
-if __name__ == '__main__':
-  unittest.main()
