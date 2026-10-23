@@ -271,30 +271,47 @@ def update_logitboost(
   """
   if sample_weights is None:
     sample_weights = jnp.ones(N, dtype=jnp.float32)
-  p = jax.nn.sigmoid(2.0 * F)
-  p_clipped = jnp.clip(p, 1e-6, 1.0 - 1e-6)
-  p_var = jnp.clip(p_clipped * (1.0 - p_clipped), 1e-4, 0.25)
+  p = jnp.clip(jax.nn.sigmoid(2.0 * F), 1e-6, 1.0 - 1e-6)
   g = sample_weights * (Y - p)
-  h = sample_weights * p_var
-  denom = jnp.sum(h) + EPS
+  h = sample_weights * jnp.clip(p * (1.0 - p), 1e-4, 0.25)
 
-  g_sum = jnp.sum(g)
-  g_sparse = jax.ops.segment_sum(g.take(rows), cols, M)
-  G = 2.0 * g_sparse - g_sum
+  # Select features by L2-regularized second-order Taylor gain over active rows
+  # {i | X_{i,j} = 1}; normalizing by h_act (not global sum(h)) preserves rare features.
+  g_act = jax.ops.segment_sum(g.take(rows), cols, M)
+  h_act = jax.ops.segment_sum(h.take(rows), cols, M)
+  reg = 2.0 * (jnp.mean(sample_weights) + EPS)
+  gain = jnp.square(g_act) / (h_act + reg)
 
-  best_feature_index: int = jnp.argmax(jnp.abs(G))  # type: ignore
-  best_G = G.at[best_feature_index].get()
-  score: float = learning_rate * 0.5 * (best_G / denom)  # type: ignore
+  # Alternate step signs around target_sum = 0.5 * max(1, learning_rate) (OOV
+  # log-odds = -2 * sum(scores) ≈ -1.0). With |step| <= 2.0, each step is bounded
+  # by 0.5 * learning_rate, guaranteeing sum(scores) > 0 (base_score < 0) for all t >= 1.
+  target_sum = 0.5 * jnp.maximum(1.0, learning_rate)
+  valid = g_act * (jnp.sum(scores) - target_sum) < 0
+  best_feature_index: int = jnp.argmax(  # type: ignore
+    jnp.where(jnp.any(valid), jnp.where(valid, gain, -1.0), gain)
+  )
+
+  # Since F_i = scores.dot(2X_i - 1) and p = sigmoid(2F), adding `score` changes
+  # the active-vs-inactive logit by 4 * score; 0.25 normalizes lr=1 to a 1x Newton step.
+  # Clipping step to [-2, 2] bounds |score| <= 0.5 * learning_rate.
+  step = jnp.clip(
+    g_act.at[best_feature_index].get() / (h_act.at[best_feature_index].get() + reg),
+    -2.0,
+    2.0,
+  )
+  score: float = learning_rate * 0.25 * step  # type: ignore
 
   X_best = (
-    jnp.zeros(N, dtype=bool)
+    jnp.zeros(N, dtype=jnp.float32)
     .at[jnp.where(cols == best_feature_index, rows, N)]
-    .set(True, mode='drop')
+    .set(1.0, mode='drop')
   )
-  z_best = 2.0 * X_best.astype(jnp.float32) - 1.0
-  F_new = F + score * z_best
-  scores_new = scores.at[best_feature_index].add(score)
-  return F_new, scores_new, best_feature_index, score
+  return (
+    F + score * (2.0 * X_best - 1.0),
+    scores.at[best_feature_index].add(score),
+    best_feature_index,
+    score,
+  )
 
 
 def fit(
