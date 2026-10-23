@@ -15,7 +15,6 @@
 
 import math
 import os
-import sys
 import tempfile
 import unittest
 
@@ -23,10 +22,6 @@ import pytest
 
 pytest.importorskip("jax")
 from jax import numpy as jnp
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import train
 
@@ -666,7 +661,3 @@ class TestLoadDataset(unittest.TestCase):
     self.assertEqual(result.X_rows.tolist(), [0, 0, 1, 2, 2, 2, 3, 3, 4])
     self.assertEqual(result.X_cols.tolist(), [0, 1, 0, 0, 1, 2, 1, 0, 2])
     self.assertEqual(result.Y.tolist(), [1, -14, 10, -11, -1])
-
-
-if __name__ == '__main__':
-  unittest.main()

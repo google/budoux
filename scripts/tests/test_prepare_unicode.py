@@ -14,13 +14,8 @@
 """Tests the prepare Unicode script."""
 
 import os
-import sys
 import tempfile
 import unittest
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import prepare_unicode
 
@@ -109,7 +104,3 @@ class TestPrepareUnicode(unittest.TestCase):
           outfile=os.path.join(tmp_dir, "out.txt"),
           corpus_dir=corpus_dir,
         )
-
-
-if __name__ == "__main__":
-  unittest.main()

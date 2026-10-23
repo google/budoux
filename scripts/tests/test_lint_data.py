@@ -14,12 +14,8 @@
 """Tests for the dataset linter script."""
 
 import os
-import sys
 import tempfile
 import unittest
-
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import lint_data
 
@@ -99,7 +95,3 @@ class TestLintData(unittest.TestCase):
   def test_main_cli_nonexistent_path(self) -> None:
     with self.assertRaises(FileNotFoundError):
       lint_data.main(["/nonexistent/path/for/sure"])
-
-
-if __name__ == "__main__":
-  unittest.main()

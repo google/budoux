@@ -18,10 +18,6 @@ import sys
 import unittest
 from os.path import abspath, dirname, join
 
-# module hack
-LIB_PATH = join(dirname(__file__), '..')
-sys.path.insert(0, abspath(LIB_PATH))
-
 from budoux import main
 
 if isinstance(sys.stdin, io.TextIOWrapper):
@@ -171,7 +167,3 @@ class TestStdin(unittest.TestCase):
       'これは<b>\u200bテスト</b>です。\n'
       '</span>',
     )
-
-
-if __name__ == '__main__':
-  unittest.main()
