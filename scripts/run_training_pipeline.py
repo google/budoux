@@ -31,6 +31,45 @@ from scripts import colab_runner, encode_data
 KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
 
 
+def _build_train_cmd(
+  *,
+  executable: list[str],
+  script_path: str,
+  train_data: str,
+  weights_path: str,
+  log_path: str,
+  iterations: int,
+  feature_thres: int,
+  algorithm: str,
+  val_data: str | None = None,
+  patience: int | None = None,
+  learning_rate: float | None = None,
+) -> list[str]:
+  """Builds the CLI command list to invoke `scripts/train.py`."""
+  cmd = [
+    *executable,
+    script_path,
+    train_data,
+    "-o",
+    weights_path,
+    "--log",
+    log_path,
+    "--iter",
+    str(iterations),
+    "--feature-thres",
+    str(feature_thres),
+    "--algorithm",
+    algorithm,
+  ]
+  if val_data is not None:
+    cmd.extend(["--val-data", val_data])
+  if patience is not None:
+    cmd.extend(["--patience", str(patience)])
+  if learning_rate is not None:
+    cmd.extend(["--learning-rate", str(learning_rate)])
+  return cmd
+
+
 def run_retraining_pipeline(
   lang: str = "ja",
   iterations: int = 10000,
@@ -109,6 +148,7 @@ def run_retraining_pipeline(
     cleaned_train = os.path.join(tmp, "cleaned.txt")
     val_encoded = os.path.join(tmp, "val_encoded.txt")
     weights_path = os.path.join(tmp, "weights.txt")
+    log_path = os.path.join(tmp, "train.log")
 
     print("[Encode] Encoding feature boundaries...")
     if os.path.exists(knbc_train):
@@ -173,6 +213,8 @@ def run_retraining_pipeline(
         check=True,
       )
 
+    has_val = os.path.exists(val_encoded)
+
     print(f"[Train] Fitting JAX model ({iterations} iterations)...")
     if colab:
       sess = session_name or f"budoux-train-{accelerator}"
@@ -183,60 +225,40 @@ def run_retraining_pipeline(
         runner.upload_file(
           os.path.join(LIB_PATH, "scripts", "train.py"), "/content/train.py"
         )
-        if os.path.exists(val_encoded):
+        if has_val:
           runner.upload_file(val_encoded, "/content/val_encoded.txt")
 
-        # Outputs training metrics and weights regularly across total iterations.
-        out_span = min(5000, max(1, iterations // 10))
-        remote_args = [
-          "python3",
-          "-u",
-          "/content/train.py",
-          "/content/cleaned.txt",
-          "-o",
-          "/content/weights.txt",
-          "--log",
-          "/content/train.log",
-          "--iter",
-          str(iterations),
-          "--feature-thres",
-          str(feature_thres),
-          "--out-span",
-          str(out_span),
-          "--algorithm",
-          algorithm,
-        ]
-
-        if os.path.exists(val_encoded):
-          remote_args.extend(["--val-data", "/content/val_encoded.txt"])
-        if patience is not None:
-          remote_args.extend(["--patience", str(patience)])
-        if learning_rate is not None:
-          remote_args.extend(["--learning-rate", str(learning_rate)])
+        remote_args = _build_train_cmd(
+          executable=["python3", "-u"],
+          script_path="/content/train.py",
+          train_data="/content/cleaned.txt",
+          weights_path="/content/weights.txt",
+          log_path="/content/train.log",
+          iterations=iterations,
+          feature_thres=feature_thres,
+          algorithm=algorithm,
+          val_data="/content/val_encoded.txt" if has_val else None,
+          patience=patience,
+          learning_rate=learning_rate,
+        )
 
         runner.exec_cmd(remote_args)
         runner.download_file("/content/weights.txt", weights_path)
 
     else:
-      train_cmd = [
-        sys.executable,
-        "scripts/train.py",
-        cleaned_train,
-        "-o",
-        weights_path,
-        "--iter",
-        str(iterations),
-        "--feature-thres",
-        str(feature_thres),
-        "--algorithm",
-        algorithm,
-      ]
-      if os.path.exists(val_encoded):
-        train_cmd.extend(["--val-data", val_encoded])
-      if patience is not None:
-        train_cmd.extend(["--patience", str(patience)])
-      if learning_rate is not None:
-        train_cmd.extend(["--learning-rate", str(learning_rate)])
+      train_cmd = _build_train_cmd(
+        executable=[sys.executable],
+        script_path="scripts/train.py",
+        train_data=cleaned_train,
+        weights_path=weights_path,
+        log_path=log_path,
+        iterations=iterations,
+        feature_thres=feature_thres,
+        algorithm=algorithm,
+        val_data=val_encoded if has_val else None,
+        patience=patience,
+        learning_rate=learning_rate,
+      )
       subprocess.run(train_cmd, check=True)
 
     print(f"[Export] Exporting compact JSON model to {out_model}...")

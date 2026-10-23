@@ -17,6 +17,7 @@ import argparse
 import array
 import os
 import shutil
+import sys
 from collections import Counter
 from functools import partial
 from typing import NamedTuple
@@ -29,7 +30,6 @@ DEFAULT_OUTPUT_NAME = 'weights.txt'
 DEFAULT_LOG_NAME = 'train.log'
 DEFAULT_FEATURE_THRES = 10
 DEFAULT_ITERATION = 10000
-DEFAULT_OUT_SPAN = 100
 DEFAULT_ALGORITHM = 'adaboost'
 ALGORITHMS = ('adaboost', 'logitboost')
 DEFAULT_LEARNING_RATE = 1.0
@@ -351,6 +351,10 @@ def fit(
   algorithm = algorithm.lower()
   if algorithm not in ALGORITHMS:
     raise ValueError(f"Unknown algorithm: {algorithm}. Must be one of {ALGORITHMS}")
+  if iters <= 0:
+    raise ValueError(f"iters must be positive, got {iters}")
+  if out_span <= 0:
+    raise ValueError(f"out_span must be positive, got {out_span}")
   if learning_rate <= 0:
     raise ValueError(f"learning_rate must be positive, got {learning_rate}")
 
@@ -359,7 +363,7 @@ def fit(
   with open(log_filename, 'w', encoding='utf-8') as f:
     f.write('iter\ttrain_accuracy\ttrain_precision\ttrain_recall\ttrain_fscore')
     if dataset_val:
-      f.write('\ttest_accuracy\ttest_precision\ttest_recall\ttest_fscore')
+      f.write('\tval_accuracy\tval_precision\tval_recall\tval_fscore')
     f.write('\n')
   print(f'Outputting learned weights to {weights_filename} ...')
 
@@ -367,9 +371,9 @@ def fit(
   scores = jnp.zeros(M)
   feature_score_buffer: list[tuple[str, float]] = []
   N_train = dataset_train.Y.shape[0]
-  N_test = dataset_val.Y.shape[0] if dataset_val else 0
+  N_val = dataset_val.Y.shape[0] if dataset_val else 0
   Y_train = dataset_train.Y > 0
-  Y_test = dataset_val.Y > 0 if dataset_val else None
+  Y_val = dataset_val.Y > 0 if dataset_val else None
   best_val_fscore = -1.0
   patience_counter = 0
   best_weights_path = weights_filename + '.best'
@@ -402,21 +406,21 @@ def fit(
       )
 
       if dataset_val:
-        pred_test = pred(scores, dataset_val.X_rows, dataset_val.X_cols, N_test)
-        metrics_test = get_metrics(pred_test, Y_test)
-        print(f'test accuracy:\t{metrics_test.accuracy:.5f}')
-        print(f'test prec.:\t{metrics_test.precision:.5f}')
-        print(f'test recall:\t{metrics_test.recall:.5f}')
-        print(f'test fscore:\t{metrics_test.fscore:.5f}')
+        pred_val = pred(scores, dataset_val.X_rows, dataset_val.X_cols, N_val)
+        metrics_val = get_metrics(pred_val, Y_val)
+        print(f'val accuracy:\t{metrics_val.accuracy:.5f}')
+        print(f'val prec.:\t{metrics_val.precision:.5f}')
+        print(f'val recall:\t{metrics_val.recall:.5f}')
+        print(f'val fscore:\t{metrics_val.fscore:.5f}')
         print()
 
         f.write(
-          f'\t{metrics_test.accuracy:.5f}\t{metrics_test.precision:.5f}\t{metrics_test.recall:.5f}\t{metrics_test.fscore:.5f}'
+          f'\t{metrics_val.accuracy:.5f}\t{metrics_val.precision:.5f}\t{metrics_val.recall:.5f}\t{metrics_val.fscore:.5f}'
         )
 
         if patience is not None:
           nonlocal best_val_fscore, patience_counter
-          current_fscore = float(metrics_test.fscore)
+          current_fscore = float(metrics_val.fscore)
           if current_fscore > best_val_fscore + min_delta:
             best_val_fscore = current_fscore
             patience_counter = 0
@@ -432,6 +436,7 @@ def fit(
               return True
 
       f.write('\n')
+      sys.stdout.flush()
     return False
 
   for t in range(iters):
@@ -512,9 +517,9 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
   )
   parser.add_argument(
     '--out-span',
-    help=f'Iteration span to output metrics and weights. (default: {DEFAULT_OUT_SPAN})',
+    help='Iteration span to output metrics and weights. (default: min(5000, max(1, iter // 10)))',
     type=int,
-    default=DEFAULT_OUT_SPAN,
+    default=None,
   )
   parser.add_argument(
     '--val-data', help='File path for the encoded validation data.', type=str
@@ -545,10 +550,10 @@ def parse_args(test: ArgList = None) -> argparse.Namespace:
     type=float,
     default=DEFAULT_LEARNING_RATE,
   )
-  if test is None:
-    return parser.parse_args()
-  else:
-    return parser.parse_args(test)
+  args = parser.parse_args(test)
+  if args.out_span is None:
+    args.out_span = min(5000, max(1, args.iter // 10))
+  return args
 
 
 def main() -> None:

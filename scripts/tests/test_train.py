@@ -57,10 +57,16 @@ class TestArgParse(unittest.TestCase):
     self.assertEqual(output.log, train.DEFAULT_LOG_NAME)
     self.assertEqual(output.feature_thres, train.DEFAULT_FEATURE_THRES)
     self.assertEqual(output.iter, train.DEFAULT_ITERATION)
-    self.assertEqual(output.out_span, train.DEFAULT_OUT_SPAN)
+    self.assertEqual(output.out_span, 1000)
     self.assertEqual(output.val_data, None)
     self.assertEqual(output.algorithm, train.DEFAULT_ALGORITHM)
     self.assertEqual(output.learning_rate, train.DEFAULT_LEARNING_RATE)
+
+  def test_cmdargs_out_span_dynamic_default(self) -> None:
+    output1 = train.parse_args(['encoded.txt', '--iter', '200000'])
+    self.assertEqual(output1.out_span, 5000)
+    output2 = train.parse_args(['encoded.txt', '--iter', '5'])
+    self.assertEqual(output2.out_span, 1)
 
   def test_cmdargs_full(self) -> None:
     cmdargs = [
@@ -357,6 +363,20 @@ class TestFit(unittest.TestCase):
     with open(log_file_path) as f:
       log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
     self.assertEqual(
+      log[0],
+      [
+        'iter',
+        'train_accuracy',
+        'train_precision',
+        'train_recall',
+        'train_fscore',
+        'val_accuracy',
+        'val_precision',
+        'val_recall',
+        'val_fscore',
+      ],
+    )
+    self.assertEqual(
       len(log),
       math.ceil(iters / out_span) + 1,
       msg='The number of lines should equal to the ceil of iteration / out_span plus one for the header',
@@ -532,6 +552,47 @@ class TestFit(unittest.TestCase):
         algorithm='unknown',
       )
     self.assertIn('Unknown algorithm', str(cm.exception))
+
+  def test_fit_log_header_without_val(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    dataset = train.Dataset(jnp.array([0, 1]), jnp.array([0, 1]), jnp.array([1, -1]))
+    train.fit(dataset, None, ['a', 'b'], 1, weights_file_path, log_file_path, 1)
+    with open(log_file_path) as f:
+      log = [line.split('\t') for line in f.read().splitlines() if line.strip()]
+    self.assertEqual(
+      log[0],
+      ['iter', 'train_accuracy', 'train_precision', 'train_recall', 'train_fscore'],
+    )
+    self.assertEqual(len(log[1]), 5)
+
+  def test_fit_invalid_iters(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    dataset = train.Dataset(jnp.array([0]), jnp.array([0]), jnp.array([1]))
+    with self.assertRaises(ValueError) as cm:
+      train.fit(dataset, None, ['a'], 0, weights_file_path, log_file_path, 1)
+    self.assertIn('iters must be positive', str(cm.exception))
+
+  def test_fit_invalid_out_span(self) -> None:
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      weights_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    with tempfile.NamedTemporaryFile(delete=False) as tf:
+      log_file_path = tf.name
+      self.addCleanup(os.remove, tf.name)
+    dataset = train.Dataset(jnp.array([0]), jnp.array([0]), jnp.array([1]))
+    with self.assertRaises(ValueError) as cm:
+      train.fit(dataset, None, ['a'], 1, weights_file_path, log_file_path, 0)
+    self.assertIn('out_span must be positive', str(cm.exception))
 
 
 class TestExtractFeatures(unittest.TestCase):
