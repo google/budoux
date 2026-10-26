@@ -60,14 +60,5 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path: 'java/pom.xml'
-      - name: Google Java Format
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        uses: axel-op/googlejavaformat-action@c1134ebd196c4cbffb077f9476585b0be8b6afcd # v4.0.0
-        with:
-          args: "--replace"
-          skip-commit: true
-      - name: Print diffs
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: git --no-pager diff --exit-code
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots -f ./java/pom.xml package
+        run: mvn --batch-mode --update-snapshots -f ./java/pom.xml spotless:check package
