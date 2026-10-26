@@ -66,7 +66,6 @@ jobs:
         with:
           args: "--replace"
           skip-commit: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Print diffs
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: git --no-pager diff --exit-code
