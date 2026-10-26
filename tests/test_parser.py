@@ -13,13 +13,7 @@
 # limitations under the License.
 """Tests the BudouX parser."""
 
-import os
-import sys
 import unittest
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import parser
 
@@ -163,8 +157,7 @@ class TestDefaultParser(unittest.TestCase):
         '大众',
         '使用，',
         '让',
-        '人',
-        '人',
+        '人人',
         '受益。',
       ],
     )
@@ -186,8 +179,7 @@ class TestDefaultParser(unittest.TestCase):
         '大眾',
         '使用，',
         '使',
-        '人',
-        '人',
+        '人人',
         '受惠。',
       ],
     )
@@ -196,7 +188,3 @@ class TestDefaultParser(unittest.TestCase):
     p_th = parser.load_default_thai_parser()
     phrases = p_th.parse('วันนี้อากาศดี')
     self.assertListEqual(phrases, ['วัน', 'นี้', 'อากาศ', 'ดี'])
-
-
-if __name__ == '__main__':
-  unittest.main()

@@ -29,6 +29,35 @@ sys.path.insert(0, LIB_PATH)
 from scripts import colab_runner, encode_data
 
 KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
+MAX_AUTO_WEIGHT_SCALE = 30
+
+
+def parse_model_id(model_id: str) -> tuple[str, str]:
+  """Splits a model identifier into its BCP-47 language tag and optional flavor.
+
+  Model identifiers follow the `<bcp47_lang>` or `<bcp47_lang>_<flavor>`
+  convention (e.g. 'ja' -> ('ja', ''), 'ja_word' -> ('ja', 'word'),
+  'zh-hans' -> ('zh-hans', ''), 'zh-hans_word' -> ('zh-hans', 'word')).
+
+  Args:
+    model_id: Model identifier string.
+
+  Returns:
+    A tuple of (base_lang, flavor).
+  """
+  base_lang, _, flavor = model_id.partition("_")
+  return base_lang, flavor
+
+
+def get_split_prefix(lang: str) -> str:
+  """Returns the dataset file prefix for a given model identifier."""
+  base_lang, flavor = parse_model_id(lang)
+  # The default Japanese phrase model ('ja') is trained on the KNBC corpus,
+  # whereas word-level ('ja_word') and other models ('zh-hans', 'zh-hant', etc.)
+  # use the Unicode Test Corpora.
+  if base_lang == "ja" and not flavor:
+    return "knbc"
+  return f"unicode_{lang}"
 
 
 def _build_train_cmd(
@@ -89,10 +118,15 @@ def run_retraining_pipeline(
   if not out_model:
     out_model = os.path.join("budoux", "models", f"{lang}.json")
 
-  train_file = os.path.join(split_dir, "knbc_train.txt")
+  base_lang, flavor = parse_model_id(lang)
+  prefix = get_split_prefix(lang)
+  train_file = os.path.join(split_dir, f"{prefix}_train.txt")
+  val_split = os.path.join(split_dir, f"{prefix}_val.txt")
+  test_split = os.path.join(split_dir, f"{prefix}_test.txt")
+
   if os.path.exists(train_file):
-    print(f"[Dataset] Using existing KNBC dataset splits in {split_dir}.")
-  else:
+    print(f"[Dataset] Using existing {prefix} dataset splits in {split_dir}.")
+  elif base_lang == "ja" and not flavor:
     print(f"[Dataset] Fetching KNBC corpus from {KNBC_URL}...")
     with tempfile.TemporaryDirectory() as tmp_knbc:
       tar_path = os.path.join(tmp_knbc, "knbc.tar.bz2")
@@ -113,18 +147,33 @@ def run_retraining_pipeline(
         ],
         check=True,
       )
+  else:
+    print(f"[Dataset] Preparing Unicode corpus splits for '{lang}' in {split_dir}...")
+    with tempfile.TemporaryDirectory() as tmp_unicode:
+      outfile = os.path.join(tmp_unicode, f"source_{prefix}.txt")
+      prep_cmd = [
+        sys.executable,
+        "scripts/prepare_unicode.py",
+        lang,
+        "-o",
+        outfile,
+        "--split-dir",
+        split_dir,
+      ]
+      if flavor != "word":
+        prep_cmd.append("--line-break")
+      subprocess.run(prep_cmd, check=True)
 
   with tempfile.TemporaryDirectory() as tmp:
     finetuning_pattern = os.path.join("data", "finetuning", lang, "*.txt")
     ft_files = sorted(glob.glob(finetuning_pattern))
-    knbc_train = os.path.join(split_dir, "knbc_train.txt")
 
     scale = 1
     if weight_factor is not None:
       scale = weight_factor
       print(f"[Scale] Using specified fine-tuning scale: {scale}x")
-    elif ft_files and os.path.exists(knbc_train):
-      with open(knbc_train, encoding="utf-8") as in_f:
+    elif ft_files and os.path.exists(train_file):
+      with open(train_file, encoding="utf-8") as in_f:
         base_s, _ = encode_data.normalize_input(in_f.read())
       ft_text = ""
       for ft_file in ft_files:
@@ -136,8 +185,11 @@ def run_retraining_pipeline(
       # Equalize total sample weight mass between the large base corpus
       # (n_base * 1) and the small fine-tuning corpus (n_ft * scale) so that
       # targeted fine-tuning boundaries are not drowned out during conflict
-      # filtering and boosting. Clamp to >= 1 in case n_ft > n_base.
-      scale = max(1, round(n_base / n_ft)) if n_ft > 0 else 1
+      # filtering and boosting, while capping at MAX_AUTO_WEIGHT_SCALE so tiny
+      # initial fine-tuning files do not overpower general corpus statistics.
+      scale = (
+        min(MAX_AUTO_WEIGHT_SCALE, max(1, round(n_base / n_ft))) if n_ft > 0 else 1
+      )
       print(
         f"[Scale] Auto-balanced fine-tuning scale: {scale}x (base={n_base}, ft={n_ft})"
       )
@@ -151,12 +203,12 @@ def run_retraining_pipeline(
     log_path = os.path.join(tmp, "train.log")
 
     print("[Encode] Encoding feature boundaries...")
-    if os.path.exists(knbc_train):
+    if os.path.exists(train_file):
       subprocess.run(
         [
           sys.executable,
           "scripts/encode_data.py",
-          knbc_train,
+          train_file,
           "-o",
           base_encoded,
           "--scale",
@@ -206,7 +258,6 @@ def run_retraining_pipeline(
       check=True,
     )
 
-    val_split = os.path.join(split_dir, "knbc_val.txt")
     if os.path.exists(val_split):
       subprocess.run(
         [sys.executable, "scripts/encode_data.py", val_split, "-o", val_encoded],
@@ -287,7 +338,6 @@ def run_retraining_pipeline(
         check=True,
       )
 
-    test_split = os.path.join(split_dir, "knbc_test.txt")
     if os.path.exists(test_split):
       print("[Evaluation] Evaluating test split benchmark...")
       subprocess.run(
@@ -327,7 +377,7 @@ def main() -> None:
     "--split-dir",
     type=str,
     default="tmp/splits",
-    help="Directory containing or receiving KNBC splits",
+    help="Directory containing or receiving dataset splits",
   )
   parser.add_argument(
     "--out-model",

@@ -22,6 +22,7 @@ import random
 import subprocess
 import sys
 import tempfile
+import unicodedata
 
 # module hack
 LIB_PATH = os.path.join(os.path.dirname(__file__), "..")
@@ -32,31 +33,122 @@ from budoux import utils
 REPO_URL = "https://github.com/unicode-org/test-corpora.git"
 TEMP_DIR = os.path.join(tempfile.gettempdir(), "test-corpora")
 
+LANG_DIR_MAP = {"zh-hans": "zh", "zh-hant": "zh-Hant"}
 
-def convert_line(line: str) -> str:
+OPENING_PUNCT_CATEGORIES = {"Ps", "Pi"}
+CLOSING_PUNCT_CATEGORIES = {"Pe", "Pf", "Po", "Pd", "So"}
+ALL_PUNCT_CATEGORIES = OPENING_PUNCT_CATEGORIES | CLOSING_PUNCT_CATEGORIES
+
+
+def _has_ascii_alnum(text: str) -> bool:
+  return any(ch.isascii() and ch.isalnum() for ch in text)
+
+
+def attach_punctuation(chunks: list[str]) -> list[str]:
+  """Attaches standalone punctuation and normalizes spaces for line-breaking.
+
+  Opening punctuation (Unicode categories Ps, Pi) is attached to the following
+  chunk, while closing and general punctuation (Unicode categories Pe, Pf, Po,
+  Pd, So) is attached to the preceding chunk. Standalone spaces adjacent to
+  ASCII alphanumeric tokens are attached to the preceding chunk (allowing breaks
+  after spaces per UAX #14), while spurious spaces between CJK punctuation/words
+  and invisible format characters (category Cf) are stripped.
+
+  Args:
+    chunks: List of raw word/punctuation tokens.
+
+  Returns:
+    List of chunks with punctuation attached according to line-breaking rules.
+  """
+  expanded: list[str] = []
+  for chunk in chunks:
+    cleaned = "".join(ch for ch in chunk if unicodedata.category(ch) != "Cf")
+    if not cleaned:
+      continue
+    if cleaned.strip() == "":
+      expanded.append(" ")
+    elif all(unicodedata.category(ch) in ALL_PUNCT_CATEGORIES for ch in cleaned):
+      expanded.extend(list(cleaned))
+    else:
+      expanded.append(cleaned)
+
+  res: list[str] = []
+  prefix = ""
+  for i, item in enumerate(expanded):
+    if item == " ":
+      next_item = next((x for x in expanded[i + 1 :] if x != " "), "")
+      prev_item = res[-1] if res and not prefix else ""
+      if (
+        next_item
+        and prev_item
+        and not prev_item.endswith(" ")
+        and (_has_ascii_alnum(prev_item) or _has_ascii_alnum(next_item))
+      ):
+        res[-1] += " "
+      continue
+    if all(unicodedata.category(ch) in OPENING_PUNCT_CATEGORIES for ch in item):
+      prefix += item
+    elif all(unicodedata.category(ch) in CLOSING_PUNCT_CATEGORIES for ch in item):
+      if prefix:
+        prefix += item
+      elif res:
+        res[-1] = res[-1].rstrip(" ") + item
+      else:
+        prefix += item
+    else:
+      res.append(prefix + item)
+      prefix = ""
+
+  if prefix:
+    if res:
+      res[-1] += prefix
+    else:
+      res.append(prefix)
+
+  return res
+
+
+def convert_line(line: str, line_break: bool = False) -> str:
   """Converts a pipe-segmented line into a BudouX-segmented line.
 
   Args:
     line: Pipe-segmented line (e.g. 'アリス|は|、|姉|の')
+    line_break: Whether to attach standalone punctuation and normalize
+      whitespace for phrase/line-break segmentation.
 
   Returns:
     BudouX-segmented line (e.g. 'アリス▁は▁、▁姉▁の')
   """
   parts = line.strip().split("|")
   chunks = [part for part in parts if part != ""]
+  if line_break:
+    chunks = attach_punctuation(chunks)
   return utils.SEP.join(chunks)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
-    "lang", help="Language or model identifier (e.g. 'ja', 'ja_word', 'th', 'ko')."
+    "lang",
+    help=(
+      "Language or model identifier "
+      "(e.g. 'ja', 'ja_word', 'zh-hans', 'zh-hant', 'th', 'ko')."
+    ),
   )
   parser.add_argument(
     "-o",
     "--outfile",
     help="File path to the output dataset. (default: data/unicode_<lang>.txt)",
     default=None,
+  )
+  parser.add_argument(
+    "--line-break",
+    action="store_true",
+    help=(
+      "Attach standalone opening punctuation to the following chunk, attach "
+      "closing/general punctuation to the preceding chunk, and normalize "
+      "standalone spaces for line-breaking models."
+    ),
   )
   parser.add_argument(
     "--split-dir",
@@ -90,6 +182,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def process_unicode(
   lang: str,
   outfile: str | None = None,
+  line_break: bool = False,
   split_dir: str | None = None,
   val_ratio: float = 0.10,
   test_ratio: float = 0.10,
@@ -108,20 +201,21 @@ def process_unicode(
     print(f"Downloading {REPO_URL} to {corpus_dir}...")
     subprocess.run(["git", "clone", "--depth", "1", REPO_URL, corpus_dir], check=True)
 
+  corpus_lang = LANG_DIR_MAP.get(base_lang.lower(), base_lang)
   pattern = os.path.join(
-    corpus_dir, "gutenberg", "*", "out", "google", "breakpoints", base_lang, "*.txt"
+    corpus_dir, "gutenberg", "*", "out", "google", "breakpoints", corpus_lang, "*.txt"
   )
   files = sorted(glob.glob(pattern))
   files = [f for f in files if "wrap" not in f]
   if not files:
     print(
-      f"No breakpoint files found for language '{lang}' (directory '{base_lang}') "
+      f"No breakpoint files found for language '{lang}' (directory '{corpus_lang}') "
       f"in {corpus_dir}.",
       file=sys.stderr,
     )
     sys.exit(1)
 
-  print(f"Found {len(files)} {base_lang} breakpoint files in {corpus_dir}.")
+  print(f"Found {len(files)} {corpus_lang} breakpoint files in {corpus_dir}.")
 
   sentences: list[str] = []
   for f_in_path in files:
@@ -130,7 +224,7 @@ def process_unicode(
         line = line.strip()
         if not line:
           continue
-        converted = convert_line(line)
+        converted = convert_line(line, line_break=line_break)
         if converted:
           sentences.append(converted)
 
@@ -188,6 +282,7 @@ def main() -> None:
   process_unicode(
     lang=args.lang,
     outfile=args.outfile,
+    line_break=args.line_break,
     split_dir=args.split_dir,
     val_ratio=args.val_ratio,
     test_ratio=args.test_ratio,

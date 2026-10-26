@@ -108,8 +108,11 @@ and [`prepare_wisesight.py`](https://github.com/google/budoux/tree/main/scripts/
 For Japanese phrase segmentation, `prepare_knbc.py` generates a source text file
 from [Kyoto University and NTT Blog (KNBC) Corpus](https://nlp.ist.i.kyoto-u.ac.jp/kuntt/),
 which segments Japanese sentences by phrase.
-For Japanese word segmentation (`ja_word`), `prepare_unicode.py` extracts
-segmented sentences from the [Unicode Test Corpora](https://github.com/unicode-org/test-corpora).
+For Japanese word segmentation (`ja_word`) and Chinese (`zh-hans` and `zh-hant`),
+`prepare_unicode.py` extracts segmented sentences from the
+[Unicode Test Corpora](https://github.com/unicode-org/test-corpora) (passing
+`--line-break` to attach standalone punctuation and normalize whitespace for
+line-breaking models).
 When we support other corpora as data sources, we should add the data
 preparation scripts for them in this directory with the `prepare_` prefix.
 
@@ -416,13 +419,22 @@ canonical methodology for updating and tuning BudouX segmentation models.
 
 ### End-to-End Retraining & Data Synthesis
 
-To automate dataset partitioning (80:10:10 train/val/test splits), auto-balanced
-fine-tuning weight scaling, JAX model fitting (defaulting to `logitboost`), and
-holdout quality benchmarking, run:
+To automate dataset partitioning (80:10:10 train/val/test splits from KNBC for
+`ja` or the Unicode Test Corpora for `zh-hans`, `zh-hant`, and `<lang>_word`
+models), auto-balanced fine-tuning weight scaling, JAX model fitting (defaulting
+to `logitboost`), and holdout quality benchmarking, run:
 
 ```bash
-python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=ja --iter=10000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=ja_word --iter=10000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=zh-hans --iter=10000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=zh-hant --iter=10000 --split-dir=tmp/splits
 ```
+
+Model identifiers follow the `<bcp47_lang>` or `<bcp47_lang>_<flavor>`
+convention, where underscore (`_`) separates the BCP-47 language tag (which may
+contain hyphens, e.g., `zh-hans`) from the optional model flavor (e.g., `word`
+for raw word + standalone punctuation segmentation without `--line-break`).
 
 To synthesize bug-fix training samples from GitHub issue reports and persist
 them directly to fine-tuning datasets and quality benchmarks:

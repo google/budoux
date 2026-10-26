@@ -15,16 +15,12 @@
 
 import json
 import os
-import sys
 import tempfile
 import typing
 import unittest
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, LIB_PATH)
 
 from scripts import run_training_pipeline
 
@@ -260,6 +256,89 @@ class TestRunTrainingPipeline(unittest.TestCase):
       if ft_calls:
         self.assertIn("--scale", ft_calls[0])
 
+  @patch("glob.glob")
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_auto_balance_capped(
+    self, mock_run: MagicMock, mock_glob: MagicMock
+  ) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      os.makedirs(split_dir, exist_ok=True)
+      # Base corpus is 10,000 chars, fine-tuning is 10 chars (ratio 1000x > MAX_AUTO_WEIGHT_SCALE).
+      with open(os.path.join(split_dir, "unicode_zh-hans_train.txt"), "w") as f:
+        f.write("一▁" * 10000 + "\n")
+      ft_file = os.path.join(tmp_dir, "issue_1.txt")
+      with open(ft_file, "w") as f:
+        f.write("一▁" * 10 + "\n")
+      mock_glob.return_value = [ft_file]
 
-if __name__ == "__main__":
-  unittest.main()
+      out_model = os.path.join(tmp_dir, "zh-hans.json")
+      run_training_pipeline.run_retraining_pipeline(
+        lang="zh-hans",
+        iterations=10,
+        split_dir=split_dir,
+        out_model=out_model,
+        weight_factor=None,
+      )
+
+      encode_calls = [
+        call[0][0]
+        for call in mock_run.call_args_list
+        if "scripts/encode_data.py" in call[0][0]
+      ]
+      ft_calls = [
+        call for call in encode_calls if any("ft_raw.txt" in str(arg) for arg in call)
+      ]
+      self.assertEqual(len(ft_calls), 1)
+      scale_idx = ft_calls[0].index("--scale") + 1
+      self.assertEqual(
+        ft_calls[0][scale_idx], str(run_training_pipeline.MAX_AUTO_WEIGHT_SCALE)
+      )
+
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_unicode_lang(self, mock_run: MagicMock) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      out_model = os.path.join(tmp_dir, "zh-hans.json")
+      run_training_pipeline.run_retraining_pipeline(
+        lang="zh-hans", iterations=10, split_dir=split_dir, out_model=out_model
+      )
+
+      prep_calls = [
+        call[0][0]
+        for call in mock_run.call_args_list
+        if "scripts/prepare_unicode.py" in call[0][0]
+      ]
+      self.assertEqual(len(prep_calls), 1)
+      self.assertIn("zh-hans", prep_calls[0])
+      self.assertIn("--line-break", prep_calls[0])
+      self.assertIn("--split-dir", prep_calls[0])
+
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_word_flavor_omits_line_break(
+    self, mock_run: MagicMock
+  ) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      out_model = os.path.join(tmp_dir, "ja_word.json")
+      run_training_pipeline.run_retraining_pipeline(
+        lang="ja_word", iterations=10, split_dir=split_dir, out_model=out_model
+      )
+
+      prep_calls = [
+        call[0][0]
+        for call in mock_run.call_args_list
+        if "scripts/prepare_unicode.py" in call[0][0]
+      ]
+      self.assertEqual(len(prep_calls), 1)
+      self.assertIn("ja_word", prep_calls[0])
+      self.assertNotIn("--line-break", prep_calls[0])
+      self.assertIn("--split-dir", prep_calls[0])
+
+  def test_parse_model_id(self) -> None:
+    self.assertEqual(run_training_pipeline.parse_model_id("ja"), ("ja", ""))
+    self.assertEqual(run_training_pipeline.parse_model_id("ja_word"), ("ja", "word"))
+    self.assertEqual(run_training_pipeline.parse_model_id("zh-hans"), ("zh-hans", ""))
+    self.assertEqual(
+      run_training_pipeline.parse_model_id("zh-hans_word"), ("zh-hans", "word")
+    )

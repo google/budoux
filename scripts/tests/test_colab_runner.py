@@ -14,13 +14,8 @@
 """Tests for colab_runner.py."""
 
 import os
-import sys
 import unittest
 from unittest.mock import MagicMock, patch
-
-# Module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), "..", "..")
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import colab_runner
 
@@ -113,7 +108,3 @@ class TestColabRunner(unittest.TestCase):
     call_args = mock_run.call_args[0][0]
     self.assertIn("exec", call_args)
     self.assertIn("test-sess", call_args)
-
-
-if __name__ == "__main__":
-  unittest.main()

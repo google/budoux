@@ -1,6 +1,6 @@
 {
   "name": "budoux",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "A small chunk segmenter.",
   "author": "Shuhei Iitsuka",
   "license": "Apache-2.0",
@@ -110,6 +110,9 @@
   "dependencies": {
     "commander": "^15.0.0",
     "linkedom": "^0.18.7"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "type": "commonjs"
 }

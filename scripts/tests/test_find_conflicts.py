@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import sys
 import tempfile
 import unittest
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import find_conflicts
 
@@ -133,7 +128,3 @@ class TestFindConflicts(unittest.TestCase):
     self.assertEqual(args.output, self.output_file)
     self.assertEqual(args.threshold, 1.0)
     self.assertFalse(args.strict)
-
-
-if __name__ == '__main__':
-  unittest.main()

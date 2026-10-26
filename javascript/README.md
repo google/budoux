@@ -144,7 +144,8 @@ All you have to do is wrap sentences with:
 <budoux-th>วันนี้อากาศดี</budoux-th>
 ```
 
-In order to enable the custom element, you can simply add this line to load the bundle.
+In order to enable the custom element, you can simply add this line to load the
+bundle.
 
 ```html
 <!-- For Japanese -->
