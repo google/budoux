@@ -192,6 +192,11 @@ class TestDefaultParser(unittest.TestCase):
       ],
     )
 
+  def test_load_default_thai_parser(self) -> None:
+    p_th = parser.load_default_thai_parser()
+    phrases = p_th.parse('วันนี้อากาศดี')
+    self.assertListEqual(phrases, ['วัน', 'นี้', 'อากาศ', 'ดี'])
+
 
 if __name__ == '__main__':
   unittest.main()
