@@ -13,13 +13,7 @@
 # limitations under the License.
 """Tests the BudouX parser."""
 
-import os
-import sys
 import unittest
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import parser
 
@@ -191,7 +185,3 @@ class TestDefaultParser(unittest.TestCase):
         '受惠。',
       ],
     )
-
-
-if __name__ == '__main__':
-  unittest.main()

@@ -14,15 +14,10 @@
 """Test suite for agentic training data synthesis."""
 
 import os
-import sys
 import tempfile
 import unittest
 from typing import Any
 from unittest.mock import MagicMock, patch
-
-# Module hack to allow importing scripts and budoux from workspace root
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux
 from budoux import utils
@@ -170,7 +165,3 @@ class TestRunAgenticSynthesisPipeline(unittest.TestCase):
 
   def tearDown(self) -> None:
     self.temp_dir_obj.cleanup()
-
-
-if __name__ == "__main__":
-  unittest.main()
