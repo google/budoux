@@ -20,5 +20,8 @@
   "devDependencies": {
     "esbuild": "^0.28.1",
     "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

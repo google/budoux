@@ -12,26 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Unittest for JavaScript
+name: JavaScript CI
 on:
   push:
+    branches: [ "main" ]
     paths:
       - 'javascript/**'
+      - 'budoux/models/**'
+      - 'budoux/skip_nodes.json'
+      - '.github/workflows/javascript.yml'
   pull_request:
     paths:
       - 'javascript/**'
+      - 'budoux/models/**'
+      - 'budoux/skip_nodes.json'
+      - '.github/workflows/javascript.yml'
+
 permissions:
   contents: read
 
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 jobs:
-  javascript-unittest:
+  javascript:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: [22, 24, 26]
-
+        node-version: ['22', '24', '26']
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
@@ -45,11 +57,14 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Install Dependencies
+          cache: 'npm'
+          cache-dependency-path: 'javascript/package-lock.json'
+      - name: Install dependencies
         run: npm ci
         working-directory: ./javascript
-      - name: Create symlink
-        run: npm link
+      - name: Run style checks
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: npm run lint
         working-directory: ./javascript
       - name: Build package
         run: npm run build --if-present

@@ -111,5 +111,8 @@
     "commander": "^15.0.0",
     "linkedom": "^0.18.7"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "type": "commonjs"
 }
