@@ -39,7 +39,7 @@ permissions:
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   python:
@@ -52,6 +52,7 @@ jobs:
         python-version: ['3.11', '3.12', '3.13', '3.14', '3.15']
     steps:
       - name: Harden Runner
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
