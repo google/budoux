@@ -17,6 +17,7 @@
 import {describe, expect, it} from 'vitest';
 import {parseFromString} from '../dom.js';
 import {
+  applyWrapStyle,
   HTMLProcessingParser,
   HTMLProcessor,
   type HTMLProcessorOptions,
@@ -222,6 +223,16 @@ describe('HTMLProcessor.applyToElement.separator.node', () => {
       console.log('expected:', expected);
     }
     expect(isEqual).toBe(true);
+  });
+});
+
+describe('applyWrapStyle', () => {
+  it('should apply word-break and overflow-wrap styles to the element', () => {
+    const document = createDocument();
+    const element = document.createElement('div');
+    applyWrapStyle(element);
+    expect(element.style.wordBreak).toBe('keep-all');
+    expect(element.style.overflowWrap).toBe('anywhere');
   });
 });
 
