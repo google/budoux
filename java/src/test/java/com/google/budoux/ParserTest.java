@@ -63,6 +63,34 @@ public class ParserTest {
   }
 
   @Test
+  public void testLoadDefaultSimplifiedChineseParser() {
+    Parser parser = Parser.loadDefaultSimplifiedChineseParser();
+    List<String> result = parser.parse("我们的使命是整合全球信息，供大众使用，让人人受益。");
+    List<String> expected =
+        Arrays.asList(
+            "我们", "的", "使命", "是", "整合", "全球", "信息，", "供", "大众", "使用，", "让", "人", "人", "受益。");
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void testLoadDefaultTraditionalChineseParser() {
+    Parser parser = Parser.loadDefaultTraditionalChineseParser();
+    List<String> result = parser.parse("我們的使命是匯整全球資訊，供大眾使用，使人人受惠。");
+    List<String> expected =
+        Arrays.asList(
+            "我們", "的", "使命", "是", "匯整", "全球", "資訊，", "供", "大眾", "使用，", "使", "人", "人", "受惠。");
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void testLoadDefaultThaiParser() {
+    Parser parser = Parser.loadDefaultThaiParser();
+    List<String> result = parser.parse("วันนี้อากาศดี");
+    List<String> expected = Arrays.asList("วัน", "นี้", "อากาศ", "ดี");
+    assertEquals(expected, result);
+  }
+
+  @Test
   public void testTranslateHTMLString() {
     Map<String, Map<String, Integer>> model = new HashMap<>();
     Map<String, Integer> uw4 = new HashMap<>();
