@@ -29,6 +29,7 @@ export default defineConfig({
           environment: 'node',
           include: [
             'src/tests/cli_test.ts',
+            'src/tests/index_test.ts',
             'src/tests/parser_test.ts',
             'src/tests/html_processor_test.ts',
           ],
@@ -44,6 +45,7 @@ export default defineConfig({
           },
           include: [
             'src/tests/webcomponents_test.ts',
+            'src/tests/index_test.ts',
             'src/tests/parser_test.ts',
             'src/tests/html_processor_test.ts',
           ],
