@@ -14,13 +14,8 @@
 """Tests the prepare KNBC script."""
 
 import os
-import sys
 import tempfile
 import unittest
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from scripts import prepare_knbc
 

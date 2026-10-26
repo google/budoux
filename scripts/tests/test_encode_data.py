@@ -13,14 +13,8 @@
 # limitations under the License.
 """Tests the data encoder script."""
 
-import os
-import sys
 import typing
 import unittest
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..', '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 from budoux import utils
 from scripts import encode_data
@@ -198,7 +192,3 @@ class TestNormalizeInput(unittest.TestCase):
     sentence, sep_indices = encode_data.normalize_input(source)
     self.assertEqual(sentence, 'ABCDEFG')
     self.assertEqual(sep_indices, {3, 5, 7})
-
-
-if __name__ == '__main__':
-  unittest.main()

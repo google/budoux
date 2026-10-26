@@ -12,20 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Unittest for Java
+name: Java CI
 on:
   push:
+    branches: [ "main" ]
     paths:
       - 'java/**'
+      - 'budoux/models/**'
+      - 'budoux/skip_nodes.json'
+      - '.github/workflows/java.yml'
   pull_request:
     paths:
       - 'java/**'
+      - 'budoux/models/**'
+      - 'budoux/skip_nodes.json'
+      - '.github/workflows/java.yml'
+
 permissions:
   contents: read
 
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 jobs:
-  java-unittest:
+  java:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -39,10 +52,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'java/pom.xml'
+      - name: Google Java Format
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: axel-op/googlejavaformat-action@c1134ebd196c4cbffb077f9476585b0be8b6afcd # v4.0.0
+        with:
+          args: "--replace"
+          skip-commit: true
+      - name: Print diffs
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: git --no-pager diff --exit-code
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots -f ./java/pom.xml package

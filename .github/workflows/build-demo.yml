@@ -16,12 +16,25 @@ name: Build Demo
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    paths:
+      - 'demo/**'
+      - 'javascript/**'
+      - 'budoux/models/**'
+      - 'budoux/skip_nodes.json'
+      - '.github/workflows/build-demo.yml'
+
 permissions:
   contents: read
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
@@ -33,7 +46,11 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20'
+          node-version-file: 'javascript/package.json'
+          cache: 'npm'
+          cache-dependency-path: |
+            javascript/package-lock.json
+            demo/package-lock.json
       - run: npm ci
         working-directory: ./javascript
       - run: npm ci
@@ -41,11 +58,13 @@ jobs:
       - run: npm run build
         working-directory: ./demo
       - name: Upload static files as artifact
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         id: deployment
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: ./demo/static/
   deploy:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: build
     permissions:
       pages: write
@@ -54,6 +73,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

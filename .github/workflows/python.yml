@@ -12,22 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Unittest for Python
+name: Python CI
 on:
   push:
-    paths-ignore:
-      - 'javascript/**'
-      - 'java/**'
+    branches: [ "main" ]
+    paths:
+      - 'budoux/**'
+      - 'data/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/python.yml'
   pull_request:
-    paths-ignore:
-      - 'javascript/**'
-      - 'java/**'
+    paths:
+      - 'budoux/**'
+      - 'data/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/python.yml'
+
 permissions:
   contents: read
 
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 jobs:
-  python-unittest:
+  python:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -46,8 +63,16 @@ jobs:
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install requirements
+          enable-cache: true
+      - name: Install dependencies
         run: uv sync --locked --extra dev --extra jaxcpu
+      - name: Run style checks
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version != '3.11' }}
+        run: |
+          uv run ruff format --check .
+          uv run pyrefly check
+          uv run ruff check
+          uv run python scripts/lint_data.py
       - name: Run unittest
         run: uv run pytest ./tests
       - name: Run unittest with Jax

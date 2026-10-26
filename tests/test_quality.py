@@ -14,12 +14,7 @@
 """Quality regression test."""
 
 import os
-import sys
 import unittest
-
-# module hack
-LIB_PATH = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(LIB_PATH))
 
 import budoux
 from budoux.evaluate_model import evaluate

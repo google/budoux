@@ -15,16 +15,12 @@
 
 import json
 import os
-import sys
 import tempfile
 import typing
 import unittest
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-LIB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, LIB_PATH)
 
 from scripts import run_training_pipeline
 
@@ -346,7 +342,3 @@ class TestRunTrainingPipeline(unittest.TestCase):
     self.assertEqual(
       run_training_pipeline.parse_model_id("zh-hans_word"), ("zh-hans", "word")
     )
-
-
-if __name__ == "__main__":
-  unittest.main()
