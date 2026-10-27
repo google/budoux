@@ -92,8 +92,9 @@ machine learning model that segments unseen sentences in the same way.
 
 The default [Japanese model](https://github.com/google/budoux/tree/main/budoux/models/ja.json)
 is trained on sentences that have been segmented into [phrases (Bunsetsu)](https://en.wikipedia.org/wiki/Japanese_grammar#Sentences,_phrases_and_words).
-The default [Simplified Chinese](https://github.com/google/budoux/tree/main/budoux/models/zh-hans.json)
-and [Traditional Chinese](https://github.com/google/budoux/tree/main/budoux/models/zh-hant.json)
+The default [Simplified Chinese](https://github.com/google/budoux/tree/main/budoux/models/zh-hans.json),
+[Traditional Chinese](https://github.com/google/budoux/tree/main/budoux/models/zh-hant.json),
+and [Thai](https://github.com/google/budoux/tree/main/budoux/models/th.json)
 models are trained on sentences segmented into words.
 We picked these segmentations to provide a satisfactory reading experience in
 those languages, but you can apply another segmentation method that works best
@@ -113,6 +114,8 @@ For Japanese word segmentation (`ja_word`) and Chinese (`zh-hans` and `zh-hant`)
 [Unicode Test Corpora](https://github.com/unicode-org/test-corpora) (passing
 `--line-break` to attach standalone punctuation and normalize whitespace for
 line-breaking models).
+For Thai (`th`), `prepare_wisesight.py` extracts segmented sentences from the
+[Wisesight Sentiment Corpus](https://github.com/PyThaiNLP/wisesight-sentiment).
 When we support other corpora as data sources, we should add the data
 preparation scripts for them in this directory with the `prepare_` prefix.
 
@@ -420,15 +423,16 @@ canonical methodology for updating and tuning BudouX segmentation models.
 ### End-to-End Retraining & Data Synthesis
 
 To automate dataset partitioning (80:10:10 train/val/test splits from KNBC for
-`ja` or the Unicode Test Corpora for `zh-hans`, `zh-hant`, and `<lang>_word`
-models), auto-balanced fine-tuning weight scaling, JAX model fitting (defaulting
-to `logitboost`), and holdout quality benchmarking, run:
+`ja`, Wisesight for `th`, or the Unicode Test Corpora for `zh-hans`, `zh-hant`,
+and `<lang>_word` models), auto-balanced fine-tuning weight scaling, JAX model
+fitting (defaulting to `logitboost`), and holdout quality benchmarking, run:
 
 ```bash
 python scripts/run_training_pipeline.py --lang=ja --iter=10000 --split-dir=tmp/splits
 python scripts/run_training_pipeline.py --lang=ja_word --iter=10000 --split-dir=tmp/splits
 python scripts/run_training_pipeline.py --lang=zh-hans --iter=10000 --split-dir=tmp/splits
 python scripts/run_training_pipeline.py --lang=zh-hant --iter=10000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=th --iter=10000 --split-dir=tmp/splits
 ```
 
 Model identifiers follow the `<bcp47_lang>` or `<bcp47_lang>_<flavor>`
