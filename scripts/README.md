@@ -432,7 +432,7 @@ python scripts/run_training_pipeline.py --lang=ja --iter=10000 --split-dir=tmp/s
 python scripts/run_training_pipeline.py --lang=ja_word --iter=10000 --split-dir=tmp/splits
 python scripts/run_training_pipeline.py --lang=zh-hans --iter=10000 --split-dir=tmp/splits
 python scripts/run_training_pipeline.py --lang=zh-hant --iter=10000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=th --iter=10000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=th --iter=6000 --split-dir=tmp/splits
 ```
 
 Model identifiers follow the `<bcp47_lang>` or `<bcp47_lang>_<flavor>`
