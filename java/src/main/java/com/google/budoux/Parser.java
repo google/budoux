@@ -47,6 +47,9 @@ import java.util.Map;
  * </pre>
  */
 public class Parser {
+  /** Recommended CSS style declarations for parent elements containing BudouX-segmented text. */
+  public static final String PARENT_CSS_STYLE = HTMLProcessor.STYLE;
+
   private final int totalScore;
   private final Map<String, Integer> uw1;
   private final Map<String, Integer> uw2;
@@ -218,8 +221,19 @@ public class Parser {
    * @return the translated HTML string with no-breaking markup.
    */
   public String translateHTMLString(String html) {
+    return translateHTMLString(html, true);
+  }
+
+  /**
+   * Translates an HTML string with phrases separated for semantic line breaks.
+   *
+   * @param html an HTML string.
+   * @param wrap whether to wrap the output in a span element with inline styles.
+   * @return the translated HTML string.
+   */
+  public String translateHTMLString(String html, boolean wrap) {
     String sentence = HTMLProcessor.getText(html);
     List<String> phrases = parse(sentence);
-    return HTMLProcessor.resolve(phrases, html, "\u200b");
+    return HTMLProcessor.resolve(phrases, html, "\u200b", wrap);
   }
 }

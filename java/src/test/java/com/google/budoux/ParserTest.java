@@ -104,6 +104,18 @@ public class ParserTest {
   }
 
   @Test
+  public void testTranslateHTMLStringWithoutWrap() {
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw4 = new HashMap<>();
+    uw4.put("a", 100);
+    model.put("UW4", uw4);
+    Parser parser = new Parser(model);
+    String html = "<a href=\"http://example.com\">xyza</a>bc";
+    String result = parser.translateHTMLString(html, false);
+    assertEquals("<a href=\"http://example.com\">xyz\u200ba</a>bc", result);
+  }
+
+  @Test
   public void testNewline() {
     Parser parser = Parser.loadDefaultJapaneseParser();
     List<String> result = parser.parse(" 1  \n  2 ");

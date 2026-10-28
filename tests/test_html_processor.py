@@ -229,3 +229,10 @@ class TestResolve(unittest.TestCase):
       '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200bdef</span>'
     )
     self.assertEqual(result, expected)
+
+  def test_without_wrap(self) -> None:
+    chunks = ['abc', 'def']
+    html = 'ab<a href="http://example.com">cd</a>ef'
+    result = html_processor.resolve(chunks, html, wrap=False)
+    expected = 'ab<a href="http://example.com">c\u200bd</a>ef'
+    self.assertEqual(result, expected)
