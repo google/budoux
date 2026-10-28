@@ -103,11 +103,13 @@ class Parser:
         chunks[-1] += sentence[i]
     return chunks
 
-  def translate_html_string(self, html: str) -> str:
+  def translate_html_string(self, html: str, wrap: bool = True) -> str:
     """Translates the given HTML string with markups for semantic line breaks.
 
     Args:
       html (str): An input html string.
+      wrap (bool, optional): Whether to wrap the output in a span element with
+        inline styles. Defaults to True.
 
     Returns:
       The translated HTML string (str).
@@ -115,7 +117,7 @@ class Parser:
     # TODO: Align with the JavaScript API regarding the parent element addition.
     text_content = get_text(html)
     chunks = self.parse(text_content)
-    return resolve(chunks, html)
+    return resolve(chunks, html, wrap=wrap)
 
 
 def load_default_japanese_parser() -> Parser:

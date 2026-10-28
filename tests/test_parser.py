@@ -116,6 +116,13 @@ class TestParser(unittest.TestCase):
       output_html, expected_html, 'Should keep trailing text with an ampersand.'
     )
 
+    input_html = 'xyza<a href="#" hidden>bc</a>abc'
+    expected_html = 'xyz\u200ba<a href="#" hidden>bc</a>\u200babc'
+    output_html = p.translate_html_string(input_html, wrap=False)
+    self.assertEqual(
+      output_html, expected_html, 'Should omit the wrapping SPAN when wrap=False.'
+    )
+
 
 class TestDefaultParser(unittest.TestCase):
   def test_load_default_japanese_parser(self) -> None:

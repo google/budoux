@@ -185,13 +185,17 @@ def get_text(html: str) -> str:
   return text_content_extractor.output
 
 
-def resolve(phrases: list[str], html: str, separator: str = '\u200b') -> str:
+def resolve(
+  phrases: list[str], html: str, separator: str = '\u200b', wrap: bool = True
+) -> str:
   """Wraps phrases in the HTML string with non-breaking markup.
 
   Args:
     phrases (List[str]): The phrases included in the HTML string.
     html (str): The HTML string to resolve.
     separator (str, optional): The separator string.
+    wrap (bool, optional): Whether to wrap the output in a span element with
+      inline styles. Defaults to True.
 
   Returns:
     The HTML string with phrases wrapped in non-breaking markup.
@@ -199,5 +203,7 @@ def resolve(phrases: list[str], html: str, separator: str = '\u200b') -> str:
   resolver = HTMLChunkResolver(phrases, separator)
   resolver.feed(html)
   resolver.close()
+  if not wrap:
+    return resolver.output
   result = f'<span style="{PARENT_CSS_STYLE}">{resolver.output}</span>'
   return result

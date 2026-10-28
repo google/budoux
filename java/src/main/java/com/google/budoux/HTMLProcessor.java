@@ -42,7 +42,7 @@ import org.jsoup.select.NodeVisitor;
 /** Processes phrases into an HTML string wrapping them in no-breaking markup. */
 final class HTMLProcessor {
   private static final Set<String> skipNodes;
-  private static final String STYLE = "word-break: keep-all; overflow-wrap: anywhere;";
+  static final String STYLE = "word-break: keep-all; overflow-wrap: anywhere;";
 
   private HTMLProcessor() {}
 
@@ -205,9 +205,25 @@ final class HTMLProcessor {
    * @return the HTML string of phrases wrapped in non-breaking markup.
    */
   public static String resolve(List<String> phrases, String html, String separator) {
+    return resolve(phrases, html, separator, true);
+  }
+
+  /**
+   * Resolves phrases in the HTML string with non-breaking markup.
+   *
+   * @param phrases the phrases included in the HTML string.
+   * @param html the HTML string to resolve.
+   * @param separator the separator string.
+   * @param wrap whether to wrap the output in a span element with inline styles.
+   * @return the HTML string of phrases resolved with the separator.
+   */
+  public static String resolve(List<String> phrases, String html, String separator, boolean wrap) {
     Document doc = Jsoup.parseBodyFragment(html);
     PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases, separator);
     doc.body().traverse(nodeVisitor);
+    if (!wrap) {
+      return nodeVisitor.getOutput().toString();
+    }
     return String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
   }
 
