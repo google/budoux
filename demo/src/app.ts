@@ -29,7 +29,7 @@ const defaultInputs = new Map([
 const inputTextElement = document.getElementById('input') as HTMLTextAreaElement;
 const outputContainerElement = document.getElementById('output') as HTMLElement;
 const fontSizeElement = document.getElementById('fontsize') as HTMLInputElement;
-const brCheckElement = document.getElementById('wbr2br') as HTMLInputElement;
+const separatorInputElement = document.getElementById('separator') as HTMLInputElement;
 const modelSelectElement = document.getElementById('model') as HTMLSelectElement;
 const url = new URL(document.location.href);
 const worker = new Worker('./worker.js');
@@ -47,12 +47,11 @@ const run = () => {
   worker.postMessage({'sentence': outputContainerElement.textContent, 'model': model});
   const parser = parsers.get(model);
   if (!parser) return;
+  parser.htmlProcessor.separator =
+    separatorInputElement.value === '<br>'
+      ? document.createElement('br')
+      : `${separatorInputElement.value}\u200b`;
   parser.applyToElement(outputContainerElement);
-  const renderWithBR = brCheckElement.checked;
-  if (renderWithBR) {
-    outputContainerElement.innerHTML = DOMPurify.sanitize(
-      outputContainerElement.innerHTML.replace(/\u200b/g, '<br>'));
-  }
   url.searchParams.set('q', inputTextElement.value);
   window.history.replaceState('', '', url.toString());
 };
@@ -76,7 +75,7 @@ inputTextElement.addEventListener('input', () => {
   run();
 });
 
-brCheckElement.addEventListener('input', () => {
+separatorInputElement.addEventListener('input', () => {
   run();
 });
 
