@@ -77,20 +77,7 @@ def main():
     f'-DnewVersion={new_version}',
     '-DgenerateBackupPoms=false',
   ]
-  try:
-    subprocess.run(mvn_command, cwd='java', check=True)
-  except (subprocess.CalledProcessError, FileNotFoundError):
-    pom_file = 'java/pom.xml'
-    with open(pom_file) as f:
-      content = f.read()
-    new_content = re.sub(
-      r'(<artifactId>budoux</artifactId>\s*<version>)([^<]+)(</version>)',
-      rf'\g<1>{new_version}\g<3>',
-      content,
-      count=1,
-    )
-    with open(pom_file, 'w') as f:
-      f.write(new_content)
+  subprocess.run(mvn_command, cwd='java', check=True)
 
 
 if __name__ == "__main__":
