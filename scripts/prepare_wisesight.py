@@ -27,7 +27,6 @@ import os
 import random
 import re
 import sys
-import unicodedata
 
 import regex
 
@@ -57,7 +56,7 @@ def preprocess_line(line: str) -> str:
   Returns:
     Cleaned BudouX-segmented line using `utils.SEP` (`▁`).
   """
-  line = ''.join(ch for ch in line.strip() if unicodedata.category(ch) != 'Cf')
+  line = regex.compile(r'\p{Cf}').sub('', line.strip())
   line = re.sub(r'https?://[^ ]+', '', line)  # Remove URLs
   line = re.sub(r'#[^ ]+', '', line)  # Remove hashtags
   line = EMOJI_PATTERN.sub('', line)  # Remove emojis and modifiers
