@@ -29,6 +29,10 @@ sys.path.insert(0, LIB_PATH)
 from scripts import colab_runner, encode_data
 
 KNBC_URL = "https://nlp.ist.i.kyoto-u.ac.jp/kuntt/KNBC_v1.0_090925_utf8.tar.bz2"
+WISESIGHT_URL = (
+  "https://raw.githubusercontent.com/PyThaiNLP/wisesight-sentiment/"
+  "master/word-tokenization/wisesight-1000-samples-tokenised.label"
+)
 MAX_AUTO_WEIGHT_SCALE = 30
 
 
@@ -52,11 +56,14 @@ def parse_model_id(model_id: str) -> tuple[str, str]:
 def get_split_prefix(lang: str) -> str:
   """Returns the dataset file prefix for a given model identifier."""
   base_lang, flavor = parse_model_id(lang)
-  # The default Japanese phrase model ('ja') is trained on the KNBC corpus,
-  # whereas word-level ('ja_word') and other models ('zh-hans', 'zh-hant', etc.)
-  # use the Unicode Test Corpora.
+  # The default Japanese phrase model ('ja') is trained on the KNBC corpus
+  # and the default Thai model ('th') is trained on the Wisesight corpus,
+  # whereas word-level ('ja_word', 'th_word') and other models ('zh-hans',
+  # 'zh-hant', etc.) use the Unicode Test Corpora.
   if base_lang == "ja" and not flavor:
     return "knbc"
+  if base_lang == "th" and not flavor:
+    return "wisesight"
   return f"unicode_{lang}"
 
 
@@ -140,6 +147,24 @@ def run_retraining_pipeline(
           sys.executable,
           "scripts/prepare_knbc.py",
           source_dir,
+          "-o",
+          outfile,
+          "--split-dir",
+          split_dir,
+        ],
+        check=True,
+      )
+  elif base_lang == "th" and not flavor:
+    print(f"[Dataset] Fetching Wisesight corpus from {WISESIGHT_URL}...")
+    with tempfile.TemporaryDirectory() as tmp_wisesight:
+      label_path = os.path.join(tmp_wisesight, "wisesight-1000-samples-tokenised.label")
+      urllib.request.urlretrieve(WISESIGHT_URL, label_path)
+      outfile = os.path.join(tmp_wisesight, "source_wisesight.txt")
+      subprocess.run(
+        [
+          sys.executable,
+          "scripts/prepare_wisesight.py",
+          label_path,
           "-o",
           outfile,
           "--split-dir",

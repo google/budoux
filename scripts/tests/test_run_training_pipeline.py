@@ -335,6 +335,44 @@ class TestRunTrainingPipeline(unittest.TestCase):
       self.assertNotIn("--line-break", prep_calls[0])
       self.assertIn("--split-dir", prep_calls[0])
 
+  @patch("urllib.request.urlretrieve")
+  @patch("subprocess.run")
+  def test_run_retraining_pipeline_wisesight_lang(
+    self, mock_run: MagicMock, mock_urlretrieve: MagicMock
+  ) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      split_dir = os.path.join(tmp_dir, "splits")
+      out_model = os.path.join(tmp_dir, "th.json")
+      run_training_pipeline.run_retraining_pipeline(
+        lang="th", iterations=10, split_dir=split_dir, out_model=out_model
+      )
+
+      mock_urlretrieve.assert_called_once()
+      self.assertEqual(
+        mock_urlretrieve.call_args[0][0], run_training_pipeline.WISESIGHT_URL
+      )
+      prep_calls = [
+        call[0][0]
+        for call in mock_run.call_args_list
+        if "scripts/prepare_wisesight.py" in call[0][0]
+      ]
+      self.assertEqual(len(prep_calls), 1)
+      self.assertIn("--split-dir", prep_calls[0])
+      self.assertIn(split_dir, prep_calls[0])
+
+  def test_get_split_prefix(self) -> None:
+    self.assertEqual(run_training_pipeline.get_split_prefix("ja"), "knbc")
+    self.assertEqual(
+      run_training_pipeline.get_split_prefix("ja_word"), "unicode_ja_word"
+    )
+    self.assertEqual(run_training_pipeline.get_split_prefix("th"), "wisesight")
+    self.assertEqual(
+      run_training_pipeline.get_split_prefix("th_word"), "unicode_th_word"
+    )
+    self.assertEqual(
+      run_training_pipeline.get_split_prefix("zh-hans"), "unicode_zh-hans"
+    )
+
   def test_parse_model_id(self) -> None:
     self.assertEqual(run_training_pipeline.parse_model_id("ja"), ("ja", ""))
     self.assertEqual(run_training_pipeline.parse_model_id("ja_word"), ("ja", "word"))
