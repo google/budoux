@@ -191,7 +191,7 @@ describe('cli', () => {
     );
   });
 
-  it('should output the error message when get extra option argument.', () => {
+  it('should output the error message when get extra --delim option argument.', () => {
     const argv = [
       'node',
       'budoux',
@@ -207,7 +207,7 @@ describe('cli', () => {
     );
   });
 
-  it('should output the error message when get extra option argument.', () => {
+  it('should output the error message when get extra --model option argument.', () => {
     const customModelPath = path.resolve(
       __dirname,
       'models',

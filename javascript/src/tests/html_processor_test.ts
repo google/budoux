@@ -375,7 +375,7 @@ describe('HTMLProcessor.splitNodes', () => {
     expect(split([node123], [2, 4])).toEqual([['12', '3']]);
   });
 
-  it('should split the first node twice', () => {
+  it('should split single node twice', () => {
     expect(split([node123], [1, 2, 4])).toEqual([['1', '2', '3']]);
   });
 

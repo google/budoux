@@ -23,7 +23,7 @@ describe('Web Components', () => {
   });
 
   beforeEach(() => {
-    window.document.body.innerText = '';
+    window.document.body.textContent = '';
   });
 
   it('should process the provided text.', () => {
