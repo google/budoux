@@ -1,9 +1,9 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "complexity": {
         "noUselessConstructor": "off",
         "useArrowFunction": "off"
@@ -50,6 +50,13 @@
     }
   },
   "files": {
-    "includes": ["**", "!**/bundle", "!**/dist", "!**/module", "!src/data"]
+    "includes": [
+      "**",
+      "!**/*.md",
+      "!**/bundle",
+      "!**/dist",
+      "!**/module",
+      "!src/data"
+    ]
   }
 }
