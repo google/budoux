@@ -265,10 +265,12 @@ class TestRunTrainingPipeline(unittest.TestCase):
       split_dir = os.path.join(tmp_dir, "splits")
       os.makedirs(split_dir, exist_ok=True)
       # Base corpus is 10,000 chars, fine-tuning is 10 chars (ratio 1000x > MAX_AUTO_WEIGHT_SCALE).
-      with open(os.path.join(split_dir, "unicode_zh-hans_train.txt"), "w") as f:
+      with open(
+        os.path.join(split_dir, "unicode_zh-hans_train.txt"), "w", encoding="utf-8"
+      ) as f:
         f.write("一▁" * 10000 + "\n")
       ft_file = os.path.join(tmp_dir, "issue_1.txt")
-      with open(ft_file, "w") as f:
+      with open(ft_file, "w", encoding="utf-8") as f:
         f.write("一▁" * 10 + "\n")
       mock_glob.return_value = [ft_file]
 
