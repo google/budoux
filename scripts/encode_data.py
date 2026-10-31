@@ -188,7 +188,7 @@ def main(test: ArgList = None) -> None:
   entries_filename: str = args.outfile
   processes = None if args.processes is None else int(args.processes)
   scale: int = args.scale
-  with open(source_filename, encoding=sys.getdefaultencoding()) as f:
+  with open(source_filename, encoding='utf-8') as f:
     data = f.read()
   sentence, sep_indices = normalize_input(data)
   with multiprocessing.Pool(processes) as p:
@@ -197,7 +197,7 @@ def main(test: ArgList = None) -> None:
     )
     lines = p.map(func, range(1, len(sentence) + 1))
 
-  with open(entries_filename, 'w', encoding=sys.getdefaultencoding()) as f:
+  with open(entries_filename, 'w', encoding='utf-8') as f:
     f.writelines(line + '\n' for line in lines)
 
   print(f'\033[92mEncoded training data is out at: {entries_filename}\033[0m')
