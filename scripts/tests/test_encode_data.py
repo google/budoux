@@ -13,6 +13,8 @@
 # limitations under the License.
 """Tests the data encoder script."""
 
+import os
+import tempfile
 import typing
 import unittest
 
@@ -192,3 +194,17 @@ class TestNormalizeInput(unittest.TestCase):
     sentence, sep_indices = encode_data.normalize_input(source)
     self.assertEqual(sentence, 'ABCDEFG')
     self.assertEqual(sep_indices, {3, 5, 7})
+
+
+class TestMain(unittest.TestCase):
+  def test_utf8_source_and_output(self) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      source_path = os.path.join(tmp_dir, 'source.txt')
+      out_path = os.path.join(tmp_dir, 'encoded.txt')
+      with open(source_path, 'w', encoding='utf-8') as f:
+        f.write(f'今日{utils.SEP}は{utils.SEP}晴天\n')
+      encode_data.main([source_path, '-o', out_path, '--processes', '1'])
+      with open(out_path, encoding='utf-8') as f:
+        lines = f.readlines()
+      self.assertEqual(len(lines), 5)
+      self.assertTrue(any('UW3:日' in line for line in lines))
