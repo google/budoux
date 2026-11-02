@@ -228,6 +228,36 @@ describe('cli', () => {
     );
   });
 
+  it('should throw an error when an unsupported language is provided via -l.', () => {
+    const argv = [
+      'node',
+      'budoux',
+      '-l',
+      'unsupported_lang',
+      '今日は天気です。',
+    ];
+    const stab = () => cli(argv);
+
+    expect(stab).toThrowError(
+      "'unsupported_lang' is not supported. Available languages:"
+    );
+  });
+
+  it('should throw an error when an unsupported language is provided via --lang.', () => {
+    const argv = [
+      'node',
+      'budoux',
+      '--lang',
+      'unsupported_lang',
+      '今日は天気です。',
+    ];
+    const stab = () => cli(argv);
+
+    expect(stab).toThrowError(
+      "'unsupported_lang' is not supported. Available languages:"
+    );
+  });
+
   it('should output the unknown option error when execute budoux command with -v option.', async () => {
     const {stderr} = await runCli(['-v']);
 

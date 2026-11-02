@@ -70,9 +70,19 @@ export const cli = (argv: string[]) => {
   };
   const {args} = program;
 
+  if (model) {
+    // Custom model is prioritized.
+  } else if (lang && !defaultParsers.has(lang)) {
+    throw new Error(
+      `'${lang}' is not supported. Available languages: ${[
+        ...defaultParsers.keys(),
+      ].join(', ')}`
+    );
+  }
+
   const parser = model
     ? loadCustomParser(model)
-    : lang && defaultParsers.has(lang)
+    : lang
       ? defaultParsers.get(lang)!
       : loadDefaultJapaneseParser();
 
