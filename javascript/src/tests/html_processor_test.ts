@@ -582,6 +582,29 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     >xyz\u200Ba🇯🇵🇵🇹\u200Babc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
+
+  it('should output an unwrapped html string when wrap=false.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = 'xyza<a href="http://example.com">bc</a>abc';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe(
+      'xyz\u200ba<a href="http://example.com">bc</a>\u200babc'
+    );
+  });
+
+  it('should not wrap in a SPAN when wrap=false for text-only inputs.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = 'xyzabcd';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe('xyz\u200Babcd');
+  });
+
+  it('should not modify attributes or add style to existing parent when wrap=false.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = '<p class="foo" style="color: red">xyzabcd</p>';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe('<p class="foo" style="color: red">xyz\u200Babcd</p>');
+  });
 });
 
 describe('HTMLProcessingParser.applyToElement with DocumentFragment', () => {

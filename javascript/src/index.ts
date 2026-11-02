@@ -21,7 +21,11 @@ import {model as zhHansModel} from './data/models/zh-hans.js';
 import {model as zhHantModel} from './data/models/zh-hant.js';
 import {HTMLProcessingParser} from './html_processor.js';
 
-export {HTMLProcessingParser, HTMLProcessor} from './html_processor.js';
+export {
+  HTMLProcessingParser,
+  HTMLProcessor,
+  PARENT_CSS_STYLE,
+} from './html_processor.js';
 export {Parser} from './parser.js';
 export {jaModel, jaWordModel, thModel, zhHansModel, zhHantModel};
 
