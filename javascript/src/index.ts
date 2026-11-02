@@ -34,6 +34,14 @@ export const loadDefaultJapaneseParser = () => {
 };
 
 /**
+ * Loads a parser equipped with the default Japanese word-level model.
+ * @return A parser with the default Japanese word-level model.
+ */
+export const loadDefaultJapaneseWordParser = () => {
+  return new HTMLProcessingParser(jaWordModel);
+};
+
+/**
  * Loads a parser equipped with the default Simplified Chinese model.
  * @return A parser with the default Simplified Chinese model.
  */
@@ -63,6 +71,7 @@ export const loadDefaultThaiParser = () => {
 export const loadDefaultParsers = () => {
   return new Map([
     ['ja', loadDefaultJapaneseParser()],
+    ['ja_word', loadDefaultJapaneseWordParser()],
     ['zh-hans', loadDefaultSimplifiedChineseParser()],
     ['zh-hant', loadDefaultTraditionalChineseParser()],
     ['th', loadDefaultThaiParser()],

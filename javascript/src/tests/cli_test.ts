@@ -120,6 +120,17 @@ describe('cli', () => {
     expect(stdout.trim()).toBe(expectedStdOut);
   });
 
+  it('should use the ja_word model when -l ja_word is specified.', async () => {
+    const inputText = '今日は天気です。';
+    const expectedStdOut = loadDefaultParsers()
+      .get('ja_word')!
+      .parse(inputText)
+      .join('\n');
+    const argv = ['-l', 'ja_word', inputText];
+    const {stdout} = await runCli(argv);
+    expect(stdout.trim()).toBe(expectedStdOut);
+  });
+
   it('should prioritize -m and --model over -l and --lang', async () => {
     const inputTextHans = '我們的使a命';
     const customModelPath = path.resolve(

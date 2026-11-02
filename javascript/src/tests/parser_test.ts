@@ -15,7 +15,12 @@
  */
 
 import {describe, expect, it} from 'vitest';
-import {thModel} from '../index.js';
+import {
+  jaWordModel,
+  loadDefaultJapaneseWordParser,
+  loadDefaultParsers,
+  thModel,
+} from '../index.js';
 import {Parser} from '../parser.js';
 
 describe('Parser.parse', () => {
@@ -60,5 +65,27 @@ describe('thModel', () => {
     const parser = new Parser(thModel);
     const result = parser.parse('วันนี้อากาศดี');
     expect(result).toEqual(['วัน', 'นี้', 'อากาศ', 'ดี']);
+  });
+});
+
+describe('jaWordModel and loadDefaultJapaneseWordParser', () => {
+  it('should parse using jaWordModel directly', () => {
+    const parser = new Parser(jaWordModel);
+    const result = parser.parse('今日は天気です。');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('should parse using loadDefaultJapaneseWordParser', () => {
+    const parser = loadDefaultJapaneseWordParser();
+    const result = parser.parse('今日は天気です。');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('should include ja_word in loadDefaultParsers', () => {
+    const parsers = loadDefaultParsers();
+    expect(parsers.has('ja_word')).toBe(true);
+    const parser = parsers.get('ja_word')!;
+    const result = parser.parse('今日は天気です。');
+    expect(result.length).toBeGreaterThan(0);
   });
 });
