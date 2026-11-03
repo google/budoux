@@ -18,11 +18,7 @@ import {Command} from 'commander';
 import {readFileSync} from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
-import {
-  HTMLProcessingParser,
-  loadDefaultJapaneseParser,
-  loadDefaultParsers,
-} from './index.js';
+import {HTMLProcessingParser, loadDefaultParsers} from './index.js';
 
 const CLI_VERSION = '0.10.2';
 const defaultParsers = loadDefaultParsers();
@@ -51,7 +47,8 @@ export const cli = (argv: string[]) => {
       '-l, --lang <str>',
       `language model to use. -m and --model will be prioritized if any.\navailable languages: ${[
         ...defaultParsers.keys(),
-      ].join(', ')}`
+      ].join(', ')}`,
+      'ja'
     )
     .argument('[txt]', 'text')
     .allowExcessArguments();
@@ -66,25 +63,19 @@ export const cli = (argv: string[]) => {
     delim: string;
     sep: string;
     model?: string;
-    lang?: string;
+    lang: string;
   };
   const {args} = program;
 
-  if (model) {
-    // Custom model is prioritized.
-  } else if (lang && !defaultParsers.has(lang)) {
+  const parser =
+    model !== undefined ? loadCustomParser(model) : defaultParsers.get(lang);
+  if (!parser) {
     throw new Error(
       `'${lang}' is not supported. Available languages: ${[
         ...defaultParsers.keys(),
       ].join(', ')}`
     );
   }
-
-  const parser = model
-    ? loadCustomParser(model)
-    : lang
-      ? defaultParsers.get(lang)!
-      : loadDefaultJapaneseParser();
 
   switch (args.length) {
     case 0: {

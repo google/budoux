@@ -236,10 +236,10 @@ describe('cli', () => {
       'unsupported_lang',
       '今日は天気です。',
     ];
-    const stab = () => cli(argv);
-
-    expect(stab).toThrowError(
-      "'unsupported_lang' is not supported. Available languages:"
+    expect(() => cli(argv)).toThrowError(
+      `'unsupported_lang' is not supported. Available languages: ${[
+        ...loadDefaultParsers().keys(),
+      ].join(', ')}`
     );
   });
 
@@ -251,10 +251,10 @@ describe('cli', () => {
       'unsupported_lang',
       '今日は天気です。',
     ];
-    const stab = () => cli(argv);
-
-    expect(stab).toThrowError(
-      "'unsupported_lang' is not supported. Available languages:"
+    expect(() => cli(argv)).toThrowError(
+      `'unsupported_lang' is not supported. Available languages: ${[
+        ...loadDefaultParsers().keys(),
+      ].join(', ')}`
     );
   });
 
