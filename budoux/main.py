@@ -29,9 +29,15 @@ ArgList = list[str] | None
 # Using typing.Any for resource related objects to avoid complex conditional
 # imports for Traversable which varies across Python versions.
 models: typing.Any = resources.files('budoux') / "models"
-langs: dict[str, typing.Any] = {
-  model.name[:-5]: model for model in models.iterdir() if model.name.endswith(".json")
-}
+# Only expose default BCP 47 language models (filenames without '_') via `-l`;
+# flavor/experimental models (e.g. `ja_word.json`) should be passed via `-m`.
+langs: dict[str, typing.Any] = dict(
+  sorted(
+    (model.name[:-5], model)
+    for model in models.iterdir()
+    if model.name.endswith(".json") and "_" not in model.name[:-5]
+  )
+)
 
 
 class BudouxHelpFormatter(
