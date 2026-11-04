@@ -72,6 +72,21 @@ class TestModelOption(unittest.TestCase):
 
     self.assertEqual(cm.exception.code, 2)
 
+  def test_cmdargs_flavor_model_rejected_in_lang(self) -> None:
+    self.assertEqual(list(main.langs.keys()), ['ja', 'th', 'zh-hans', 'zh-hant'])
+    cmdargs = ['-l', 'ja_word']
+    with self.assertRaises(SystemExit) as cm:
+      main.parse_args(cmdargs)
+
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_cmdargs_flavor_model_via_model_option(self) -> None:
+    model_path = join(dirname(abspath(main.__file__)), 'models', 'ja_word.json')
+    cmdargs = ['-m', model_path, '今日は天気です。']
+    output = main._main(cmdargs)
+
+    self.assertEqual(output, '今日\nは\n天気\nです\n。')
+
   def test_cmdargs_lang_ja(self) -> None:
     cmdargs = ['-l', 'ja', '今日は良い天気ですね。']
     output = main._main(cmdargs)
