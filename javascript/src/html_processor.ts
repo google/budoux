@@ -214,16 +214,18 @@ function actionForElement(element: Element | DocumentFragment): DomAction {
 /**
  * Recommended CSS style declarations for parent elements containing BudouX-segmented text.
  */
-export const PARENT_CSS_STYLE =
-  'word-break: keep-all; overflow-wrap: anywhere;';
+const WORD_BREAK = 'keep-all';
+const OVERFLOW_WRAP = 'anywhere';
+
+export const PARENT_CSS_STYLE = `word-break: ${WORD_BREAK}; overflow-wrap: ${OVERFLOW_WRAP};`;
 
 /**
  * Applies wrapping styles to make linebreak controls work in children.
  * @param element A parent element to apply the styles.
  */
 export const applyWrapStyle = (element: HTMLElement) => {
-  element.style.wordBreak = 'keep-all';
-  element.style.overflowWrap = 'anywhere';
+  element.style.wordBreak = WORD_BREAK;
+  element.style.overflowWrap = OVERFLOW_WRAP;
 };
 
 /**
@@ -434,15 +436,24 @@ export class HTMLProcessor {
    * It breaks descendant nodes into paragraphs,
    * and applies the BudouX to each paragraph.
    * @param element The input element or document fragment.
-   * @param applyBlockStyle Whether to apply the block style to paragraphs. Defaults to true.
    */
-  applyToElement(
+  applyToElement(element: HTMLElement | DocumentFragment) {
+    this.applyToElementInternal(element, true);
+  }
+
+  /**
+   * Applies markups for semantic line breaks, optionally applying block styles.
+   * @param element The input element or document fragment.
+   * @param shouldApplyBlockStyle Whether to apply block styles to paragraphs.
+   * @internal
+   */
+  applyToElementInternal(
     element: HTMLElement | DocumentFragment,
-    applyBlockStyle = true
+    shouldApplyBlockStyle: boolean
   ) {
     for (const block of this.getBlocks(element)) {
       assert(!block.isEmpty());
-      this.applyToParagraph(block, applyBlockStyle);
+      this.applyToParagraphInternal(block, shouldApplyBlockStyle);
     }
   }
 
@@ -523,9 +534,15 @@ export class HTMLProcessor {
   /**
    * Apply the BudouX to the given {@link Paragraph}.
    * @param paragraph The {@link Paragraph} to apply.
-   * @param applyBlockStyle Whether to apply the block style to paragraphs. Defaults to true.
    */
-  applyToParagraph(paragraph: Paragraph, applyBlockStyle = true): void {
+  applyToParagraph(paragraph: Paragraph): void {
+    this.applyToParagraphInternal(paragraph, true);
+  }
+
+  private applyToParagraphInternal(
+    paragraph: Paragraph,
+    shouldApplyBlockStyle: boolean
+  ): void {
     assert(paragraph.nodes.length > 0);
     if (!paragraph.nodes.some(node => node.canSplit)) return;
     const text = paragraph.text;
@@ -551,7 +568,7 @@ export class HTMLProcessor {
     adjustedBoundaries.push(text.length + 1);
 
     this.splitNodes(paragraph.nodes, adjustedBoundaries);
-    if (applyBlockStyle) {
+    if (shouldApplyBlockStyle) {
       this.applyBlockStyle(paragraph.element);
     }
   }
@@ -676,20 +693,23 @@ export class HTMLProcessingParser extends Parser {
   /**
    * Applies markups for semantic line breaks to the given HTML element or document fragment.
    * @param parentElement The input element or document fragment.
-   * @param applyBlockStyle Whether to apply the block style to paragraphs. Defaults to true.
    */
-  applyToElement(
-    parentElement: HTMLElement | DocumentFragment,
-    applyBlockStyle = true
-  ) {
-    this.htmlProcessor.applyToElement(parentElement, applyBlockStyle);
+  applyToElement(parentElement: HTMLElement | DocumentFragment) {
+    this.htmlProcessor.applyToElement(parentElement);
   }
 
   /**
    * Translates the given HTML string to another HTML string with markups
    * for semantic line breaks.
+   *
+   * When `wrap` is `true` (default), the output is wrapped in a `<span>` element
+   * (if needed) and block styles (or class name) are applied to paragraph elements.
+   * When `wrap` is `false`, the HTML string is segmented without wrapping in a
+   * `<span>` or applying block styles.
+   *
    * @param html An input html string.
-   * @param wrap Whether to wrap the output in a span element with inline styles. Defaults to true.
+   * @param wrap Whether to wrap the output in a `<span>` element (if needed) and
+   * apply block styles. Defaults to true.
    * @return The translated HTML string.
    */
   translateHTMLString(html: string, wrap = true) {
@@ -706,7 +726,7 @@ export class HTMLProcessingParser extends Parser {
       }
       this.applyToElement(doc.body.firstElementChild as HTMLElement);
     } else {
-      this.applyToElement(doc.body, false);
+      this.htmlProcessor.applyToElementInternal(doc.body, false);
     }
     return doc.body.innerHTML;
   }

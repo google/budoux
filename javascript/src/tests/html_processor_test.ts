@@ -21,9 +21,14 @@ import {
   HTMLProcessor,
   type HTMLProcessorOptions,
   NodeOrTextForTesting,
+  PARENT_CSS_STYLE,
   type ParagraphForTesting,
 } from '../html_processor.js';
-import {jaModel, loadDefaultJapaneseParser} from '../index.js';
+import {
+  jaModel,
+  loadDefaultJapaneseParser,
+  PARENT_CSS_STYLE as PARENT_CSS_STYLE_FROM_INDEX,
+} from '../index.js';
 import {createDocument, isBrowser, setInnerHtml} from './testutils.js';
 
 const parser = loadDefaultJapaneseParser();
@@ -604,6 +609,22 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     const inputHTML = '<p class="foo" style="color: red">xyzabcd</p>';
     const result = parser.translateHTMLString(inputHTML, false);
     expect(result).toBe('<p class="foo" style="color: red">xyz\u200Babcd</p>');
+  });
+
+  it('should not wrap in a SPAN or apply styles for multi-element inputs when wrap=false.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = '<p>xyzabcd</p><p>xyzabcd</p>';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe('<p>xyz\u200Babcd</p><p>xyz\u200Babcd</p>');
+  });
+});
+
+describe('PARENT_CSS_STYLE', () => {
+  it('should define the recommended CSS style declarations.', () => {
+    expect(PARENT_CSS_STYLE).toBe(
+      'word-break: keep-all; overflow-wrap: anywhere;'
+    );
+    expect(PARENT_CSS_STYLE_FROM_INDEX).toBe(PARENT_CSS_STYLE);
   });
 });
 
