@@ -212,12 +212,20 @@ function actionForElement(element: Element | DocumentFragment): DomAction {
 }
 
 /**
+ * Recommended CSS style declarations for parent elements containing BudouX-segmented text.
+ */
+const WORD_BREAK = 'keep-all';
+const OVERFLOW_WRAP = 'anywhere';
+
+export const PARENT_CSS_STYLE = `word-break: ${WORD_BREAK}; overflow-wrap: ${OVERFLOW_WRAP};`;
+
+/**
  * Applies wrapping styles to make linebreak controls work in children.
  * @param element A parent element to apply the styles.
  */
 export const applyWrapStyle = (element: HTMLElement) => {
-  element.style.wordBreak = 'keep-all';
-  element.style.overflowWrap = 'anywhere';
+  element.style.wordBreak = WORD_BREAK;
+  element.style.overflowWrap = OVERFLOW_WRAP;
 };
 
 /**
@@ -430,9 +438,22 @@ export class HTMLProcessor {
    * @param element The input element or document fragment.
    */
   applyToElement(element: HTMLElement | DocumentFragment) {
+    this.applyToElementInternal(element, true);
+  }
+
+  /**
+   * Applies markups for semantic line breaks, optionally applying block styles.
+   * @param element The input element or document fragment.
+   * @param shouldApplyBlockStyle Whether to apply block styles to paragraphs.
+   * @internal
+   */
+  applyToElementInternal(
+    element: HTMLElement | DocumentFragment,
+    shouldApplyBlockStyle: boolean
+  ) {
     for (const block of this.getBlocks(element)) {
       assert(!block.isEmpty());
-      this.applyToParagraph(block);
+      this.applyToParagraphInternal(block, shouldApplyBlockStyle);
     }
   }
 
@@ -515,6 +536,13 @@ export class HTMLProcessor {
    * @param paragraph The {@link Paragraph} to apply.
    */
   applyToParagraph(paragraph: Paragraph): void {
+    this.applyToParagraphInternal(paragraph, true);
+  }
+
+  private applyToParagraphInternal(
+    paragraph: Paragraph,
+    shouldApplyBlockStyle: boolean
+  ): void {
     assert(paragraph.nodes.length > 0);
     if (!paragraph.nodes.some(node => node.canSplit)) return;
     const text = paragraph.text;
@@ -540,7 +568,9 @@ export class HTMLProcessor {
     adjustedBoundaries.push(text.length + 1);
 
     this.splitNodes(paragraph.nodes, adjustedBoundaries);
-    this.applyBlockStyle(paragraph.element);
+    if (shouldApplyBlockStyle) {
+      this.applyBlockStyle(paragraph.element);
+    }
   }
 
   /**
@@ -671,21 +701,33 @@ export class HTMLProcessingParser extends Parser {
   /**
    * Translates the given HTML string to another HTML string with markups
    * for semantic line breaks.
+   *
+   * When `wrap` is `true` (default), the output is wrapped in a `<span>` element
+   * (if needed) and block styles (or class name) are applied to paragraph elements.
+   * When `wrap` is `false`, the HTML string is segmented without wrapping in a
+   * `<span>` or applying block styles.
+   *
    * @param html An input html string.
+   * @param wrap Whether to wrap the output in a `<span>` element (if needed) and
+   * apply block styles. Defaults to true.
    * @return The translated HTML string.
    */
-  translateHTMLString(html: string) {
+  translateHTMLString(html: string, wrap = true) {
     if (html === '') return html;
     const doc = parseFromString(html);
-    if (
-      HTMLProcessor.hasChildTextNode(doc.body) ||
-      doc.body.children.length !== 1
-    ) {
-      const wrapper = doc.createElement('span') as unknown as HTMLElement;
-      wrapper.append(...doc.body.childNodes);
-      doc.body.append(wrapper);
+    if (wrap) {
+      if (
+        HTMLProcessor.hasChildTextNode(doc.body) ||
+        doc.body.children.length !== 1
+      ) {
+        const wrapper = doc.createElement('span') as unknown as HTMLElement;
+        wrapper.append(...doc.body.childNodes);
+        doc.body.append(wrapper);
+      }
+      this.applyToElement(doc.body.firstElementChild as HTMLElement);
+    } else {
+      this.htmlProcessor.applyToElementInternal(doc.body, false);
     }
-    this.applyToElement(doc.body.firstElementChild as HTMLElement);
     return doc.body.innerHTML;
   }
 }

@@ -21,9 +21,14 @@ import {
   HTMLProcessor,
   type HTMLProcessorOptions,
   NodeOrTextForTesting,
+  PARENT_CSS_STYLE,
   type ParagraphForTesting,
 } from '../html_processor.js';
-import {jaModel, loadDefaultJapaneseParser} from '../index.js';
+import {
+  jaModel,
+  loadDefaultJapaneseParser,
+  PARENT_CSS_STYLE as PARENT_CSS_STYLE_FROM_INDEX,
+} from '../index.js';
 import {createDocument, isBrowser, setInnerHtml} from './testutils.js';
 
 const parser = loadDefaultJapaneseParser();
@@ -581,6 +586,45 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     style="word-break: keep-all; overflow-wrap: anywhere;"
     >xyz\u200Ba🇯🇵🇵🇹\u200Babc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
+  });
+
+  it('should output an unwrapped html string when wrap=false.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = 'xyza<a href="http://example.com">bc</a>abc';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe(
+      'xyz\u200ba<a href="http://example.com">bc</a>\u200babc'
+    );
+  });
+
+  it('should not wrap in a SPAN when wrap=false for text-only inputs.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = 'xyzabcd';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe('xyz\u200Babcd');
+  });
+
+  it('should not modify attributes or add style to existing parent when wrap=false.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = '<p class="foo" style="color: red">xyzabcd</p>';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe('<p class="foo" style="color: red">xyz\u200Babcd</p>');
+  });
+
+  it('should not wrap in a SPAN or apply styles for multi-element inputs when wrap=false.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const inputHTML = '<p>xyzabcd</p><p>xyzabcd</p>';
+    const result = parser.translateHTMLString(inputHTML, false);
+    expect(result).toBe('<p>xyz\u200Babcd</p><p>xyz\u200Babcd</p>');
+  });
+});
+
+describe('PARENT_CSS_STYLE', () => {
+  it('should define the recommended CSS style declarations.', () => {
+    expect(PARENT_CSS_STYLE).toBe(
+      'word-break: keep-all; overflow-wrap: anywhere;'
+    );
+    expect(PARENT_CSS_STYLE_FROM_INDEX).toBe(PARENT_CSS_STYLE);
   });
 });
 
