@@ -486,6 +486,14 @@ describe('HTMLProcessingParser.applyToElement', () => {
     };
     checkEqual(model, inputHTML, expectedHTML);
   });
+  it('should not insert ZWSPs right before existing ZWSPs.', () => {
+    const inputHTML = '<p>xyz\u200Babc</p>';
+    const expectedHTML = `<p style="${style}">xyz\u200Babc</p>`;
+    checkEqual({UW4: {'\u200B': 1001}}, inputHTML, expectedHTML);
+    // The output for '今日は天気です。', so applying it again is a no-op.
+    const html = '<p>今日は\u200B天気です。</p>';
+    checkEqual(jaModel, html, html.replace('<p>', `<p style="${style}">`));
+  });
   it('should not insert ZWSPs before or after whitespace.', () => {
     const inputHTML = '<p>xyza\nabca</p>';
     // Separate right before 'a', except after the '\n'.

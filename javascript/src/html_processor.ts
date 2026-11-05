@@ -559,10 +559,13 @@ export class HTMLProcessor {
     assert(boundaries.every((x, i) => i === 0 || x > boundaries[i - 1]));
     assert(boundaries[boundaries.length - 1] < text.length);
 
-    // Don't insert separators before or after whitespace, as in Python and Java.
+    // Don't insert separators before or after whitespace, as in Python and Java,
+    // or right before a ZWSP in the source.
     const adjustedBoundaries = paragraph
       .excludeForcedOpportunities(boundaries)
-      .filter(i => !/\s/.test(text[i - 1]) && !/\s/.test(text[i]));
+      .filter(
+        i => !/\s/.test(text[i - 1]) && !/\s/.test(text[i]) && text[i] !== ZWSP
+      );
 
     // Add a sentinel to help iterating.
     adjustedBoundaries.push(text.length + 1);
