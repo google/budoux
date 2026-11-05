@@ -438,22 +438,9 @@ export class HTMLProcessor {
    * @param element The input element or document fragment.
    */
   applyToElement(element: HTMLElement | DocumentFragment) {
-    this.applyToElementInternal(element, true);
-  }
-
-  /**
-   * Applies markups for semantic line breaks, optionally applying block styles.
-   * @param element The input element or document fragment.
-   * @param shouldApplyBlockStyle Whether to apply block styles to paragraphs.
-   * @internal
-   */
-  applyToElementInternal(
-    element: HTMLElement | DocumentFragment,
-    shouldApplyBlockStyle: boolean
-  ) {
     for (const block of this.getBlocks(element)) {
       assert(!block.isEmpty());
-      this.applyToParagraphInternal(block, shouldApplyBlockStyle);
+      this.applyToParagraph(block);
     }
   }
 
@@ -534,15 +521,9 @@ export class HTMLProcessor {
   /**
    * Apply the BudouX to the given {@link Paragraph}.
    * @param paragraph The {@link Paragraph} to apply.
+   * @param shouldApplyBlockStyle Whether to apply block styles to the paragraph element.
    */
-  applyToParagraph(paragraph: Paragraph): void {
-    this.applyToParagraphInternal(paragraph, true);
-  }
-
-  private applyToParagraphInternal(
-    paragraph: Paragraph,
-    shouldApplyBlockStyle: boolean
-  ): void {
+  applyToParagraph(paragraph: Paragraph, shouldApplyBlockStyle = true): void {
     assert(paragraph.nodes.length > 0);
     if (!paragraph.nodes.some(node => node.canSplit)) return;
     const text = paragraph.text;
@@ -726,7 +707,10 @@ export class HTMLProcessingParser extends Parser {
       }
       this.applyToElement(doc.body.firstElementChild as HTMLElement);
     } else {
-      this.htmlProcessor.applyToElementInternal(doc.body, false);
+      for (const block of this.htmlProcessor.getBlocks(doc.body)) {
+        assert(!block.isEmpty());
+        this.htmlProcessor.applyToParagraph(block, false);
+      }
     }
     return doc.body.innerHTML;
   }
