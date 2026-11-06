@@ -114,6 +114,20 @@ final class HTMLProcessor {
       return output;
     }
 
+    private boolean outputEndsWith(String str) {
+      int len = str.length();
+      int outLen = output.length();
+      if (outLen < len) {
+        return false;
+      }
+      for (int i = 0; i < len; i++) {
+        if (output.charAt(outLen - len + i) != str.charAt(i)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     @Override
     public void head(Node node, int depth) {
       if (node.nodeName().equals("body")) {
@@ -126,11 +140,20 @@ final class HTMLProcessor {
           // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
           // Assume phrasesJoined.charAt(scanIndex) == '\n'.
           scanIndex++;
+        } else if (nodeName.equals("wbr")) {
+          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
+            scanIndex++;
+          }
         } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
           if (!toSkip
               && scanIndex < phrasesJoined.length()
-              && phrasesJoined.charAt(scanIndex) == SEP) {
+              && phrasesJoined.charAt(scanIndex) == SEP
+              && !outputEndsWith(separator)
+              && !outputEndsWith("<wbr>")
+              && !outputEndsWith("\u200b")) {
             output.append(separator);
+            scanIndex++;
+          } else if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
             scanIndex++;
           }
           toSkip = true;
@@ -148,7 +171,15 @@ final class HTMLProcessor {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
             boolean prevWasWhitespace =
                 scanIndex > 0 && Character.isWhitespace(phrasesJoined.charAt(scanIndex - 1));
-            if (!toSkip && !Character.isWhitespace(c) && !prevWasWhitespace) {
+            boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
+            if (!toSkip
+                && !Character.isWhitespace(c)
+                && !prevWasWhitespace
+                && c != '\u200b'
+                && !prevWasZwsp
+                && !outputEndsWith(separator)
+                && !outputEndsWith("<wbr>")
+                && !outputEndsWith("\u200b")) {
               output.append(separator);
             }
             scanIndex++;
