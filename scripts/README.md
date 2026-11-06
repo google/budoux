@@ -428,11 +428,11 @@ and `<lang>_word` models), auto-balanced fine-tuning weight scaling, JAX model
 fitting (defaulting to `logitboost`), and holdout quality benchmarking, run:
 
 ```bash
-python scripts/run_training_pipeline.py --lang=ja --iter=10000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=ja_word --iter=10000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=zh-hans --iter=10000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=zh-hant --iter=10000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=th --iter=6000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=ja_word --iter=25000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=zh-hans --iter=28000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=zh-hant --iter=28000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=th --iter=200000 --split-dir=tmp/splits
 ```
 
 Model identifiers follow the `<bcp47_lang>` or `<bcp47_lang>_<flavor>`
