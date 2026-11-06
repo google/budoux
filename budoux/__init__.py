@@ -15,7 +15,7 @@
 
 from . import parser
 
-__version__ = "0.10.2"
+__version__ = "0.10.3"
 
 Parser = parser.Parser
 load_default_japanese_parser = parser.load_default_japanese_parser
