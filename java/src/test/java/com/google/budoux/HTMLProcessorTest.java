@@ -192,4 +192,36 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>", false);
     assertEquals("ab<a href=\"http://example.com\">c<wbr>d</a>ef", result);
   }
+
+  @Test
+  public void testResolveWithExistingWbr() {
+    List<String> phrases = Arrays.asList("abc", "def");
+    String html = "abc<wbr>def";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc<wbr>def"), result);
+  }
+
+  @Test
+  public void testResolveWithExistingSeparators() {
+    List<String> phrases = Arrays.asList("abc", "def\u200b", "ghi");
+    String html = "abc<wbr>def\u200bghi";
+    String result = HTMLProcessor.resolve(phrases, html);
+    assertEquals(this.wrap("abc<wbr>def\u200bghi"), result);
+  }
+
+  @Test
+  public void testResolveWithExistingSeparatorsAtStartOfChunk() {
+    List<String> phrases = Arrays.asList("abc", "\u200bdef");
+    String html = "abc\u200bdef";
+    String result = HTMLProcessor.resolve(phrases, html);
+    assertEquals(this.wrap("abc\u200bdef"), result);
+  }
+
+  @Test
+  public void testResolveWithStandaloneExistingSeparator() {
+    List<String> phrases = Arrays.asList("abc", "\u200b", "def");
+    String html = "abc\u200bdef";
+    String result = HTMLProcessor.resolve(phrases, html);
+    assertEquals(this.wrap("abc\u200bdef"), result);
+  }
 }
