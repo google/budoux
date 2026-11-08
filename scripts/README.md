@@ -429,9 +429,9 @@ fitting (defaulting to `logitboost`), and holdout quality benchmarking, run:
 
 ```bash
 python scripts/run_training_pipeline.py --lang=ja --iter=200000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=ja_word --iter=25000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=zh-hans --iter=28000 --split-dir=tmp/splits
-python scripts/run_training_pipeline.py --lang=zh-hant --iter=28000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=ja_word --iter=20000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=zh-hans --iter=20000 --split-dir=tmp/splits
+python scripts/run_training_pipeline.py --lang=zh-hant --iter=20000 --split-dir=tmp/splits
 python scripts/run_training_pipeline.py --lang=th --iter=200000 --split-dir=tmp/splits
 ```
 

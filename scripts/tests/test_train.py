@@ -331,6 +331,89 @@ class TestUpdateLogitBoost(unittest.TestCase):
 
     self.assertGreater(float(jnp.sum(scores)), 1.2)
 
+  def test_min_sum_none_disables_floor(self) -> None:
+    # Dense breaks where unconstrained 1D Newton step at t=0 is negative (-1.0)
+    # and unconstrained sum(scores) drifts well below 0.
+    X = jnp.array([[0, 0], [0, 0], [0, 1]])
+    rows, cols = jnp.where(X == 1)
+    M = 2
+    N = X.shape[0]
+    Y = jnp.array([1.0, 1.0, 0.0])
+    F = jnp.zeros(N, dtype=jnp.float32)
+    scores = jnp.zeros(M)
+
+    # At t=0: g = [0.5, 0.5, -0.5], sum(g) = 0.5, g_sparse = [0.0, -0.5],
+    # G = [-0.5, -1.5], sum(h) = 0.75 -> exact Newton step on feature 1 is -1.0.
+    F, scores, feat_idx, step_score = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, min_sum=None
+    )
+    self.assertEqual(int(feat_idx), 1)
+    self.assertAlmostEqual(float(step_score), -1.0, places=5)
+    self.assertLess(float(jnp.sum(scores)), 0.0)
+
+    for _ in range(10):
+      F, scores, _, _ = train.update_logitboost(
+        F, scores, rows, cols, M, N, Y, min_sum=None
+      )
+    self.assertLess(float(jnp.sum(scores)), -1.0)
+
+  def test_mid_floor_avoids_step_size_starvation(self) -> None:
+    # cur_sum = 0.58 lies between mid_floor (0.55) and upper_floor (0.60).
+    # Unconstrained step is negative, triggering the floor handler; with the
+    # midpoint threshold, need_pos is False so a negative step is taken rather
+    # than clipping a positive step to upper_floor - cur_sum (+0.02).
+    X = jnp.array([[1, 0], [0, 1], [0, 0], [0, 0]])
+    rows, cols = jnp.where(X == 1)
+    M = 2
+    N = X.shape[0]
+    Y = jnp.array([1.0, 0.0, 1.0, 1.0])
+    scores = jnp.array([0.58, 0.0], dtype=jnp.float32)
+    F = (2.0 * X.astype(jnp.float32) - 1.0) @ scores
+
+    _, new_scores, best_idx, step_score = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, learning_rate=1.0, min_sum=0.5
+    )
+    self.assertEqual(int(best_idx), 1)
+    self.assertLess(float(step_score), 0.0)
+    self.assertGreaterEqual(float(jnp.sum(new_scores)), 0.5 - 1e-6)
+
+  def test_floor_holds_when_all_g_sparse_nonpositive(self) -> None:
+    # Y is all zeros so g = -p < 0 everywhere (all g_sparse <= 0). Feature 0 is
+    # active on all 3 rows, so G_0 = 2 * g_sparse[0] - sum(g) < 0 and
+    # unconstrained_score < 0. Starting at cur_sum >= min_sum must never drop
+    # below min_sum across both cur_sum >= mid_floor and cur_sum < mid_floor.
+    X = jnp.array([[1, 1], [1, 0], [1, 0]])
+    rows, cols = jnp.where(X == 1)
+    M = 2
+    N = X.shape[0]
+    Y = jnp.array([0.0, 0.0, 0.0])
+    scores = jnp.array([0.30, 0.28], dtype=jnp.float32)  # cur_sum = 0.58 >= 0.50
+    F = (2.0 * X.astype(jnp.float32) - 1.0) @ scores
+
+    for _ in range(10):
+      F, scores, _, _ = train.update_logitboost(
+        F, scores, rows, cols, M, N, Y, learning_rate=1.0, min_sum=0.5
+      )
+      self.assertGreaterEqual(float(jnp.sum(scores)), 0.5 - 1e-6)
+
+  def test_floor_selects_by_second_order_gain(self) -> None:
+    # Feature 0 has slightly larger 1st-order gradient (g_sparse[0] = 2.0 vs
+    # g_sparse[1] ≈ 1.964), but much higher active curvature (h_sparse[0] = 4.0
+    # vs h_sparse[1] ≈ 0.035), so Feature 1 has higher 2nd-order Taylor gain.
+    X = jnp.array([[1, 0]] * 16 + [[0, 1]] * 2 + [[0, 0]] * 6, dtype=jnp.int32)
+    rows, cols = jnp.where(X == 1)
+    M = 2
+    N = X.shape[0]
+    Y = jnp.array([1.0] * 10 + [0.0] * 6 + [1.0] * 2 + [1.0] * 6, dtype=jnp.float32)
+    scores = jnp.array([0.25, 0.25], dtype=jnp.float32)  # cur_sum = 0.50 < mid_floor
+    F = jnp.array([0.0] * 16 + [-2.0] * 2 + [-2.0] * 6, dtype=jnp.float32)
+
+    _, _, best_idx, step_score = train.update_logitboost(
+      F, scores, rows, cols, M, N, Y, learning_rate=1.0, min_sum=0.5
+    )
+    self.assertEqual(int(best_idx), 1)
+    self.assertGreater(float(step_score), 0.0)
+
 
 class TestFit(unittest.TestCase):
   def test_fit(self) -> None:
