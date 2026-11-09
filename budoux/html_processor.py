@@ -153,6 +153,9 @@ class HTMLChunkResolver(HTMLParser):
       # Note the HTML "adoption agency algorithm" isn't fully supported.
       # See https://html.spec.whatwg.org/multipage/parsing.html#an-introduction-to-error-handling-and-strange-cases-in-the-parser
 
+  def handle_comment(self, data: str) -> None:
+    self._output.append(f'<!--{data}-->')
+
   def handle_data(self, data: str) -> None:
     for char in data:
       if self.scan_index in self.boundaries:
