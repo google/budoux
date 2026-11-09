@@ -33,6 +33,7 @@ DEFAULT_ITERATION = 10000
 DEFAULT_ALGORITHM = 'adaboost'
 ALGORITHMS = ('adaboost', 'logitboost')
 DEFAULT_LEARNING_RATE = 1.0
+DEFAULT_MIN_SCORE_SUM = 0.5
 ArgList = list[str] | None
 
 
@@ -236,6 +237,70 @@ def update(
   return w, scores, best_feature_index, score
 
 
+def _apply_score_sum_floor(
+  unconstrained_idx: jax.Array,
+  unconstrained_score: jax.Array,
+  scores: jax.Array,
+  g_sparse: jax.Array,
+  h: jax.Array,
+  rows: jax.Array,
+  cols: jax.Array,
+  M: int,
+  sample_weights: jax.Array,
+  learning_rate: float,
+  min_sum: float,
+) -> tuple[jax.Array, jax.Array]:
+  """Enforces the one-sided KKT floor `sum(scores) >= min_sum`.
+
+  On dense word-segmented corpora (e.g. `ja_word`, `zh-hans`, `zh-hant`), the
+  unconstrained optimum has `sum(scores) < 0` (`base_score > 0`), which would
+  split unseen OOV text at every character. On the active hyperplane
+  `sum(scores) = c`, global `-1` intercept shifts cancel across zero-sum tangent
+  displacements, leaving the L2-damped active tangent Newton step.
+  """
+  band = 0.1 * learning_rate
+  mid_floor = min_sum + 0.5 * band
+  upper_floor = min_sum + band
+  cur_sum = jnp.sum(scores)
+
+  h_sparse = jax.ops.segment_sum(h.take(rows), cols, M)
+  reg = 2.0 * (jnp.mean(sample_weights) + EPS)
+  gain = jnp.square(g_sparse) / (h_sparse + reg)
+  j_pos = jnp.argmax(jnp.where(g_sparse > 0.0, gain, -1.0))
+  j_neg = jnp.argmax(jnp.where(g_sparse < 0.0, gain, -1.0))
+
+  # Once cur_sum >= min_sum, unconditionally block any drop below min_sum even
+  # if all g_sparse <= 0; before reaching min_sum (e.g. t=0), require at least
+  # one positive-gradient feature so purely negative toy datasets do not
+  # deadlock at pos_step = 0.
+  can_enforce = (cur_sum >= min_sum - 1e-6) | (jnp.max(g_sparse) > 0.0)
+  violates_floor = (
+    can_enforce
+    & (unconstrained_score < 0.0)
+    & (cur_sum + unconstrained_score < upper_floor - 1e-6)
+  )
+  need_pos = cur_sum < mid_floor
+  pos_step = jnp.minimum(
+    upper_floor - cur_sum,
+    learning_rate
+    * 0.25
+    * jnp.clip(g_sparse.at[j_pos].get() / (h_sparse.at[j_pos].get() + reg), 0.0, 2.0),
+  )
+  neg_step = jnp.maximum(
+    min_sum - cur_sum,
+    learning_rate
+    * 0.25
+    * jnp.clip(g_sparse.at[j_neg].get() / (h_sparse.at[j_neg].get() + reg), -2.0, 0.0),
+  )
+
+  floor_idx = jnp.where(need_pos, j_pos, j_neg)
+  floor_score = jnp.where(need_pos, pos_step, neg_step)
+  return (
+    jnp.where(violates_floor, floor_idx, unconstrained_idx),
+    jnp.where(violates_floor, floor_score, unconstrained_score),
+  )
+
+
 @partial(jax.jit, static_argnums=[4, 5])
 def update_logitboost(
   F: jax.Array,
@@ -247,6 +312,7 @@ def update_logitboost(
   Y: jax.Array,
   sample_weights: jax.Array | None = None,
   learning_rate: float = DEFAULT_LEARNING_RATE,
+  min_sum: float | None = DEFAULT_MIN_SCORE_SUM,
 ) -> tuple[jax.Array, jax.Array, int, float]:
   """Calculates the new ensemble score vector and contribution scores via LogitBoost.
 
@@ -261,6 +327,9 @@ def update_logitboost(
     sample_weights (Optional[jax.Array]): Per-sample cost/importance weights.
       Defaults to ones if None.
     learning_rate (float): Shrinkage factor multiplying step size. Defaults to 1.0.
+    min_sum (Optional[float]): One-sided lower floor on `sum(scores)` so the
+      parser's `base_score` (`-0.5 * sum(scores)`) stays negative on dense word
+      corpora. Pass `None` to disable the floor constraint.
 
   Returns:
     A tuple of following items:
@@ -274,32 +343,33 @@ def update_logitboost(
   p = jnp.clip(jax.nn.sigmoid(2.0 * F), 1e-6, 1.0 - 1e-6)
   g = sample_weights * (Y - p)
   h = sample_weights * jnp.clip(p * (1.0 - p), 1e-4, 0.25)
+  denom = jnp.sum(h) + EPS
 
-  # Select features by L2-regularized second-order Taylor gain over active rows
-  # {i | X_{i,j} = 1}; normalizing by h_act (not global sum(h)) preserves rare features.
-  g_act = jax.ops.segment_sum(g.take(rows), cols, M)
-  h_act = jax.ops.segment_sum(h.take(rows), cols, M)
-  reg = 2.0 * (jnp.mean(sample_weights) + EPS)
-  gain = jnp.square(g_act) / (h_act + reg)
+  # Exact 1D coordinate Newton step on F_i = sum_j s_j (2 X_{i,j} - 1).
+  # Sparse-break corpora (such as phrase models like `ja` and `th`) naturally
+  # maintain sum(scores) >> min_sum and use this unconstrained step directly.
+  g_sparse = jax.ops.segment_sum(g.take(rows), cols, M)
+  G = 2.0 * g_sparse - jnp.sum(g)
+  best_idx = jnp.argmax(jnp.abs(G))
+  best_score = learning_rate * 0.5 * (G.at[best_idx].get() / denom)
 
-  # Alternate step signs around target_sum = 0.5 * max(1, learning_rate) (OOV
-  # log-odds = -2 * sum(scores) ≈ -1.0). With |step| <= 2.0, each step is bounded
-  # by 0.5 * learning_rate, guaranteeing sum(scores) > 0 (base_score < 0) for all t >= 1.
-  target_sum = 0.5 * jnp.maximum(1.0, learning_rate)
-  valid = g_act * (jnp.sum(scores) - target_sum) < 0
-  best_feature_index: int = jnp.argmax(  # type: ignore
-    jnp.where(jnp.any(valid), jnp.where(valid, gain, -1.0), gain)
-  )
+  if min_sum is not None:
+    best_idx, best_score = _apply_score_sum_floor(
+      best_idx,
+      best_score,
+      scores,
+      g_sparse,
+      h,
+      rows,
+      cols,
+      M,
+      sample_weights,
+      learning_rate,
+      min_sum,
+    )
 
-  # Since F_i = scores.dot(2X_i - 1) and p = sigmoid(2F), adding `score` changes
-  # the active-vs-inactive logit by 4 * score; 0.25 normalizes lr=1 to a 1x Newton step.
-  # Clipping step to [-2, 2] bounds |score| <= 0.5 * learning_rate.
-  step = jnp.clip(
-    g_act.at[best_feature_index].get() / (h_act.at[best_feature_index].get() + reg),
-    -2.0,
-    2.0,
-  )
-  score: float = learning_rate * 0.25 * step  # type: ignore
+  best_feature_index: int = best_idx  # type: ignore
+  score: float = best_score  # type: ignore
 
   X_best = (
     jnp.zeros(N, dtype=jnp.float32)
