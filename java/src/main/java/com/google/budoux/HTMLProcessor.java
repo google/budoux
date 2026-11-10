@@ -126,11 +126,19 @@ final class HTMLProcessor {
           // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
           // Assume phrasesJoined.charAt(scanIndex) == '\n'.
           scanIndex++;
+        } else if (nodeName.equals("wbr")) {
+          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
+            scanIndex++;
+          }
         } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
-          if (!toSkip
-              && scanIndex < phrasesJoined.length()
-              && phrasesJoined.charAt(scanIndex) == SEP) {
-            output.append(separator);
+          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
+            boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
+            boolean nextIsZwsp =
+                scanIndex + 1 < phrasesJoined.length()
+                    && phrasesJoined.charAt(scanIndex + 1) == '\u200b';
+            if (!toSkip && !prevWasZwsp && !nextIsZwsp) {
+              output.append(separator);
+            }
             scanIndex++;
           }
           toSkip = true;
@@ -148,7 +156,12 @@ final class HTMLProcessor {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
             boolean prevWasWhitespace =
                 scanIndex > 0 && Character.isWhitespace(phrasesJoined.charAt(scanIndex - 1));
-            if (!toSkip && !Character.isWhitespace(c) && !prevWasWhitespace) {
+            boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
+            if (!toSkip
+                && !Character.isWhitespace(c)
+                && !prevWasWhitespace
+                && c != '\u200b'
+                && !prevWasZwsp) {
               output.append(separator);
             }
             scanIndex++;
