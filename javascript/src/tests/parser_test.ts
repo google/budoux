@@ -48,6 +48,16 @@ describe('Parser.parse', () => {
     expect(result).toEqual(['𠮷', '野', '家']);
   });
 
+  it('should match features with surrogate pairs.', () => {
+    const model = {
+      UW3: {𠮷: 1000},
+      BW2: {𠮷野: 1000},
+    };
+    const parser = new Parser(model);
+    const result = parser.parse('𠮷野家');
+    expect(result).toEqual(['𠮷', '野家']);
+  });
+
   it('should return an empty list when the input is a blank string.', () => {
     const parser = new Parser({});
     const result = parser.parse('');

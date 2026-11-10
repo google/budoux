@@ -81,25 +81,33 @@ export class Parser {
     const tw3 = this.model.get('TW3');
     const tw4 = this.model.get('TW4');
 
-    for (let i = 1; i < sentence.length; i++) {
-      // Don't separate the two halves of a surrogate pair.
-      if ((sentence.codePointAt(i - 1) ?? 0) > 0xffff) continue;
+    const chars = Array.from(sentence);
+    let offset = 0;
+    for (let i = 1; i < chars.length; i++) {
+      offset += chars[i - 1].length;
       let score = this.baseScore;
       // NOTE: Score values in models may be negative.
-      score += uw1?.get(sentence.substring(i - 3, i - 2)) || 0;
-      score += uw2?.get(sentence.substring(i - 2, i - 1)) || 0;
-      score += uw3?.get(sentence.substring(i - 1, i)) || 0;
-      score += uw4?.get(sentence.substring(i, i + 1)) || 0;
-      score += uw5?.get(sentence.substring(i + 1, i + 2)) || 0;
-      score += uw6?.get(sentence.substring(i + 2, i + 3)) || 0;
-      score += bw1?.get(sentence.substring(i - 2, i)) || 0;
-      score += bw2?.get(sentence.substring(i - 1, i + 1)) || 0;
-      score += bw3?.get(sentence.substring(i, i + 2)) || 0;
-      score += tw1?.get(sentence.substring(i - 3, i)) || 0;
-      score += tw2?.get(sentence.substring(i - 2, i + 1)) || 0;
-      score += tw3?.get(sentence.substring(i - 1, i + 2)) || 0;
-      score += tw4?.get(sentence.substring(i, i + 3)) || 0;
-      if (score > 0) result.push(i);
+      score += (i > 2 && uw1?.get(chars[i - 3])) || 0;
+      score += (i > 1 && uw2?.get(chars[i - 2])) || 0;
+      score += uw3?.get(chars[i - 1]) || 0;
+      score += uw4?.get(chars[i]) || 0;
+      score += (i + 1 < chars.length && uw5?.get(chars[i + 1])) || 0;
+      score += (i + 2 < chars.length && uw6?.get(chars[i + 2])) || 0;
+      score += (i > 1 && bw1?.get(chars[i - 2] + chars[i - 1])) || 0;
+      score += bw2?.get(chars[i - 1] + chars[i]) || 0;
+      score += (i + 1 < chars.length && bw3?.get(chars[i] + chars[i + 1])) || 0;
+      score +=
+        (i > 2 && tw1?.get(chars[i - 3] + chars[i - 2] + chars[i - 1])) || 0;
+      score += (i > 1 && tw2?.get(chars[i - 2] + chars[i - 1] + chars[i])) || 0;
+      score +=
+        (i + 1 < chars.length &&
+          tw3?.get(chars[i - 1] + chars[i] + chars[i + 1])) ||
+        0;
+      score +=
+        (i + 2 < chars.length &&
+          tw4?.get(chars[i] + chars[i + 1] + chars[i + 2])) ||
+        0;
+      if (score > 0) result.push(offset);
     }
     return result;
   }
