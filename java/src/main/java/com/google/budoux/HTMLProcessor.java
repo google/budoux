@@ -114,20 +114,6 @@ final class HTMLProcessor {
       return output;
     }
 
-    private boolean outputEndsWith(String str) {
-      int len = str.length();
-      int outLen = output.length();
-      if (outLen < len) {
-        return false;
-      }
-      for (int i = 0; i < len; i++) {
-        if (output.charAt(outLen - len + i) != str.charAt(i)) {
-          return false;
-        }
-      }
-      return true;
-    }
-
     @Override
     public void head(Node node, int depth) {
       if (node.nodeName().equals("body")) {
@@ -145,15 +131,14 @@ final class HTMLProcessor {
             scanIndex++;
           }
         } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
-          if (!toSkip
-              && scanIndex < phrasesJoined.length()
-              && phrasesJoined.charAt(scanIndex) == SEP
-              && !outputEndsWith(separator)
-              && !outputEndsWith("<wbr>")
-              && !outputEndsWith("\u200b")) {
-            output.append(separator);
-            scanIndex++;
-          } else if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
+          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
+            boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
+            boolean nextIsZwsp =
+                scanIndex + 1 < phrasesJoined.length()
+                    && phrasesJoined.charAt(scanIndex + 1) == '\u200b';
+            if (!toSkip && !prevWasZwsp && !nextIsZwsp) {
+              output.append(separator);
+            }
             scanIndex++;
           }
           toSkip = true;
@@ -176,10 +161,7 @@ final class HTMLProcessor {
                 && !Character.isWhitespace(c)
                 && !prevWasWhitespace
                 && c != '\u200b'
-                && !prevWasZwsp
-                && !outputEndsWith(separator)
-                && !outputEndsWith("<wbr>")
-                && !outputEndsWith("\u200b")) {
+                && !prevWasZwsp) {
               output.append(separator);
             }
             scanIndex++;

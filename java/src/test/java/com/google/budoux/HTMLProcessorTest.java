@@ -224,4 +224,20 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html);
     assertEquals(this.wrap("abc\u200bdef"), result);
   }
+
+  @Test
+  public void testResolveWithExistingZwspBeforeSkipNode() {
+    List<String> phrases = Arrays.asList("abc\u200b", "def");
+    String html = "<span>abc\u200b</span><nobr>def</nobr>";
+    String result = HTMLProcessor.resolve(phrases, html);
+    assertEquals(this.wrap("<span>abc\u200b</span><nobr>def</nobr>"), result);
+  }
+
+  @Test
+  public void testResolveWithExistingZwspAtStartOfSkipNode() {
+    List<String> phrases = Arrays.asList("abc", "\u200bdef");
+    String html = "abc<nobr>\u200bdef</nobr>";
+    String result = HTMLProcessor.resolve(phrases, html);
+    assertEquals(this.wrap("abc<nobr>\u200bdef</nobr>"), result);
+  }
 }
