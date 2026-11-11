@@ -163,51 +163,44 @@ public class Parser {
     if (sentence.isEmpty()) {
       return new ArrayList<>();
     }
+    int numChars = sentence.codePointCount(0, sentence.length());
+    String[] chars = new String[numChars];
+    for (int i = 0, charOffset = 0; i < numChars; i++) {
+      int codePoint = sentence.codePointAt(charOffset);
+      int charCount = Character.charCount(codePoint);
+      chars[i] = sentence.substring(charOffset, charOffset + charCount);
+      charOffset += charCount;
+    }
     List<String> result = new ArrayList<>();
     int phraseStart = 0;
-    int length = sentence.length();
-    for (int i = 1; i < length; i++) {
-      // Don't separate the two halves of a surrogate pair.
-      if (Character.isSurrogatePair(sentence.charAt(i - 1), sentence.charAt(i))) {
-        continue;
-      }
+    int offset = 0;
+    for (int i = 1; i < chars.length; i++) {
+      offset += chars[i - 1].length();
       int score = -this.totalScore;
-      if (i - 2 > 0) {
-        score += 2 * this.uw1.getOrDefault(sentence.substring(i - 3, i - 2), 0);
-      }
-      if (i - 1 > 0) {
-        score += 2 * this.uw2.getOrDefault(sentence.substring(i - 2, i - 1), 0);
-      }
-      score += 2 * this.uw3.getOrDefault(sentence.substring(i - 1, i), 0);
-      score += 2 * this.uw4.getOrDefault(sentence.substring(i, i + 1), 0);
-      if (i + 1 < length) {
-        score += 2 * this.uw5.getOrDefault(sentence.substring(i + 1, i + 2), 0);
-      }
-      if (i + 2 < length) {
-        score += 2 * this.uw6.getOrDefault(sentence.substring(i + 2, i + 3), 0);
+      if (i > 2) {
+        score += 2 * this.uw1.getOrDefault(chars[i - 3], 0);
+        score += 2 * this.tw1.getOrDefault(chars[i - 3] + chars[i - 2] + chars[i - 1], 0);
       }
       if (i > 1) {
-        score += 2 * this.bw1.getOrDefault(sentence.substring(i - 2, i), 0);
+        score += 2 * this.uw2.getOrDefault(chars[i - 2], 0);
+        score += 2 * this.bw1.getOrDefault(chars[i - 2] + chars[i - 1], 0);
+        score += 2 * this.tw2.getOrDefault(chars[i - 2] + chars[i - 1] + chars[i], 0);
       }
-      score += 2 * this.bw2.getOrDefault(sentence.substring(i - 1, i + 1), 0);
-      if (i + 1 < length) {
-        score += 2 * this.bw3.getOrDefault(sentence.substring(i, i + 2), 0);
+      score += 2 * this.uw3.getOrDefault(chars[i - 1], 0);
+      score += 2 * this.uw4.getOrDefault(chars[i], 0);
+      score += 2 * this.bw2.getOrDefault(chars[i - 1] + chars[i], 0);
+      if (i + 1 < chars.length) {
+        score += 2 * this.uw5.getOrDefault(chars[i + 1], 0);
+        score += 2 * this.bw3.getOrDefault(chars[i] + chars[i + 1], 0);
+        score += 2 * this.tw3.getOrDefault(chars[i - 1] + chars[i] + chars[i + 1], 0);
       }
-      if (i - 2 > 0) {
-        score += 2 * this.tw1.getOrDefault(sentence.substring(i - 3, i), 0);
-      }
-      if (i - 1 > 0) {
-        score += 2 * this.tw2.getOrDefault(sentence.substring(i - 2, i + 1), 0);
-      }
-      if (i + 1 < length) {
-        score += 2 * this.tw3.getOrDefault(sentence.substring(i - 1, i + 2), 0);
-      }
-      if (i + 2 < length) {
-        score += 2 * this.tw4.getOrDefault(sentence.substring(i, i + 3), 0);
+      if (i + 2 < chars.length) {
+        score += 2 * this.uw6.getOrDefault(chars[i + 2], 0);
+        score += 2 * this.tw4.getOrDefault(chars[i] + chars[i + 1] + chars[i + 2], 0);
       }
       if (score > 0) {
-        result.add(sentence.substring(phraseStart, i));
-        phraseStart = i;
+        result.add(sentence.substring(phraseStart, offset));
+        phraseStart = offset;
       }
     }
     result.add(sentence.substring(phraseStart));

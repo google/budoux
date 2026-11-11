@@ -55,6 +55,55 @@ public class ParserTest {
   }
 
   @Test
+  public void testMatchSurrogatePairFeatures() {
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw3 = new HashMap<>();
+    uw3.put("𠮷", 1000);
+    model.put("UW3", uw3);
+    Map<String, Integer> bw2 = new HashMap<>();
+    bw2.put("𠮷野", 1000);
+    model.put("BW2", bw2);
+    Parser parser = new Parser(model);
+    List<String> result = parser.parse("𠮷野家");
+    List<String> expected = Arrays.asList("𠮷", "野家");
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void testCumulativeOffsetMultipleSurrogatePairs() {
+    Map<String, Map<String, Integer>> model1 = new HashMap<>();
+    Map<String, Integer> bw2 = new HashMap<>();
+    bw2.put("𠮷家", 1000);
+    model1.put("BW2", bw2);
+    Parser parser1 = new Parser(model1);
+    assertEquals(Arrays.asList("𠮷野𠮷", "家"), parser1.parse("𠮷野𠮷家"));
+
+    Map<String, Map<String, Integer>> model2 = new HashMap<>();
+    Map<String, Integer> uw3 = new HashMap<>();
+    uw3.put("𠮷", 1000);
+    model2.put("UW3", uw3);
+    Parser parser2 = new Parser(model2);
+    assertEquals(Arrays.asList("𠮷", "野𠮷", "家"), parser2.parse("𠮷野𠮷家"));
+  }
+
+  @Test
+  public void testOuterWindowFeaturesAcrossSurrogatePair() {
+    Map<String, Map<String, Integer>> modelUW2 = new HashMap<>();
+    Map<String, Integer> uw2 = new HashMap<>();
+    uw2.put("あ", 1000);
+    modelUW2.put("UW2", uw2);
+    Parser parserUW2 = new Parser(modelUW2);
+    assertEquals(Arrays.asList("あ𠮷", "い"), parserUW2.parse("あ𠮷い"));
+
+    Map<String, Map<String, Integer>> modelUW5 = new HashMap<>();
+    Map<String, Integer> uw5 = new HashMap<>();
+    uw5.put("い", 1000);
+    modelUW5.put("UW5", uw5);
+    Parser parserUW5 = new Parser(modelUW5);
+    assertEquals(Arrays.asList("あ", "𠮷い"), parserUW5.parse("あ𠮷い"));
+  }
+
+  @Test
   public void testLoadDefaultJapaneseParser() {
     Parser parser = Parser.loadDefaultJapaneseParser();
     List<String> result = parser.parse("今日は天気です。");
