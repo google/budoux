@@ -58,6 +58,36 @@ describe('Parser.parse', () => {
     expect(result).toEqual(['𠮷', '野家']);
   });
 
+  it('should track cumulative offsets with multiple surrogate pairs.', () => {
+    const modelBreakAfterSecond = {
+      BW2: {𠮷家: 1000},
+    };
+    const parser1 = new Parser(modelBreakAfterSecond);
+    expect(parser1.parseBoundaries('𠮷野𠮷家')).toEqual([5]);
+    expect(parser1.parse('𠮷野𠮷家')).toEqual(['𠮷野𠮷', '家']);
+
+    const modelBreakAfterBoth = {
+      UW3: {𠮷: 1000},
+    };
+    const parser2 = new Parser(modelBreakAfterBoth);
+    expect(parser2.parseBoundaries('𠮷野𠮷家')).toEqual([2, 5]);
+    expect(parser2.parse('𠮷野𠮷家')).toEqual(['𠮷', '野𠮷', '家']);
+  });
+
+  it('should match outer window features across an intervening surrogate pair.', () => {
+    const modelUW2 = {
+      UW2: {あ: 1000},
+    };
+    const parserUW2 = new Parser(modelUW2);
+    expect(parserUW2.parse('あ𠮷い')).toEqual(['あ𠮷', 'い']);
+
+    const modelUW5 = {
+      UW5: {い: 1000},
+    };
+    const parserUW5 = new Parser(modelUW5);
+    expect(parserUW5.parse('あ𠮷い')).toEqual(['あ', '𠮷い']);
+  });
+
   it('should return an empty list when the input is a blank string.', () => {
     const parser = new Parser({});
     const result = parser.parse('');
