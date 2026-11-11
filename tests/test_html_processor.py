@@ -230,6 +230,20 @@ class TestResolve(unittest.TestCase):
     )
     self.assertEqual(result, expected)
 
+  def test_with_comments(self) -> None:
+    chunks = ['abc', 'def']
+    html = '<p>abc<!-- note -->def</p>'
+    result = html_processor.resolve(chunks, html, wrap=False)
+    expected = '<p>abc<!-- note -->\u200bdef</p>'
+    self.assertEqual(result, expected)
+
+  def test_with_comments_before_text_and_in_skip_node(self) -> None:
+    chunks = ['abc', 'def']
+    html = '<!-- head --><nobr>abc<!-- x -->def</nobr>'
+    result = html_processor.resolve(chunks, html, wrap=False)
+    expected = '<!-- head --><nobr>abc<!-- x -->def</nobr>'
+    self.assertEqual(result, expected)
+
   def test_without_wrap(self) -> None:
     chunks = ['abc', 'def']
     html = 'ab<a href="http://example.com">cd</a>ef'
