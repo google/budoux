@@ -20,7 +20,7 @@ import * as path from 'path';
 import * as readline from 'readline';
 import {HTMLProcessingParser, loadDefaultParsers} from './index.js';
 
-const CLI_VERSION = '0.10.3';
+const CLI_VERSION = '0.10.4';
 const defaultParsers = loadDefaultParsers();
 
 /**
