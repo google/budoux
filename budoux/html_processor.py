@@ -120,8 +120,15 @@ class HTMLChunkResolver(HTMLParser):
       self.boundaries.discard(self.scan_index)
     if tag.upper() in SKIP_NODES:
       if not self.to_skip and self.scan_index in self.boundaries:
+        prev_was_whitespace = (
+          self.scan_index > 0 and self.text[self.scan_index - 1].isspace()
+        )
+        next_is_whitespace = (
+          self.scan_index < len(self.text) and self.text[self.scan_index].isspace()
+        )
         self.boundaries.remove(self.scan_index)
-        self._output.append(self.separator)
+        if not prev_was_whitespace and not next_is_whitespace:
+          self._output.append(self.separator)
       self.to_skip = True
     self._output.append(f'<{tag}{encoded_attrs}>')
     if tag in VOID_ELEMENTS:
