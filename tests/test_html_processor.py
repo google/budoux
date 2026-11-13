@@ -144,7 +144,7 @@ class TestResolve(unittest.TestCase):
     chunks = ['abc', ' def', 'ghi']
     html = 'abc<button> def</button>ghi'
     result = html_processor.resolve(chunks, html)
-    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc<button> def</button>\u200bghi</span>'
+    expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">abc\u200b<button> def</button>\u200bghi</span>'
     self.assertEqual(result, expected)
 
   def test_with_skip_node_at_end(self) -> None:

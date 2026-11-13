@@ -123,11 +123,8 @@ class HTMLChunkResolver(HTMLParser):
         prev_was_whitespace = (
           self.scan_index > 0 and self.text[self.scan_index - 1].isspace()
         )
-        next_is_whitespace = (
-          self.scan_index < len(self.text) and self.text[self.scan_index].isspace()
-        )
         self.boundaries.remove(self.scan_index)
-        if not prev_was_whitespace and not next_is_whitespace:
+        if not prev_was_whitespace:
           self._output.append(self.separator)
       self.to_skip = True
     self._output.append(f'<{tag}{encoded_attrs}>')
