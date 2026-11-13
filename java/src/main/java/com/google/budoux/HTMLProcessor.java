@@ -132,11 +132,13 @@ final class HTMLProcessor {
           }
         } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
           if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
+            boolean prevWasWhitespace =
+                scanIndex > 0 && Character.isWhitespace(phrasesJoined.charAt(scanIndex - 1));
             boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
             boolean nextIsZwsp =
                 scanIndex + 1 < phrasesJoined.length()
                     && phrasesJoined.charAt(scanIndex + 1) == '\u200b';
-            if (!toSkip && !prevWasZwsp && !nextIsZwsp) {
+            if (!toSkip && !prevWasWhitespace && !prevWasZwsp && !nextIsZwsp) {
               output.append(separator);
             }
             scanIndex++;
