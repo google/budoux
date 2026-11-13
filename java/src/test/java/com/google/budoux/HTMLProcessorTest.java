@@ -240,4 +240,20 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html);
     assertEquals(this.wrap("abc<nobr>\u200bdef</nobr>"), result);
   }
+
+  @Test
+  public void testResolveWithBreakBeforeSkipPrecededByWhitespace() {
+    List<String> phrases = Arrays.asList("abc ", "def", "ghi");
+    String html = "abc <button>def</button>ghi";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc <button>def</button><wbr>ghi"), result);
+  }
+
+  @Test
+  public void testResolveWithBreakBeforeSkipStartingWithWhitespace() {
+    List<String> phrases = Arrays.asList("abc", " def", "ghi");
+    String html = "abc<button> def</button>ghi";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc<wbr><button> def</button><wbr>ghi"), result);
+  }
 }
