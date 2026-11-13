@@ -124,8 +124,14 @@ final class HTMLProcessor {
         final String nodeName = node.nodeName();
         if (nodeName.equals("br")) {
           // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
-          // Assume phrasesJoined.charAt(scanIndex) == '\n'.
-          scanIndex++;
+          // Consume any phrase boundary (`SEP`) immediately before `\n` without
+          // emitting a separator, since `<br>` already provides a line break.
+          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
+            scanIndex++;
+          }
+          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == '\n') {
+            scanIndex++;
+          }
         } else if (nodeName.equals("wbr")) {
           if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
             scanIndex++;
