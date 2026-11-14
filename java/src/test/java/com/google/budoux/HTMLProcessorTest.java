@@ -75,6 +75,23 @@ public class HTMLProcessorTest {
   }
 
   @Test
+  public void testResolveWithSelectSkipNode() {
+    List<String> phrases = Arrays.asList("abc", "def", "ghi");
+    String html = "<select><option>a</option><option>bcde</option></select>fghi";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(
+        this.wrap("<select><option>a</option><option>bcde</option></select>f<wbr>ghi"), result);
+  }
+
+  @Test
+  public void testResolveWithPreSkipNode() {
+    List<String> phrases = Arrays.asList("abc", "def", "ghi");
+    String html = "<pre>abcde</pre>fghi";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("<pre>abcde</pre>f<wbr>ghi"), result);
+  }
+
+  @Test
   public void testResolveWithNodesBreakBeforeSkip() {
     List<String> phrases = Arrays.asList("abc", "def", "ghi", "jkl");
     String html = "abc<nobr>defghi</nobr>jkl";
