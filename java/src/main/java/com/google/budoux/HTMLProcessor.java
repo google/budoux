@@ -46,6 +46,19 @@ final class HTMLProcessor {
 
   private HTMLProcessor() {}
 
+  /**
+   * Checks if the character is whitespace, including no-break spaces such as U+00A0.
+   *
+   * <p>{@link Character#isWhitespace} excludes no-break spaces, but separators must not be inserted
+   * next to them either, as they prohibit line breaks around them.
+   *
+   * @param c the character to check.
+   * @return whether the character is whitespace.
+   */
+  private static boolean isWhitespace(char c) {
+    return Character.isWhitespace(c) || Character.isSpaceChar(c);
+  }
+
   static {
     Gson gson = new Gson();
     InputStream inputStream = HTMLProcessor.class.getResourceAsStream("/skip_nodes.json");
@@ -133,7 +146,7 @@ final class HTMLProcessor {
         } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
           if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
             boolean prevWasWhitespace =
-                scanIndex > 0 && Character.isWhitespace(phrasesJoined.charAt(scanIndex - 1));
+                scanIndex > 0 && isWhitespace(phrasesJoined.charAt(scanIndex - 1));
             boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
             boolean nextIsZwsp =
                 scanIndex + 1 < phrasesJoined.length()
@@ -157,10 +170,10 @@ final class HTMLProcessor {
           if (c != phrasesJoined.charAt(scanIndex)) {
             // Assume phrasesJoined.charAt(scanIndex) == SEP.
             boolean prevWasWhitespace =
-                scanIndex > 0 && Character.isWhitespace(phrasesJoined.charAt(scanIndex - 1));
+                scanIndex > 0 && isWhitespace(phrasesJoined.charAt(scanIndex - 1));
             boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
             if (!toSkip
-                && !Character.isWhitespace(c)
+                && !isWhitespace(c)
                 && !prevWasWhitespace
                 && c != '\u200b'
                 && !prevWasZwsp) {

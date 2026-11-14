@@ -256,4 +256,28 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(this.wrap("abc<wbr><button> def</button><wbr>ghi"), result);
   }
+
+  @Test
+  public void testResolveWithBreakBeforeNoBreakSpace() {
+    List<String> phrases = Arrays.asList("abc", "\u00a0def");
+    String html = "abc\u00a0def";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc\u00a0def"), result);
+  }
+
+  @Test
+  public void testResolveWithBreakAfterNoBreakSpace() {
+    List<String> phrases = Arrays.asList("abc\u202f", "def");
+    String html = "abc\u202fdef";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc\u202fdef"), result);
+  }
+
+  @Test
+  public void testResolveWithBreakBeforeSkipPrecededByNoBreakSpace() {
+    List<String> phrases = Arrays.asList("abc\u00a0", "def", "ghi");
+    String html = "abc\u00a0<button>def</button>ghi";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc\u00a0<button>def</button><wbr>ghi"), result);
+  }
 }
