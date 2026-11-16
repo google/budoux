@@ -263,6 +263,7 @@ public class HTMLProcessorTest {
     String html = "abc<br>";
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(this.wrap("abc<br>"), result);
+  }
 
   @Test
   public void testResolveWithBreakBeforeSkipPrecededByWhitespace() {
