@@ -321,4 +321,10 @@ public class HTMLProcessorTest {
     String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
     assertEquals(this.wrap("abc\u00a0<button>def</button><wbr>ghi"), result);
   }
+
+  @Test
+  public void testResolveEmptyHtml() {
+    assertEquals("", HTMLProcessor.resolve(Arrays.asList("abc"), ""));
+    assertEquals("", HTMLProcessor.resolve(Arrays.asList("abc"), "", "<wbr>", false));
+  }
 }

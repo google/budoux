@@ -207,6 +207,8 @@ def resolve(
   Returns:
     The HTML string with phrases wrapped in non-breaking markup.
   """
+  if not html:
+    return html
   resolver = HTMLChunkResolver(phrases, separator)
   resolver.feed(html)
   resolver.close()
