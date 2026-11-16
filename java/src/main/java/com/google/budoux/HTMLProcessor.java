@@ -252,6 +252,9 @@ final class HTMLProcessor {
    * @return the HTML string of phrases resolved with the separator.
    */
   public static String resolve(List<String> phrases, String html, String separator, boolean wrap) {
+    if (html.isEmpty()) {
+      return html;
+    }
     Document doc = Jsoup.parseBodyFragment(html);
     PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases, separator);
     doc.body().traverse(nodeVisitor);

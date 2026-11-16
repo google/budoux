@@ -171,4 +171,11 @@ public class ParserTest {
     List<String> expected = Arrays.asList(" 1  \n  2 ");
     assertEquals(expected, result);
   }
+
+  @Test
+  public void testTranslateHTMLStringEmpty() {
+    Parser parser = new Parser(new HashMap<>());
+    assertEquals("", parser.translateHTMLString(""));
+    assertEquals("", parser.translateHTMLString("", false));
+  }
 }

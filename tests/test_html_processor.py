@@ -284,3 +284,9 @@ class TestResolve(unittest.TestCase):
     result = html_processor.resolve(chunks, html, wrap=False)
     expected = 'ab<a href="http://example.com">c\u200bd</a>ef'
     self.assertEqual(result, expected)
+
+  def test_without_html(self) -> None:
+    chunks = ['abc', 'def']
+    html = ''
+    result = html_processor.resolve(chunks, html)
+    self.assertEqual(result, '')

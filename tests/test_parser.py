@@ -123,6 +123,9 @@ class TestParser(unittest.TestCase):
       output_html, expected_html, 'Should omit the wrapping SPAN when wrap=False.'
     )
 
+    self.assertEqual(p.translate_html_string(''), '')
+    self.assertEqual(p.translate_html_string('', wrap=False), '')
+
 
 class TestDefaultParser(unittest.TestCase):
   def test_load_default_japanese_parser(self) -> None:
