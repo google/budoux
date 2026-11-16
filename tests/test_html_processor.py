@@ -126,6 +126,26 @@ class TestResolve(unittest.TestCase):
     expected = '<span style="word-break: keep-all; overflow-wrap: anywhere;">a<button>bcde</button>f\u200bghi</span>'
     self.assertEqual(result, expected)
 
+  def test_with_select_skip_node(self) -> None:
+    chunks = ['abc', 'def', 'ghi']
+    html = '<select><option>a</option><option>bcde</option></select>fghi'
+    result = html_processor.resolve(chunks, html)
+    expected = (
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+      '<select><option>a</option><option>bcde</option></select>f\u200bghi</span>'
+    )
+    self.assertEqual(result, expected)
+
+  def test_with_pre_skip_node(self) -> None:
+    chunks = ['abc', 'def', 'ghi']
+    html = '<pre>abcde</pre>fghi'
+    result = html_processor.resolve(chunks, html)
+    expected = (
+      '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
+      '<pre>abcde</pre>f\u200bghi</span>'
+    )
+    self.assertEqual(result, expected)
+
   def test_with_break_before_skip(self) -> None:
     chunks = ['abc', 'def', 'ghi', 'jkl']
     html = "abc<button>defghi</button>jkl"
