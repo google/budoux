@@ -21,7 +21,7 @@ on:
       - 'demo/**'
       - 'javascript/**'
       - 'budoux/models/**'
-      - 'budoux/skip_nodes.json'
+      - 'budoux/html_spec.json'
       - '.github/workflows/build-demo.yml'
 
 permissions:

@@ -54,7 +54,7 @@ where = ["."]
 include = ["budoux*"]
 
 [tool.setuptools.package-data]
-budoux = ["models/*.json", "skip_nodes.json", "py.typed"]
+budoux = ["models/*.json", "html_spec.json", "py.typed"]
 
 [dependency-groups]
 dev = [

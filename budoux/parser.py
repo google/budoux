@@ -16,9 +16,10 @@
 import json
 import os
 
-from .html_processor import get_text, resolve
+from .html_processor import HTML_SPEC, get_text, resolve
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
+INVISIBLE_FORMAT_CHARS: set[str] = set(HTML_SPEC['invisible_format_chars'])
 
 
 class Parser:
@@ -37,25 +38,28 @@ class Parser:
     Args:
       model (Dict[str, Dict[str, int]]): A dict mapping a feature and its score.
     """
-    self._model = model
-    self._base_score = -sum(sum(g.values()) for g in self._model.values()) * 0.5
+    self._model: dict[str, dict[str, int]] = {k: dict(v) for k, v in model.items()}
+    self._total_score: int = sum(sum(g.values()) for g in self._model.values())
 
   @property
   def model(self) -> dict[str, dict[str, int]]:
     return self._model
 
-  def parse(self, sentence: str) -> list[str]:
-    """Parses the input sentence and returns a list of semantic chunks.
+  def parse_boundaries(self, sentence: str) -> list[int]:
+    """Parses the input sentence and returns boundary character offsets.
+
+    Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated as
+    transparent in the feature window so repeated segmentation stays idempotent.
 
     Args:
       sentence (str): An input sentence.
 
     Returns:
-      A list of semantic chunks (List[str]).
+      A list of character offsets where phrase boundaries occur.
     """
     if sentence == '':
       return []
-    chunks = [sentence[0]]
+
     uw1 = self._model.get('UW1', {})
     uw2 = self._model.get('UW2', {})
     uw3 = self._model.get('UW3', {})
@@ -69,38 +73,59 @@ class Parser:
     tw2 = self._model.get('TW2', {})
     tw3 = self._model.get('TW3', {})
     tw4 = self._model.get('TW4', {})
-    for i in range(1, len(sentence)):
-      score = self._base_score
-      if i > 2:
-        score += uw1.get(sentence[i - 3], 0)
-      if i > 1:
-        score += uw2.get(sentence[i - 2], 0)
-      score += uw3.get(sentence[i - 1], 0)
-      score += uw4.get(sentence[i], 0)
-      if i + 1 < len(sentence):
-        score += uw5.get(sentence[i + 1], 0)
-      if i + 2 < len(sentence):
-        score += uw6.get(sentence[i + 2], 0)
 
-      if i > 1:
-        score += bw1.get(sentence[i - 2 : i], 0)
-      score += bw2.get(sentence[i - 1 : i + 1], 0)
-      if i + 1 < len(sentence):
-        score += bw3.get(sentence[i : i + 2], 0)
+    chars: list[str] = []
+    offsets: list[int] = []
+    for idx, ch in enumerate(sentence):
+      if ch in INVISIBLE_FORMAT_CHARS:
+        continue
+      chars.append(ch)
+      offsets.append(idx)
 
+    boundaries: list[int] = []
+    n = len(chars)
+    for i in range(1, n):
+      score = -self._total_score
       if i > 2:
-        score += tw1.get(sentence[i - 3 : i], 0)
+        score += 2 * uw1.get(chars[i - 3], 0)
+        score += 2 * tw1.get(chars[i - 3] + chars[i - 2] + chars[i - 1], 0)
       if i > 1:
-        score += tw2.get(sentence[i - 2 : i + 1], 0)
-      if i + 1 < len(sentence):
-        score += tw3.get(sentence[i - 1 : i + 2], 0)
-      if i + 2 < len(sentence):
-        score += tw4.get(sentence[i : i + 3], 0)
+        score += 2 * uw2.get(chars[i - 2], 0)
+        score += 2 * bw1.get(chars[i - 2] + chars[i - 1], 0)
+        score += 2 * tw2.get(chars[i - 2] + chars[i - 1] + chars[i], 0)
+      score += 2 * uw3.get(chars[i - 1], 0)
+      score += 2 * uw4.get(chars[i], 0)
+      score += 2 * bw2.get(chars[i - 1] + chars[i], 0)
+      if i + 1 < n:
+        score += 2 * uw5.get(chars[i + 1], 0)
+        score += 2 * bw3.get(chars[i] + chars[i + 1], 0)
+        score += 2 * tw3.get(chars[i - 1] + chars[i] + chars[i + 1], 0)
+      if i + 2 < n:
+        score += 2 * uw6.get(chars[i + 2], 0)
+        score += 2 * tw4.get(chars[i] + chars[i + 1] + chars[i + 2], 0)
 
       if score > 0:
-        chunks.append(sentence[i])
-      else:
-        chunks[-1] += sentence[i]
+        boundaries.append(offsets[i])
+    return boundaries
+
+  def parse(self, sentence: str) -> list[str]:
+    """Parses the input sentence and returns a list of semantic chunks.
+
+    Args:
+      sentence (str): An input sentence.
+
+    Returns:
+      A list of semantic chunks (List[str]).
+    """
+    if sentence == '':
+      return []
+    boundaries = self.parse_boundaries(sentence)
+    chunks: list[str] = []
+    start = 0
+    for boundary in boundaries:
+      chunks.append(sentence[start:boundary])
+      start = boundary
+    chunks.append(sentence[start:])
     return chunks
 
   def translate_html_string(self, html: str, wrap: bool = True) -> str:

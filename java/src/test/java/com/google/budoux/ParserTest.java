@@ -16,7 +16,10 @@
 
 package com.google.budoux;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -170,5 +173,29 @@ public class ParserTest {
     List<String> result = parser.parse(" 1  \n  2 ");
     List<String> expected = Arrays.asList(" 1  \n  2 ");
     assertEquals(expected, result);
+  }
+
+  @Test
+  public void testParseBoundariesAndMissingResource() {
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> bw2 = new HashMap<>();
+    bw2.put("𠮷家", 1000);
+    model.put("BW2", bw2);
+    Parser parser = new Parser(model);
+    assertArrayEquals(new int[] {5}, parser.parseBoundaries("𠮷野𠮷家"));
+
+    assertThrows(
+        IllegalArgumentException.class, () -> Parser.loadByFileName("/models/nonexistent.json"));
+  }
+
+  @Test
+  public void testInvisibleFormatCharsIdempotency() {
+    Parser jaParser = Parser.loadDefaultJapaneseParser();
+    String sentence = "あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら";
+    String once = jaParser.translateHTMLString(sentence, false);
+    String twice = jaParser.translateHTMLString(once, false);
+    assertEquals(once, twice);
+    assertTrue(twice.contains("もつ"));
+    assertEquals(Arrays.asList("\u200b"), jaParser.parse("\u200b"));
   }
 }

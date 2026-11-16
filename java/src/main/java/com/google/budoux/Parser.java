@@ -27,10 +27,12 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The BudouX parser that translates the input sentence into phrases.
@@ -50,7 +52,10 @@ public class Parser {
   /** Recommended CSS style declarations for parent elements containing BudouX-segmented text. */
   public static final String PARENT_CSS_STYLE = HTMLProcessor.STYLE;
 
-  private final int totalScore;
+  private static final Set<Integer> INVISIBLE_FORMAT_CODE_POINTS =
+      HtmlSpec.INSTANCE.invisibleFormatCodePoints;
+
+  private final long totalScore;
   private final Map<String, Integer> uw1;
   private final Map<String, Integer> uw2;
   private final Map<String, Integer> uw3;
@@ -71,7 +76,7 @@ public class Parser {
    * @param model the model data.
    */
   public Parser(Map<String, Map<String, Integer>> model) {
-    int sum = 0;
+    long sum = 0;
     for (Map<String, Integer> group : model.values()) {
       for (int weight : group.values()) {
         sum += weight;
@@ -140,17 +145,114 @@ public class Parser {
    *
    * @param modelFileName the model file path.
    * @return a BudouX parser.
+   * @throws IllegalArgumentException if the model resource does not exist.
    */
   public static Parser loadByFileName(String modelFileName) {
     Gson gson = new Gson();
     Type type = new TypeToken<Map<String, Map<String, Integer>>>() {}.getType();
     InputStream inputStream = Parser.class.getResourceAsStream(modelFileName);
+    if (inputStream == null) {
+      throw new IllegalArgumentException("Model resource not found: " + modelFileName);
+    }
     try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
       Map<String, Map<String, Integer>> model = gson.fromJson(reader, type);
       return new Parser(model);
     } catch (JsonIOException | JsonSyntaxException | IOException e) {
       throw new AssertionError(e);
     }
+  }
+
+  /**
+   * Parses the input sentence and returns UTF-16 code unit offsets of phrase boundaries.
+   *
+   * <p>Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated as transparent in
+   * the feature window so repeated segmentation stays idempotent.
+   *
+   * @param sentence the sentence to analyze.
+   * @return an array of UTF-16 code unit boundary offsets.
+   */
+  public int[] parseBoundaries(String sentence) {
+    if (sentence.isEmpty()) {
+      return new int[0];
+    }
+    int maxCodePoints = sentence.codePointCount(0, sentence.length());
+    String[] chars = new String[maxCodePoints];
+    int[] offsets = new int[maxCodePoints];
+
+    int visibleCount = 0;
+    for (int charOffset = 0; charOffset < sentence.length(); ) {
+      int codePoint = sentence.codePointAt(charOffset);
+      int charCount = Character.charCount(codePoint);
+      if (INVISIBLE_FORMAT_CODE_POINTS.contains(codePoint)) {
+        charOffset += charCount;
+        continue;
+      }
+      chars[visibleCount] = sentence.substring(charOffset, charOffset + charCount);
+      offsets[visibleCount] = charOffset;
+      visibleCount++;
+      charOffset += charCount;
+    }
+
+    if (visibleCount <= 1) {
+      return new int[0];
+    }
+
+    int[] tempBoundaries = new int[visibleCount - 1];
+    int boundaryCount = 0;
+    for (int i = 1; i < visibleCount; i++) {
+      long score = -this.totalScore;
+      if (i > 2) {
+        if (!this.uw1.isEmpty()) {
+          score += 2L * this.uw1.getOrDefault(chars[i - 3], 0);
+        }
+        if (!this.tw1.isEmpty()) {
+          score += 2L * this.tw1.getOrDefault(chars[i - 3] + chars[i - 2] + chars[i - 1], 0);
+        }
+      }
+      if (i > 1) {
+        if (!this.uw2.isEmpty()) {
+          score += 2L * this.uw2.getOrDefault(chars[i - 2], 0);
+        }
+        if (!this.bw1.isEmpty()) {
+          score += 2L * this.bw1.getOrDefault(chars[i - 2] + chars[i - 1], 0);
+        }
+        if (!this.tw2.isEmpty()) {
+          score += 2L * this.tw2.getOrDefault(chars[i - 2] + chars[i - 1] + chars[i], 0);
+        }
+      }
+      if (!this.uw3.isEmpty()) {
+        score += 2L * this.uw3.getOrDefault(chars[i - 1], 0);
+      }
+      if (!this.uw4.isEmpty()) {
+        score += 2L * this.uw4.getOrDefault(chars[i], 0);
+      }
+      if (!this.bw2.isEmpty()) {
+        score += 2L * this.bw2.getOrDefault(chars[i - 1] + chars[i], 0);
+      }
+      if (i + 1 < visibleCount) {
+        if (!this.uw5.isEmpty()) {
+          score += 2L * this.uw5.getOrDefault(chars[i + 1], 0);
+        }
+        if (!this.bw3.isEmpty()) {
+          score += 2L * this.bw3.getOrDefault(chars[i] + chars[i + 1], 0);
+        }
+        if (!this.tw3.isEmpty()) {
+          score += 2L * this.tw3.getOrDefault(chars[i - 1] + chars[i] + chars[i + 1], 0);
+        }
+      }
+      if (i + 2 < visibleCount) {
+        if (!this.uw6.isEmpty()) {
+          score += 2L * this.uw6.getOrDefault(chars[i + 2], 0);
+        }
+        if (!this.tw4.isEmpty()) {
+          score += 2L * this.tw4.getOrDefault(chars[i] + chars[i + 1] + chars[i + 2], 0);
+        }
+      }
+      if (score > 0) {
+        tempBoundaries[boundaryCount++] = offsets[i];
+      }
+    }
+    return Arrays.copyOf(tempBoundaries, boundaryCount);
   }
 
   /**
@@ -163,47 +265,14 @@ public class Parser {
     if (sentence.isEmpty()) {
       return new ArrayList<>();
     }
-    int numChars = sentence.codePointCount(0, sentence.length());
-    String[] chars = new String[numChars];
-    for (int i = 0, charOffset = 0; i < numChars; i++) {
-      int codePoint = sentence.codePointAt(charOffset);
-      int charCount = Character.charCount(codePoint);
-      chars[i] = sentence.substring(charOffset, charOffset + charCount);
-      charOffset += charCount;
+    int[] boundaries = parseBoundaries(sentence);
+    List<String> result = new ArrayList<>(boundaries.length + 1);
+    int start = 0;
+    for (int boundary : boundaries) {
+      result.add(sentence.substring(start, boundary));
+      start = boundary;
     }
-    List<String> result = new ArrayList<>();
-    int phraseStart = 0;
-    int offset = 0;
-    for (int i = 1; i < chars.length; i++) {
-      offset += chars[i - 1].length();
-      int score = -this.totalScore;
-      if (i > 2) {
-        score += 2 * this.uw1.getOrDefault(chars[i - 3], 0);
-        score += 2 * this.tw1.getOrDefault(chars[i - 3] + chars[i - 2] + chars[i - 1], 0);
-      }
-      if (i > 1) {
-        score += 2 * this.uw2.getOrDefault(chars[i - 2], 0);
-        score += 2 * this.bw1.getOrDefault(chars[i - 2] + chars[i - 1], 0);
-        score += 2 * this.tw2.getOrDefault(chars[i - 2] + chars[i - 1] + chars[i], 0);
-      }
-      score += 2 * this.uw3.getOrDefault(chars[i - 1], 0);
-      score += 2 * this.uw4.getOrDefault(chars[i], 0);
-      score += 2 * this.bw2.getOrDefault(chars[i - 1] + chars[i], 0);
-      if (i + 1 < chars.length) {
-        score += 2 * this.uw5.getOrDefault(chars[i + 1], 0);
-        score += 2 * this.bw3.getOrDefault(chars[i] + chars[i + 1], 0);
-        score += 2 * this.tw3.getOrDefault(chars[i - 1] + chars[i] + chars[i + 1], 0);
-      }
-      if (i + 2 < chars.length) {
-        score += 2 * this.uw6.getOrDefault(chars[i + 2], 0);
-        score += 2 * this.tw4.getOrDefault(chars[i] + chars[i + 1] + chars[i + 2], 0);
-      }
-      if (score > 0) {
-        result.add(sentence.substring(phraseStart, offset));
-        phraseStart = offset;
-      }
-    }
-    result.add(sentence.substring(phraseStart));
+    result.add(sentence.substring(start));
     return result;
   }
 
