@@ -242,6 +242,30 @@ public class HTMLProcessorTest {
   }
 
   @Test
+  public void testResolveWithBrPrecededByPhraseBoundary() {
+    List<String> phrases = Arrays.asList("abc", "\n", "d", "ef");
+    String html = "abc<br>def";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc<br>d<wbr>ef"), result);
+  }
+
+  @Test
+  public void testResolveWithBrAtStartOfPhrase() {
+    List<String> phrases = Arrays.asList("今日は", "\n天気です。");
+    String html = "今日は<br>天気です。";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("今日は<br>天気です。"), result);
+  }
+
+  @Test
+  public void testResolveWithTrailingBr() {
+    List<String> phrases = Arrays.asList("abc", "\n");
+    String html = "abc<br>";
+    String result = HTMLProcessor.resolve(phrases, html, "<wbr>");
+    assertEquals(this.wrap("abc<br>"), result);
+  }
+
+  @Test
   public void testResolveWithBreakBeforeSkipPrecededByWhitespace() {
     List<String> phrases = Arrays.asList("abc ", "def", "ghi");
     String html = "abc <button>def</button>ghi";
