@@ -70,9 +70,6 @@ class TestParser(unittest.TestCase):
     )
 
     input_html = 'xyz<script>alert(1);</script>xyzabc'
-    # TODO: Because the content for skip elements are included, this test tries
-    # to break before "alert". We may want to distinguish "skip from the
-    # content" and "skip breaking" in future.
     expected_html = (
       '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
       'xyz\u200b<script>alert(1);</script>xyz\u200babc</span>'

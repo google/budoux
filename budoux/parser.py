@@ -114,7 +114,6 @@ class Parser:
     Returns:
       The translated HTML string (str).
     """
-    # TODO: Align with the JavaScript API regarding the parent element addition.
     text_content = get_text(html)
     chunks = self.parse(text_content)
     return resolve(chunks, html, wrap=wrap)

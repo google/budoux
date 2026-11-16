@@ -154,7 +154,8 @@ class HTMLChunkResolver(HTMLParser):
       # This means that close tags close their corresponding open tags.
       # e.g., `<span>abc<img>def</span>` or `<p>abc<span>def</p>` are both valid
       # HTML as per the HTML spec.
-      # Note the HTML "adoption agency algorithm" isn't fully supported.
+      # Complex HTML5 error recovery (e.g., the adoption agency algorithm) is
+      # intentionally out of scope.
       # See https://html.spec.whatwg.org/multipage/parsing.html#an-introduction-to-error-handling-and-strange-cases-in-the-parser
 
   def handle_comment(self, data: str) -> None:

@@ -88,7 +88,6 @@ const domActions: {[name: string]: DomAction} = {
   TEXTAREA: DomAction.Skip,
 
   // Other elements where the phrase-based line breaking should be disabled.
-  // https://github.com/google/budoux/blob/main/budoux/skip_nodes.json
   ABBR: DomAction.Skip,
   CODE: DomAction.Skip,
   IFRAME: DomAction.Skip,
@@ -205,7 +204,7 @@ function actionForElement(element: Element | DocumentFragment): DomAction {
   }
 
   // Use the built-in rules if the `display` property is empty, or if
-  // `getComputedStyle` is missing (e.g., jsdom.)
+  // `getComputedStyle` is missing (e.g., linkedom.)
   return defaultBlockElements.has(nodeName)
     ? DomAction.Block
     : DomAction.Inline;
