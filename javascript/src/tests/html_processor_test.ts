@@ -550,6 +550,14 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
 
+  it('should not add a SPAN parent if the input has one single parent surrounded by whitespace.', () => {
+    const inputHTML = '\n  <p class="foo" style="color: red">xyzabcd</p>\n';
+    const expectedHTML = `\n  <p class="foo"
+       style="color: red; word-break: keep-all; overflow-wrap: anywhere;"
+    >xyz\u200Babcd</p>\n`;
+    checkEqual(defaultModel, inputHTML, expectedHTML);
+  });
+
   it('should add a SPAN parent if the input has multiple parents.', () => {
     const inputHTML = '<b>xyzabc</b><b>xyzabc</b>';
     const expectedHTML = `<span

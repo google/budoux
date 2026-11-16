@@ -425,7 +425,13 @@ export class HTMLProcessor {
    */
   static hasChildTextNode(ele: HTMLElement | DocumentFragment) {
     for (const child of ele.childNodes) {
-      if (child.nodeType === NodeType.TEXT_NODE) return true;
+      if (
+        child.nodeType === NodeType.TEXT_NODE &&
+        child.nodeValue &&
+        /\S/.test(child.nodeValue)
+      ) {
+        return true;
+      }
     }
     return false;
   }
