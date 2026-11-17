@@ -19,7 +19,6 @@ package com.google.budoux;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -190,12 +189,21 @@ public class ParserTest {
 
   @Test
   public void testInvisibleFormatCharsIdempotency() {
-    Parser jaParser = Parser.loadDefaultJapaneseParser();
-    String sentence = "あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら";
-    String once = jaParser.translateHTMLString(sentence, false);
-    String twice = jaParser.translateHTMLString(once, false);
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw4 = new HashMap<>();
+    uw4.put("d", 1000);
+    uw4.put("e", 1000);
+    model.put("UW4", uw4);
+    Map<String, Integer> uw2 = new HashMap<>();
+    uw2.put("c", -2000);
+    model.put("UW2", uw2);
+    Parser parser = new Parser(model);
+
+    String once = parser.translateHTMLString("abcdef", false);
+    assertEquals("abc\u200bdef", once);
+    String twice = parser.translateHTMLString(once, false);
     assertEquals(once, twice);
-    assertTrue(twice.contains("もつ"));
-    assertEquals(Arrays.asList("\u200b"), jaParser.parse("\u200b"));
+    assertArrayEquals(new int[] {4}, parser.parseBoundaries("abc\u200bdef"));
+    assertEquals(Arrays.asList("\u200b"), parser.parse("\u200b"));
   }
 }

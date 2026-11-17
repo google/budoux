@@ -57,13 +57,13 @@ class TestParser(unittest.TestCase):
     self.assertListEqual(p.parse_boundaries('abcdeabcd'), [5])
 
   def test_invisible_format_chars_idempotency(self) -> None:
-    p_ja = parser.load_default_japanese_parser()
-    sentence = 'あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら'
-    once = p_ja.translate_html_string(sentence, wrap=False)
-    twice = p_ja.translate_html_string(once, wrap=False)
-    self.assertEqual(once, twice)
-    self.assertIn('もつ', twice)
-    self.assertListEqual(p_ja.parse('\u200b'), ['\u200b'])
+    p = parser.Parser({'UW4': {'d': 1000, 'e': 1000}, 'UW2': {'c': -2000}})
+    once = p.translate_html_string('abcdef', wrap=False)
+    self.assertEqual(once, 'abc\u200bdef')
+    twice = p.translate_html_string(once, wrap=False)
+    self.assertEqual(twice, once)
+    self.assertListEqual(p.parse_boundaries('abc\u200bdef'), [4])
+    self.assertListEqual(p.parse('\u200b'), ['\u200b'])
 
   def test_translate_html_string(self) -> None:
     p = parser.Parser(

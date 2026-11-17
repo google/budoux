@@ -15,7 +15,8 @@
  */
 
 import {describe, expect, it} from 'vitest';
-import {loadDefaultJapaneseParser, thModel} from '../index.js';
+import {HTMLProcessingParser} from '../html_processor.js';
+import {thModel} from '../index.js';
 import {Parser} from '../parser.js';
 
 describe('Parser.parse', () => {
@@ -95,14 +96,16 @@ describe('Parser.parse', () => {
   });
 
   it('should keep feature windows clean across existing ZWSPs.', () => {
-    const jaParser = loadDefaultJapaneseParser();
-    const sentence =
-      'あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら';
-    const once = jaParser.translateHTMLString(sentence, false);
-    const twice = jaParser.translateHTMLString(once, false);
+    const parser = new HTMLProcessingParser({
+      UW4: {d: 1000, e: 1000},
+      UW2: {c: -2000},
+    });
+    const once = parser.translateHTMLString('abcdef', false);
+    expect(once).toBe('abc\u200bdef');
+    const twice = parser.translateHTMLString(once, false);
     expect(twice).toBe(once);
-    expect(twice).toContain('もつ');
-    expect(jaParser.parse('\u200b')).toEqual(['\u200b']);
+    expect(parser.parseBoundaries('abc\u200bdef')).toEqual([4]);
+    expect(parser.parse('\u200b')).toEqual(['\u200b']);
   });
 });
 
