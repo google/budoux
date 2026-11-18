@@ -22,26 +22,17 @@ from html.parser import HTMLParser
 HTMLAttr = list[tuple[str, str | None]]
 PARENT_CSS_STYLE = 'word-break: keep-all; overflow-wrap: anywhere;'
 with open(
-  os.path.join(os.path.dirname(__file__), 'skip_nodes.json'), encoding='utf-8'
+  os.path.join(os.path.dirname(__file__), 'html_spec.json'), encoding='utf-8'
 ) as f:
-  SKIP_NODES: set[str] = set(json.load(f))
+  HTML_SPEC = json.load(f)
+
+SKIP_NODES: set[str] = set(HTML_SPEC['element_actions']['skip']) | set(
+  HTML_SPEC['element_actions']['nobreak']
+)
+SPACE_CHARS: set[str] = set(HTML_SPEC['space_chars'])
 
 # Elements without an end tag, see https://html.spec.whatwg.org/#void-elements
-VOID_ELEMENTS = {
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'source',
-  'track',
-  'wbr',
-}
+VOID_ELEMENTS: set[str] = {t.lower() for t in HTML_SPEC['void_elements']}
 
 
 class ElementState:
@@ -121,7 +112,7 @@ class HTMLChunkResolver(HTMLParser):
     if tag.upper() in SKIP_NODES:
       if not self.to_skip and self.scan_index in self.boundaries:
         prev_was_whitespace = (
-          self.scan_index > 0 and self.text[self.scan_index - 1].isspace()
+          self.scan_index > 0 and self.text[self.scan_index - 1] in SPACE_CHARS
         )
         self.boundaries.remove(self.scan_index)
         if not prev_was_whitespace:
@@ -165,9 +156,9 @@ class HTMLChunkResolver(HTMLParser):
     for char in data:
       if self.scan_index in self.boundaries:
         prev_was_whitespace = (
-          self.scan_index > 0 and self.text[self.scan_index - 1].isspace()
+          self.scan_index > 0 and self.text[self.scan_index - 1] in SPACE_CHARS
         )
-        if not self.to_skip and not char.isspace() and not prev_was_whitespace:
+        if not self.to_skip and char not in SPACE_CHARS and not prev_was_whitespace:
           self._output.append(self.separator)
       # Re-escape text that `HTMLParser` unescaped, except in raw text elements.
       self._output.append(

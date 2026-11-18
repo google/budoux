@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
+import {htmlSpec} from './data/html_spec.js';
+
+const INVISIBLE_FORMAT_CHARS = new Set(htmlSpec.invisible_format_chars);
+
 /**
  * Base BudouX parser.
  */
 export class Parser {
   /** BudouX model data */
   private readonly model: Map<string, Map<string, number>>;
-  private readonly baseScore: number;
+  private readonly totalScore: number;
 
   /**
    * Constructs a BudouX parser.
@@ -33,11 +37,9 @@ export class Parser {
         new Map(Object.entries(v)),
       ])
     );
-    this.baseScore =
-      -0.5 *
-      [...this.model.values()]
-        .flatMap((group: Map<string, number>) => [...group.values()])
-        .reduce((prev: number, curr: number) => prev + curr, 0);
+    this.totalScore = [...this.model.values()]
+      .flatMap((group: Map<string, number>) => [...group.values()])
+      .reduce((prev: number, curr: number) => prev + curr, 0);
   }
 
   /**
@@ -62,11 +64,17 @@ export class Parser {
   /**
    * Parses the input sentence and returns a list of boundaries.
    *
+   * Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated
+   * as transparent in the feature window so repeated segmentation stays
+   * idempotent.
+   *
    * @param sentence An input sentence.
    * @return The list of UTF-16 code unit offsets of the boundaries.
    */
   parseBoundaries(sentence: string): number[] {
-    const result = [];
+    const result: number[] = [];
+    if (sentence === '') return result;
+
     const uw1 = this.model.get('UW1');
     const uw2 = this.model.get('UW2');
     const uw3 = this.model.get('UW3');
@@ -81,34 +89,45 @@ export class Parser {
     const tw3 = this.model.get('TW3');
     const tw4 = this.model.get('TW4');
 
-    const chars = Array.from(sentence);
-    let offset = 0;
+    const chars: string[] = [];
+    const offsets: number[] = [];
+    let utf16Offset = 0;
+    for (const ch of sentence) {
+      if (INVISIBLE_FORMAT_CHARS.has(ch)) {
+        utf16Offset += ch.length;
+        continue;
+      }
+      chars.push(ch);
+      offsets.push(utf16Offset);
+      utf16Offset += ch.length;
+    }
+
     for (let i = 1; i < chars.length; i++) {
-      offset += chars[i - 1].length;
-      let score = this.baseScore;
+      let score = -this.totalScore;
       // NOTE: Score values in models may be negative.
       if (i > 2) {
-        score += uw1?.get(chars[i - 3]) ?? 0;
-        score += tw1?.get(chars[i - 3] + chars[i - 2] + chars[i - 1]) ?? 0;
+        score += 2 * (uw1?.get(chars[i - 3]) ?? 0);
+        score +=
+          2 * (tw1?.get(chars[i - 3] + chars[i - 2] + chars[i - 1]) ?? 0);
       }
       if (i > 1) {
-        score += uw2?.get(chars[i - 2]) ?? 0;
-        score += bw1?.get(chars[i - 2] + chars[i - 1]) ?? 0;
-        score += tw2?.get(chars[i - 2] + chars[i - 1] + chars[i]) ?? 0;
+        score += 2 * (uw2?.get(chars[i - 2]) ?? 0);
+        score += 2 * (bw1?.get(chars[i - 2] + chars[i - 1]) ?? 0);
+        score += 2 * (tw2?.get(chars[i - 2] + chars[i - 1] + chars[i]) ?? 0);
       }
-      score += uw3?.get(chars[i - 1]) ?? 0;
-      score += uw4?.get(chars[i]) ?? 0;
-      score += bw2?.get(chars[i - 1] + chars[i]) ?? 0;
+      score += 2 * (uw3?.get(chars[i - 1]) ?? 0);
+      score += 2 * (uw4?.get(chars[i]) ?? 0);
+      score += 2 * (bw2?.get(chars[i - 1] + chars[i]) ?? 0);
       if (i + 1 < chars.length) {
-        score += uw5?.get(chars[i + 1]) ?? 0;
-        score += bw3?.get(chars[i] + chars[i + 1]) ?? 0;
-        score += tw3?.get(chars[i - 1] + chars[i] + chars[i + 1]) ?? 0;
+        score += 2 * (uw5?.get(chars[i + 1]) ?? 0);
+        score += 2 * (bw3?.get(chars[i] + chars[i + 1]) ?? 0);
+        score += 2 * (tw3?.get(chars[i - 1] + chars[i] + chars[i + 1]) ?? 0);
       }
       if (i + 2 < chars.length) {
-        score += uw6?.get(chars[i + 2]) ?? 0;
-        score += tw4?.get(chars[i] + chars[i + 1] + chars[i + 2]) ?? 0;
+        score += 2 * (uw6?.get(chars[i + 2]) ?? 0);
+        score += 2 * (tw4?.get(chars[i] + chars[i + 1] + chars[i + 2]) ?? 0);
       }
-      if (score > 0) result.push(offset);
+      if (score > 0) result.push(offsets[i]);
     }
     return result;
   }

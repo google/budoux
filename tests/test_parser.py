@@ -50,6 +50,21 @@ class TestParser(unittest.TestCase):
       chunks, [], 'Should return a blank list when the input is blank.'
     )
 
+  def test_parse_boundaries_and_defensive_copy(self) -> None:
+    raw_model = {'UW4': {'a': 10000}}
+    p = parser.Parser(raw_model)
+    raw_model['UW4']['a'] = -10000
+    self.assertListEqual(p.parse_boundaries('abcdeabcd'), [5])
+
+  def test_invisible_format_chars_idempotency(self) -> None:
+    p = parser.Parser({'UW4': {'d': 1000, 'e': 1000}, 'UW2': {'c': -2000}})
+    once = p.translate_html_string('abcdef', wrap=False)
+    self.assertEqual(once, 'abc\u200bdef')
+    twice = p.translate_html_string(once, wrap=False)
+    self.assertEqual(twice, once)
+    self.assertListEqual(p.parse_boundaries('abc\u200bdef'), [4])
+    self.assertListEqual(p.parse('\u200b'), ['\u200b'])
+
   def test_translate_html_string(self) -> None:
     p = parser.Parser(
       {

@@ -16,17 +16,7 @@
 
 package com.google.budoux;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -41,7 +31,8 @@ import org.jsoup.select.NodeVisitor;
 
 /** Processes phrases into an HTML string wrapping them in no-breaking markup. */
 final class HTMLProcessor {
-  private static final Set<String> skipNodes;
+  private static final Set<String> skipNodes = HtmlSpec.INSTANCE.skipAndNoBreakNodes;
+  private static final Set<Integer> spaceCodePoints = HtmlSpec.INSTANCE.spaceCodePoints;
   static final String STYLE = "word-break: keep-all; overflow-wrap: anywhere;";
 
   private HTMLProcessor() {}
@@ -49,25 +40,11 @@ final class HTMLProcessor {
   /**
    * Checks if the character is whitespace, including no-break spaces such as U+00A0.
    *
-   * <p>{@link Character#isWhitespace} excludes no-break spaces, but separators must not be inserted
-   * next to them either, as they prohibit line breaks around them.
-   *
    * @param c the character to check.
    * @return whether the character is whitespace.
    */
   private static boolean isWhitespace(char c) {
-    return Character.isWhitespace(c) || Character.isSpaceChar(c);
-  }
-
-  static {
-    Gson gson = new Gson();
-    InputStream inputStream = HTMLProcessor.class.getResourceAsStream("/skip_nodes.json");
-    try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-      String[] skipNodesStrings = gson.fromJson(reader, String[].class);
-      skipNodes = new HashSet<>(Arrays.asList(skipNodesStrings));
-    } catch (JsonSyntaxException | JsonIOException | IOException e) {
-      throw new AssertionError(e);
-    }
+    return spaceCodePoints.contains((int) c);
   }
 
   /**

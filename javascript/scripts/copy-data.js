@@ -30,7 +30,7 @@ const copyModels = () => {
     if (ext !== 'json') return;
     const sourcePath = path.join(modelsDirPath, file);
     const targetPath = path.join(DATA_DIR, 'models', `${body}.ts`);
-    const content = fs.readFileSync(sourcePath);
+    const content = fs.readFileSync(sourcePath, 'utf-8');
     fs.writeFileSync(
       targetPath,
       `export const model: {[key:string]: {[key:string]: number}} = ${content}`
@@ -38,8 +38,31 @@ const copyModels = () => {
   });
 };
 
+const copyHtmlSpec = () => {
+  const sourcePath = path.join(PROJECT_ROOT, 'budoux', 'html_spec.json');
+  const targetPath = path.join(DATA_DIR, 'html_spec.ts');
+  const content = fs.readFileSync(sourcePath, 'utf-8').trimEnd();
+  const tsContent = `export interface HtmlSpec {
+  element_actions: {
+    block: string[];
+    skip: string[];
+    nobreak: string[];
+    break: string[];
+    break_opportunity: string[];
+  };
+  void_elements: string[];
+  invisible_format_chars: string[];
+  space_chars: string[];
+}
+
+export const htmlSpec: HtmlSpec = ${content};
+`;
+  fs.writeFileSync(targetPath, tsContent);
+};
+
 const main = () => {
   copyModels();
+  copyHtmlSpec();
 };
 
 main();

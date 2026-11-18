@@ -15,6 +15,7 @@
  */
 
 import {describe, expect, it} from 'vitest';
+import {HTMLProcessingParser} from '../html_processor.js';
 import {thModel} from '../index.js';
 import {Parser} from '../parser.js';
 
@@ -92,6 +93,19 @@ describe('Parser.parse', () => {
     const parser = new Parser({});
     const result = parser.parse('');
     expect(result).toEqual([]);
+  });
+
+  it('should keep feature windows clean across existing ZWSPs.', () => {
+    const parser = new HTMLProcessingParser({
+      UW4: {d: 1000, e: 1000},
+      UW2: {c: -2000},
+    });
+    const once = parser.translateHTMLString('abcdef', false);
+    expect(once).toBe('abc\u200bdef');
+    const twice = parser.translateHTMLString(once, false);
+    expect(twice).toBe(once);
+    expect(parser.parseBoundaries('abc\u200bdef')).toEqual([4]);
+    expect(parser.parse('\u200b')).toEqual(['\u200b']);
   });
 });
 

@@ -19,13 +19,13 @@ on:
     paths:
       - 'javascript/**'
       - 'budoux/models/**'
-      - 'budoux/skip_nodes.json'
+      - 'budoux/html_spec.json'
       - '.github/workflows/javascript.yml'
   pull_request:
     paths:
       - 'javascript/**'
       - 'budoux/models/**'
-      - 'budoux/skip_nodes.json'
+      - 'budoux/html_spec.json'
       - '.github/workflows/javascript.yml'
 
 permissions:

@@ -16,7 +16,9 @@
 
 package com.google.budoux;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -170,5 +172,38 @@ public class ParserTest {
     List<String> result = parser.parse(" 1  \n  2 ");
     List<String> expected = Arrays.asList(" 1  \n  2 ");
     assertEquals(expected, result);
+  }
+
+  @Test
+  public void testParseBoundariesAndMissingResource() {
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> bw2 = new HashMap<>();
+    bw2.put("𠮷家", 1000);
+    model.put("BW2", bw2);
+    Parser parser = new Parser(model);
+    assertArrayEquals(new int[] {5}, parser.parseBoundaries("𠮷野𠮷家"));
+
+    assertThrows(
+        IllegalArgumentException.class, () -> Parser.loadByFileName("/models/nonexistent.json"));
+  }
+
+  @Test
+  public void testInvisibleFormatCharsIdempotency() {
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw4 = new HashMap<>();
+    uw4.put("d", 1000);
+    uw4.put("e", 1000);
+    model.put("UW4", uw4);
+    Map<String, Integer> uw2 = new HashMap<>();
+    uw2.put("c", -2000);
+    model.put("UW2", uw2);
+    Parser parser = new Parser(model);
+
+    String once = parser.translateHTMLString("abcdef", false);
+    assertEquals("abc\u200bdef", once);
+    String twice = parser.translateHTMLString(once, false);
+    assertEquals(once, twice);
+    assertArrayEquals(new int[] {4}, parser.parseBoundaries("abc\u200bdef"));
+    assertEquals(Arrays.asList("\u200b"), parser.parse("\u200b"));
   }
 }
