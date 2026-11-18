@@ -58,7 +58,11 @@ final class HtmlSpec {
   @SerializedName("space_chars")
   List<String> spaceChars;
 
-  transient Set<String> skipAndNoBreakNodes;
+  transient Set<String> blockNodes;
+  transient Set<String> skipNodes;
+  transient Set<String> noBreakNodes;
+  transient Set<String> breakNodes;
+  transient Set<String> breakOpportunityNodes;
   transient Set<Integer> invisibleFormatCodePoints;
   transient Set<Integer> spaceCodePoints;
 
@@ -70,10 +74,13 @@ final class HtmlSpec {
     }
     try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
       HtmlSpec spec = gson.fromJson(reader, HtmlSpec.class);
-      Set<String> combinedSkip = new HashSet<>();
-      combinedSkip.addAll(spec.elementActions.skip);
-      combinedSkip.addAll(spec.elementActions.nobreak);
-      spec.skipAndNoBreakNodes = Collections.unmodifiableSet(combinedSkip);
+      spec.blockNodes = Collections.unmodifiableSet(new HashSet<>(spec.elementActions.block));
+      spec.skipNodes = Collections.unmodifiableSet(new HashSet<>(spec.elementActions.skip));
+      spec.noBreakNodes = Collections.unmodifiableSet(new HashSet<>(spec.elementActions.nobreak));
+      spec.breakNodes =
+          Collections.unmodifiableSet(new HashSet<>(spec.elementActions.breakElements));
+      spec.breakOpportunityNodes =
+          Collections.unmodifiableSet(new HashSet<>(spec.elementActions.breakOpportunity));
 
       Set<Integer> invisibleCps = new HashSet<>();
       for (String s : spec.invisibleFormatChars) {
