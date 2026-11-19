@@ -1179,11 +1179,11 @@ wheels = [
 
 [[package]]
 name = "types-regex"
-version = "2026.9.29.20261030"
+version = "2026.11.9.20261110"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e3/65/e12b4d7a96c730e7a696cf83593f952da1b2ab5a539d303c94ef6496ebed/types_regex-2026.9.29.20261030.tar.gz", hash = "sha256:37d6512ef2551c4a3529f06f248c47bbf768d5de6301e04bc55c5bee73f2d4c5", size = 14206, upload-time = "2026-10-30T07:50:11.374Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/63/4f/3b60e524ae059ad151160756f8029eaeef804f627fa23c23c62d063389df/types_regex-2026.11.9.20261110.tar.gz", hash = "sha256:b3f459f43eabbe541b4f550252233e5b6689fc1e2bccba528e8731536acace00", size = 14400, upload-time = "2026-11-10T08:54:13.597Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/27/517899e827975f3256b16b301ef6de6aa70830a83f8f4ae6a5cf9eb574f2/types_regex-2026.9.29.20261030-py3-none-any.whl", hash = "sha256:19b1010bd1dad05babd4f4c4d31198f107c7092a2881a12f12c2319e406d9c86", size = 11209, upload-time = "2026-10-30T07:50:10.201Z" },
+    { url = "https://files.pythonhosted.org/packages/58/47/23427ff7c9fdf6055b8b5eb951959c783f0cbddb8e2294be7e45b63a4dc9/types_regex-2026.11.9.20261110-py3-none-any.whl", hash = "sha256:b5effea974bdc751b9c544cb0ecae60b2337da0653bad9698cb63d45e1956d47", size = 11211, upload-time = "2026-11-10T08:54:12.516Z" },
 ]
 
 [[package]]
