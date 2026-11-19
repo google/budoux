@@ -53,9 +53,9 @@ final class HTMLProcessor {
    * <p>It also converts `&lt;br>` to `\n`.
    */
   private static class TextizeNodeVisitor implements NodeVisitor {
-    private StringBuilder output = new StringBuilder();
+    private final StringBuilder output = new StringBuilder();
 
-    public String getString() {
+    String getString() {
       return output.toString();
     }
 
@@ -100,7 +100,7 @@ final class HTMLProcessor {
      *
      * @return the output string.
      */
-    public StringBuilder getOutput() {
+    StringBuilder getOutput() {
       return output;
     }
 

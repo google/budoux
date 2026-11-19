@@ -52,7 +52,7 @@ public class Parser {
   /** Recommended CSS style declarations for parent elements containing BudouX-segmented text. */
   public static final String PARENT_CSS_STYLE = HTMLProcessor.STYLE;
 
-  private static final Set<Integer> INVISIBLE_FORMAT_CODE_POINTS =
+  private static final Set<Integer> invisibleFormatCodePoints =
       HtmlSpec.INSTANCE.invisibleFormatCodePoints;
 
   private final long totalScore;
@@ -183,7 +183,7 @@ public class Parser {
     for (int charOffset = 0; charOffset < sentence.length(); ) {
       int codePoint = sentence.codePointAt(charOffset);
       int charCount = Character.charCount(codePoint);
-      if (INVISIBLE_FORMAT_CODE_POINTS.contains(codePoint)) {
+      if (invisibleFormatCodePoints.contains(codePoint)) {
         charOffset += charCount;
         continue;
       }
