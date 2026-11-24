@@ -125,7 +125,7 @@ describe('HTMLProcessor.applyToElement', () => {
     },
     {
       in: '<div>今日は<code>code</code>晴れです</div>',
-      out: '<div class="applied">今日は<code>code</code>|晴れです</div>',
+      out: '<div class="applied">今日は|<code>code</code>晴れです</div>',
       browserOnly: false,
     },
     {
@@ -265,21 +265,92 @@ describe('HTMLProcessor.getBlocks', () => {
 
   it('should collect nested blocks separately from the parent block', () => {
     expect(getText('<div>123<div>456</div>789</div>')).toEqual([
+      '123',
       '456',
-      '123789',
+      '789',
     ]);
   });
 
   it('should collect inline-blocks separately from the parent block', () => {
     expect(
       getText('<div>123<div style="display: inline-block">456</div>789</div>')
-    ).toEqual(['456', '123789']);
+    ).toEqual(['123', '456', '789']);
     if (isBrowser) {
       expect(
         getText(
           '<div>123<span style="display: inline-block">456</span>789</div>'
         )
-      ).toEqual(['456', '123789']);
+      ).toEqual(['123', '456', '789']);
+    }
+  });
+
+  it('should retain paragraph nodes when collecting getBlocks eagerly across <br>', () => {
+    const paragraphs = [...getBlocks('<div>123<br>456</div>')];
+    expect(paragraphs.length).toBe(2);
+    expect(paragraphs[0]).not.toBe(paragraphs[1]);
+    expect(paragraphs.map(p => p.text)).toEqual(['123', '456']);
+    expect(paragraphs[0].nodes.length).toBe(1);
+    expect(paragraphs[1].nodes.length).toBe(1);
+    expect(paragraphs[0].nodes[0].hasBreakOpportunityAfter).toBe(false);
+  });
+
+  it('should flush surrounding paragraph across block-level skip elements', () => {
+    expect(getText('<div>123<pre>456</pre>789</div>')).toEqual(['123', '789']);
+  });
+
+  it('should skip <svg>, <math>, and <select>/<optgroup>/<option> elements', () => {
+    expect(getText('<div>123<svg><text>456</text></svg>789</div>')).toEqual([
+      '123789',
+    ]);
+    expect(getText('<div>123<math><mi>x</mi></math>789</div>')).toEqual([
+      '123789',
+    ]);
+    expect(
+      getText(
+        '<div>123<select><optgroup label="g"><option>456</option></optgroup></select>789</div>'
+      )
+    ).toEqual(['123789']);
+  });
+
+  it('should treat display: none as Skip and display: contents as Inline', () => {
+    if (isBrowser) {
+      expect(
+        getText('<div>123<span style="display: none">456</span>789</div>')
+      ).toEqual(['123789']);
+      expect(
+        getText('<div>123<div style="display: none">456</div>789</div>')
+      ).toEqual(['123789']);
+      expect(
+        getText('<div>123<div style="display: contents">456</div>789</div>')
+      ).toEqual(['123456789']);
+    } else {
+      const origGetComputedStyle = globalThis.getComputedStyle;
+      try {
+        globalThis.getComputedStyle = ((el: Element) => {
+          const styleAttr = el.getAttribute('style') ?? '';
+          if (styleAttr.includes('display: none')) {
+            return {
+              display: 'none',
+              whiteSpace: 'normal',
+            } as CSSStyleDeclaration;
+          }
+          if (styleAttr.includes('display: contents')) {
+            return {
+              display: 'contents',
+              whiteSpace: 'normal',
+            } as CSSStyleDeclaration;
+          }
+          return {display: '', whiteSpace: ''} as CSSStyleDeclaration;
+        }) as typeof globalThis.getComputedStyle;
+        expect(
+          getText('<div>123<span style="display: none">456</span>789</div>')
+        ).toEqual(['123789']);
+        expect(
+          getText('<div>123<div style="display: contents">456</div>789</div>')
+        ).toEqual(['123456789']);
+      } finally {
+        globalThis.getComputedStyle = origGetComputedStyle;
+      }
     }
   });
 
@@ -295,7 +366,7 @@ describe('HTMLProcessor.getBlocks', () => {
 
   it('should use the built-in rules if the `display` property is empty', () => {
     expect(getText('<div>123<span>456</span></div>')).toEqual(['123456']);
-    expect(getText('<div>123<div>456</div></div>')).toEqual(['456', '123']);
+    expect(getText('<div>123<div>456</div></div>')).toEqual(['123', '456']);
     expect(getText('<div><h1>123</h1><li>456</li></div>')).toEqual([
       '123',
       '456',
@@ -330,6 +401,11 @@ describe('HTMLProcessor.forcedOpportunities', () => {
   });
   it('ZWSP should be in forcedOpportunities', () => {
     expect(forcedOpportunities('123<span>\u200B456</span>')).toEqual([
+      {indices: [4], after: [false, false]},
+    ]);
+  });
+  it('ZWSP inside NoBreak elements should be in forcedOpportunities', () => {
+    expect(forcedOpportunities('<nobr>123\u200B</nobr>456')).toEqual([
       {indices: [4], after: [false, false]},
     ]);
   });
@@ -580,12 +656,61 @@ describe('HTMLProcessingParser.translateHTMLString', () => {
     checkEqual(defaultModel, inputHTML, expectedHTML);
   });
 
-  it('should skip some specific tags.', () => {
+  it('should treat NoBreak tags as unbreakable context and skip Skip tags.', () => {
     const inputHTML = 'xyz<code>abc</code>abc';
     const expectedHTML = `<span
     style="word-break: keep-all; overflow-wrap: anywhere;"
-    >xyz<code>abc</code>\u200Babc</span>`;
+    >xyz\u200B<code>abc</code>\u200Babc</span>`;
     checkEqual(defaultModel, inputHTML, expectedHTML);
+
+    const nestedNoBreakHTML = 'xyz<nobr><b>abca</b></nobr>abc';
+    const expectedNestedNoBreakHTML = `<span
+    style="word-break: keep-all; overflow-wrap: anywhere;"
+    >xyz\u200B<nobr><b>abca</b></nobr>\u200Babc</span>`;
+    checkEqual(defaultModel, nestedNoBreakHTML, expectedNestedNoBreakHTML);
+
+    const skipButtonHTML = 'xyz<button>abc</button>abc';
+    const expectedSkipButtonHTML = `<span
+    style="word-break: keep-all; overflow-wrap: anywhere;"
+    >xyz<button>abc</button>\u200Babc</span>`;
+    checkEqual(defaultModel, skipButtonHTML, expectedSkipButtonHTML);
+  });
+
+  it('should suppress breaks adjacent to html_spec space_chars and ZWSP inside NoBreak.', () => {
+    const parser = new HTMLProcessingParser(defaultModel);
+    const nbspResult = parseFromString(
+      parser.translateHTMLString('xyz\u00a0abc', false)
+    );
+    expect(nbspResult.body.textContent).toBe('xyz\u00a0abc');
+    expect(parser.translateHTMLString('xyz\u2007abc', false)).toBe(
+      'xyz\u2007abc'
+    );
+    expect(parser.translateHTMLString('xyz\u202fabc', false)).toBe(
+      'xyz\u202fabc'
+    );
+    expect(parser.translateHTMLString('xyz\u0085abc', false)).toBe(
+      'xyz\u0085abc'
+    );
+    expect(parser.translateHTMLString('<nobr>xyz\u200B</nobr>abc', false)).toBe(
+      '<nobr>xyz\u200B</nobr>abc'
+    );
+  });
+
+  it('should split multiple paragraphs cleanly when separator is an Element.', () => {
+    const doc = createDocument();
+    setInnerHtml(
+      doc.body,
+      '<div>xyzabc<br>xyzabc<div>xyzabc</div>xyzabc</div>'
+    );
+    const wbrSeparator = doc.createElement('wbr');
+    const customParser = new HTMLProcessingParser(defaultModel, {
+      separator: wbrSeparator,
+      className: 'applied',
+    });
+    customParser.applyToElement(doc.body);
+    expect(doc.body.innerHTML).toBe(
+      '<div class="applied">xyz<wbr>abc<br>xyz<wbr>abc<div class="applied">xyz<wbr>abc</div>xyz<wbr>abc</div>'
+    );
   });
 
   it('should not ruin attributes of child elements.', () => {
