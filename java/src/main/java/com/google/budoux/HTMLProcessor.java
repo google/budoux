@@ -16,238 +16,398 @@
 
 package com.google.budoux;
 
-import java.util.ArrayDeque;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.NodeVisitor;
 
-/** Processes phrases into an HTML string wrapping them in no-breaking markup. */
+/**
+ * Processes HTML inputs into semantic line-broken HTML using Jsoup's DOM tree.
+ *
+ * <p>HTML elements are classified via {@link HtmlSpec} into block, inline, skip, no-break, forced
+ * break, and break-opportunity actions, segmented per paragraph, and serialized back via Jsoup
+ * without manual tag concatenation.
+ */
 final class HTMLProcessor {
-  private static final Set<String> skipNodes = HtmlSpec.INSTANCE.skipAndNoBreakNodes;
-  private static final Set<Integer> spaceCodePoints = HtmlSpec.INSTANCE.spaceCodePoints;
   static final String STYLE = "word-break: keep-all; overflow-wrap: anywhere;";
+
+  private static final char ZWSP = '\u200b';
+  private static final Set<String> BLOCK_SKIP_NODES =
+      Collections.unmodifiableSet(
+          new HashSet<>(Arrays.asList("LISTING", "PLAINTEXT", "PRE", "XMP")));
+
+  private enum DomAction {
+    INLINE,
+    BLOCK,
+    SKIP,
+    NO_BREAK,
+    BREAK,
+    BREAK_OPPORTUNITY
+  }
 
   private HTMLProcessor() {}
 
-  /**
-   * Checks if the character is whitespace, including no-break spaces such as U+00A0.
-   *
-   * @param c the character to check.
-   * @return whether the character is whitespace.
-   */
-  private static boolean isWhitespace(char c) {
-    return spaceCodePoints.contains((int) c);
+  private static DomAction actionForElement(Element element) {
+    String tag = element.normalName().toUpperCase(Locale.ENGLISH);
+    HtmlSpec spec = HtmlSpec.INSTANCE;
+    if (spec.skipNodes.contains(tag)) {
+      return DomAction.SKIP;
+    }
+    if (spec.noBreakNodes.contains(tag)) {
+      return DomAction.NO_BREAK;
+    }
+    if (spec.breakNodes.contains(tag)) {
+      return DomAction.BREAK;
+    }
+    if (spec.breakOpportunityNodes.contains(tag)) {
+      return DomAction.BREAK_OPPORTUNITY;
+    }
+    if (spec.blockNodes.contains(tag)) {
+      return DomAction.BLOCK;
+    }
+    return DomAction.INLINE;
   }
 
-  /**
-   * A `NodeVisitor` subclass that concatenates all `TextNode`s to a string.
-   *
-   * <p>It also converts `&lt;br>` to `\n`.
-   */
-  private static class TextizeNodeVisitor implements NodeVisitor {
-    private final StringBuilder output = new StringBuilder();
+  private static boolean isSpace(int codePoint) {
+    return HtmlSpec.INSTANCE.spaceCodePoints.contains(codePoint);
+  }
 
-    String getString() {
-      return output.toString();
-    }
-
-    @Override
-    public void head(Node node, int depth) {
-      if (node instanceof Element) {
-        final String nodeName = node.nodeName();
-        if (nodeName.equals("br")) {
-          output.append('\n');
-        }
-      } else if (node instanceof TextNode) {
-        output.append(((TextNode) node).getWholeText());
+  private static boolean isAllSpaces(String text) {
+    for (int offset = 0; offset < text.length(); ) {
+      int cp = text.codePointAt(offset);
+      if (!isSpace(cp)) {
+        return false;
       }
+      offset += Character.charCount(cp);
     }
-
-    @Override
-    public void tail(Node node, int depth) {}
+    return true;
   }
 
-  private static class PhraseResolvingNodeVisitor implements NodeVisitor {
-    private static final char SEP = '\uFFFF';
-    private final String phrasesJoined;
-    private final String separator;
-    private final StringBuilder output = new StringBuilder();
-    private Integer scanIndex = 0;
-    private boolean toSkip = false;
-    private final ArrayDeque<Boolean> elementStack = new ArrayDeque<>();
+  /**
+   * Wraps either a mutable {@link TextNode} (`canSplit == true`) or an unbreakable context string
+   * (`canSplit == false`, used for {@code NO_BREAK} elements such as {@code <nobr>} and {@code
+   * <code>}).
+   */
+  private static final class NodeOrText {
+    final TextNode textNode;
+    final String unbreakableText;
+    final List<String> chunks = new ArrayList<>();
+    boolean hasBreakOpportunityAfter = false;
 
-    /**
-     * Constructs a PhraseResolvingNodeVisitor.
-     *
-     * @param phrases a list of phrase strings.
-     * @param separator the separator string.
-     */
-    PhraseResolvingNodeVisitor(List<String> phrases, String separator) {
-      this.separator = separator;
-      this.phrasesJoined = String.join(Character.toString(SEP), phrases);
+    NodeOrText(TextNode textNode) {
+      this.textNode = textNode;
+      this.unbreakableText = null;
     }
 
-    /**
-     * Returns the resolved output string.
-     *
-     * @return the output string.
-     */
-    StringBuilder getOutput() {
-      return output;
+    NodeOrText(String unbreakableText) {
+      this.textNode = null;
+      this.unbreakableText = unbreakableText;
     }
 
-    @Override
-    public void head(Node node, int depth) {
-      if (node.nodeName().equals("body")) {
+    boolean canSplit() {
+      return textNode != null;
+    }
+
+    String text() {
+      return textNode != null ? textNode.getWholeText() : unbreakableText;
+    }
+
+    void split(String textSeparator, List<Node> nodeSeparatorPrototype) {
+      if (!canSplit() || chunks.size() <= 1) {
         return;
       }
-      if (node instanceof Element) {
-        elementStack.push(toSkip);
-        final String nodeName = node.nodeName();
-        if (nodeName.equals("br")) {
-          // `<br>` is converted to `\n`, see `TextizeNodeVisitor.head`.
-          // Consume any phrase boundary (`SEP`) immediately before `\n` without
-          // emitting a separator, since `<br>` already provides a line break.
-          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
-            scanIndex++;
+      if (nodeSeparatorPrototype == null) {
+        textNode.text(String.join(textSeparator, chunks));
+        return;
+      }
+      for (int i = 0; i < chunks.size(); i++) {
+        String chunk = chunks.get(i);
+        if (!chunk.isEmpty()) {
+          textNode.before(new TextNode(chunk));
+        }
+        if (i < chunks.size() - 1) {
+          for (Node sepNode : nodeSeparatorPrototype) {
+            textNode.before(sepNode.clone());
           }
-          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == '\n') {
-            scanIndex++;
-          }
-        } else if (nodeName.equals("wbr")) {
-          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
-            scanIndex++;
-          }
-        } else if (skipNodes.contains(nodeName.toUpperCase(Locale.ENGLISH))) {
-          if (scanIndex < phrasesJoined.length() && phrasesJoined.charAt(scanIndex) == SEP) {
-            boolean prevWasWhitespace =
-                scanIndex > 0 && isWhitespace(phrasesJoined.charAt(scanIndex - 1));
-            boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
-            boolean nextIsZwsp =
-                scanIndex + 1 < phrasesJoined.length()
-                    && phrasesJoined.charAt(scanIndex + 1) == '\u200b';
-            if (!toSkip && !prevWasWhitespace && !prevWasZwsp && !nextIsZwsp) {
-              output.append(separator);
+        }
+      }
+      textNode.remove();
+    }
+  }
+
+  /** Represents an inline formatting unit (paragraph) collected for phrase segmentation. */
+  private static final class Paragraph {
+    final List<NodeOrText> nodes = new ArrayList<>();
+
+    boolean isEmpty() {
+      return nodes.isEmpty();
+    }
+
+    boolean hasSplittableNode() {
+      for (NodeOrText node : nodes) {
+        if (node.canSplit()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    String text() {
+      StringBuilder sb = new StringBuilder();
+      for (NodeOrText node : nodes) {
+        String t = node.text();
+        if (t != null) {
+          sb.append(t);
+        }
+      }
+      return sb.toString();
+    }
+
+    void markBreakOpportunityAfterLastNode() {
+      if (!nodes.isEmpty()) {
+        nodes.get(nodes.size() - 1).hasBreakOpportunityAfter = true;
+      }
+    }
+
+    Set<Integer> getForcedOpportunities() {
+      Set<Integer> opportunities = new HashSet<>();
+      int offset = 0;
+      for (NodeOrText node : nodes) {
+        String t = node.text();
+        if (t != null) {
+          for (int i = 0; i < t.length(); i++) {
+            if (t.charAt(i) == ZWSP) {
+              opportunities.add(offset + i);
+              opportunities.add(offset + i + 1);
             }
-            scanIndex++;
           }
-          toSkip = true;
+          offset += t.length();
         }
-        output.append('<').append(nodeName);
-        for (Attribute attribute : node.attributes()) {
-          output.append(' ').append(attribute);
+        if (node.hasBreakOpportunityAfter) {
+          opportunities.add(offset);
         }
-        output.append('>');
-      } else if (node instanceof TextNode) {
-        String data = ((TextNode) node).getWholeText();
-        for (int i = 0; i < data.length(); i++) {
-          char c = data.charAt(i);
-          if (c != phrasesJoined.charAt(scanIndex)) {
-            // Assume phrasesJoined.charAt(scanIndex) == SEP.
-            boolean prevWasWhitespace =
-                scanIndex > 0 && isWhitespace(phrasesJoined.charAt(scanIndex - 1));
-            boolean prevWasZwsp = scanIndex > 0 && phrasesJoined.charAt(scanIndex - 1) == '\u200b';
-            if (!toSkip
-                && !isWhitespace(c)
-                && !prevWasWhitespace
-                && c != '\u200b'
-                && !prevWasZwsp) {
-              output.append(separator);
-            }
-            scanIndex++;
-          }
-          scanIndex++;
-          // Re-escape the text that jsoup has unescaped.
-          if (c == '&') {
-            output.append("&amp;");
-          } else if (c == '<') {
-            output.append("&lt;");
-          } else if (c == '>') {
-            output.append("&gt;");
-          } else {
-            output.append(c);
-          }
-        }
-      } else if (node instanceof DataNode) {
-        // Keep the contents of `<script>` and `<style>` as is.
-        output.append(((DataNode) node).getWholeData());
       }
+      return opportunities;
     }
+  }
 
-    @Override
-    public void tail(Node node, int depth) {
-      if (node.nodeName().equals("body") || !(node instanceof Element)) {
-        return;
+  /** Mutable pointer to the active {@link Paragraph} within a block formatting context. */
+  private static final class ParagraphContext {
+    Paragraph current = new Paragraph();
+
+    void flushInto(List<Paragraph> out) {
+      if (!current.isEmpty()) {
+        out.add(current);
+        current = new Paragraph();
       }
-      toSkip = elementStack.pop();
-      Element element = (Element) node;
-      if (element.tag().isSelfClosing()) {
-        return;
-      }
-      output.append(String.format("</%s>", node.nodeName()));
     }
   }
 
   /**
-   * Wraps phrases in the HTML string with non-breaking markup.
+   * Translates an HTML fragment string with semantic line-break separators and optional span
+   * wrapping.
    *
-   * @param phrases the phrases included in the HTML string.
-   * @param html the HTML string to resolve.
-   * @return the HTML string of phrases wrapped in non-breaking markup.
+   * @param parser the BudouX {@link Parser} instance.
+   * @param html the input HTML string.
+   * @param separator the separator string (plain text such as {@code "\u200b"} or HTML markup such
+   *     as {@code "<wbr>"}).
+   * @param wrap whether to wrap the output in a {@code <span>} element with inline styles.
+   * @return the processed HTML string.
    */
-  public static String resolve(List<String> phrases, String html) {
-    return resolve(phrases, html, "\u200b");
-  }
-
-  /**
-   * Wraps phrases in the HTML string with non-breaking markup.
-   *
-   * @param phrases the phrases included in the HTML string.
-   * @param html the HTML string to resolve.
-   * @param separator the separator string.
-   * @return the HTML string of phrases wrapped in non-breaking markup.
-   */
-  public static String resolve(List<String> phrases, String html, String separator) {
-    return resolve(phrases, html, separator, true);
-  }
-
-  /**
-   * Resolves phrases in the HTML string with non-breaking markup.
-   *
-   * @param phrases the phrases included in the HTML string.
-   * @param html the HTML string to resolve.
-   * @param separator the separator string.
-   * @param wrap whether to wrap the output in a span element with inline styles.
-   * @return the HTML string of phrases resolved with the separator.
-   */
-  public static String resolve(List<String> phrases, String html, String separator, boolean wrap) {
+  static String translate(Parser parser, String html, String separator, boolean wrap) {
     Document doc = Jsoup.parseBodyFragment(html);
-    PhraseResolvingNodeVisitor nodeVisitor = new PhraseResolvingNodeVisitor(phrases, separator);
-    doc.body().traverse(nodeVisitor);
+    doc.outputSettings().prettyPrint(false).charset(StandardCharsets.UTF_8);
+
+    Element body = doc.body();
+    List<Paragraph> paragraphs = new ArrayList<>();
+    collectFromElement(body, null, false, paragraphs);
+
+    List<Node> nodeSeparatorPrototype = parseSeparatorIfElement(separator, body);
+    for (Paragraph paragraph : paragraphs) {
+      applyToParagraph(parser, paragraph, separator, nodeSeparatorPrototype);
+    }
+
+    String resolved = body.html();
     if (!wrap) {
-      return nodeVisitor.getOutput().toString();
+      return resolved;
     }
-    return String.format("<span style=\"%s\">%s</span>", STYLE, nodeVisitor.getOutput());
+    return String.format("<span style=\"%s\">%s</span>", STYLE, resolved);
   }
 
-  /**
-   * Gets the text content from the input HTML string.
-   *
-   * @param html an HTML string.
-   * @return the text content.
-   */
-  public static String getText(String html) {
-    Document doc = Jsoup.parseBodyFragment(html);
-    TextizeNodeVisitor nodeVisitor = new TextizeNodeVisitor();
-    doc.body().traverse(nodeVisitor);
-    return nodeVisitor.getString();
+  private static List<Node> parseSeparatorIfElement(String separator, Element context) {
+    if (separator.indexOf('<') < 0) {
+      return null;
+    }
+    List<Node> parsed = org.jsoup.parser.Parser.parseFragment(separator, context, "");
+    for (Node node : parsed) {
+      if (node instanceof Element) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
+  private static void collectFromElement(
+      Element element,
+      ParagraphContext parentContext,
+      boolean inNoBreak,
+      List<Paragraph> outParagraphs) {
+    DomAction action = actionForElement(element);
+    if (action == DomAction.SKIP) {
+      if (parentContext != null
+          && BLOCK_SKIP_NODES.contains(element.normalName().toUpperCase(Locale.ENGLISH))) {
+        parentContext.flushInto(outParagraphs);
+      }
+      return;
+    }
+    if (action == DomAction.BREAK) {
+      if (parentContext != null && !parentContext.current.isEmpty()) {
+        parentContext.flushInto(outParagraphs);
+      }
+      return;
+    }
+    if (action == DomAction.BREAK_OPPORTUNITY) {
+      if (parentContext != null) {
+        parentContext.current.markBreakOpportunityAfterLastNode();
+      }
+      return;
+    }
+
+    boolean isNewBlock = parentContext == null || action == DomAction.BLOCK;
+    if (isNewBlock && parentContext != null) {
+      parentContext.flushInto(outParagraphs);
+    }
+
+    ParagraphContext ctx = isNewBlock ? new ParagraphContext() : parentContext;
+    boolean childNoBreak = inNoBreak || action == DomAction.NO_BREAK;
+
+    for (Node child : element.childNodes()) {
+      collectFromChildNode(child, ctx, childNoBreak, outParagraphs);
+    }
+
+    if (isNewBlock) {
+      ctx.flushInto(outParagraphs);
+    }
+  }
+
+  private static void collectFromChildNode(
+      Node child, ParagraphContext ctx, boolean inNoBreak, List<Paragraph> outParagraphs) {
+    if (child instanceof Element) {
+      collectFromElement((Element) child, ctx, inNoBreak, outParagraphs);
+    } else if (child instanceof TextNode && !(child instanceof CDataNode)) {
+      TextNode textNode = (TextNode) child;
+      String wholeText = textNode.getWholeText();
+      if (wholeText.isEmpty()) {
+        return;
+      }
+      if (inNoBreak) {
+        ctx.current.nodes.add(new NodeOrText(wholeText));
+      } else {
+        ctx.current.nodes.add(new NodeOrText(textNode));
+      }
+    }
+  }
+
+  private static void applyToParagraph(
+      Parser parser, Paragraph paragraph, String separator, List<Node> nodeSeparatorPrototype) {
+    if (!paragraph.hasSplittableNode()) {
+      return;
+    }
+    String text = paragraph.text();
+    if (text.isEmpty() || isAllSpaces(text)) {
+      return;
+    }
+
+    int[] boundaries = parser.parseBoundaries(text);
+    if (boundaries.length == 0) {
+      return;
+    }
+    Set<Integer> forcedOpportunities = paragraph.getForcedOpportunities();
+
+    List<Integer> adjustedBoundaries = new ArrayList<>(boundaries.length + 1);
+    for (int boundary : boundaries) {
+      if (boundary <= 0 || boundary >= text.length()) {
+        continue;
+      }
+      if (forcedOpportunities.contains(boundary)) {
+        continue;
+      }
+      int cpBefore = Character.codePointBefore(text, boundary);
+      int cpAt = Character.codePointAt(text, boundary);
+      if (isSpace(cpBefore) || isSpace(cpAt)) {
+        continue;
+      }
+      adjustedBoundaries.add(boundary);
+    }
+
+    if (!adjustedBoundaries.isEmpty()) {
+      adjustedBoundaries.add(text.length() + 1);
+      splitNodes(paragraph.nodes, adjustedBoundaries, separator, nodeSeparatorPrototype);
+    }
+  }
+
+  private static void splitNodes(
+      List<NodeOrText> nodes,
+      List<Integer> boundaries,
+      String textSeparator,
+      List<Node> nodeSeparatorPrototype) {
+    int boundaryIndex = 0;
+    int boundary = boundaries.get(0);
+    int nodeStart = 0;
+    NodeOrText lastSplittableNode = null;
+
+    for (NodeOrText node : nodes) {
+      String nodeText = node.text();
+      if (nodeText == null || nodeText.isEmpty()) {
+        continue;
+      }
+      int nodeLength = nodeText.length();
+      int nodeEnd = nodeStart + nodeLength;
+
+      if (!node.canSplit()) {
+        if (lastSplittableNode != null && boundary == nodeStart) {
+          if (lastSplittableNode.chunks.isEmpty()) {
+            lastSplittableNode.chunks.add(lastSplittableNode.text());
+          }
+          lastSplittableNode.chunks.add("");
+        }
+        while (boundary < nodeEnd) {
+          boundary = boundaries.get(++boundaryIndex);
+        }
+        lastSplittableNode = null;
+        nodeStart = nodeEnd;
+        continue;
+      }
+
+      lastSplittableNode = node;
+      if (boundary >= nodeEnd) {
+        nodeStart = nodeEnd;
+        continue;
+      }
+
+      int chunkStartInNode = 0;
+      while (boundary < nodeEnd) {
+        int boundaryInNode = boundary - nodeStart;
+        node.chunks.add(nodeText.substring(chunkStartInNode, boundaryInNode));
+        chunkStartInNode = boundaryInNode;
+        boundary = boundaries.get(++boundaryIndex);
+      }
+      node.chunks.add(nodeText.substring(chunkStartInNode));
+      nodeStart = nodeEnd;
+    }
+
+    for (NodeOrText node : nodes) {
+      node.split(textSeparator, nodeSeparatorPrototype);
+    }
   }
 }

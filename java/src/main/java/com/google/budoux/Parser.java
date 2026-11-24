@@ -294,8 +294,6 @@ public class Parser {
    * @return the translated HTML string.
    */
   public String translateHTMLString(String html, boolean wrap) {
-    String sentence = HTMLProcessor.getText(html);
-    List<String> phrases = parse(sentence);
-    return HTMLProcessor.resolve(phrases, html, "\u200b", wrap);
+    return HTMLProcessor.translate(this, html, "\u200b", wrap);
   }
 }
