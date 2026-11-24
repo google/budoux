@@ -16,7 +16,7 @@
 import json
 import os
 
-from .html_processor import HTML_SPEC, get_text, resolve
+from .html_processor import HTML_SPEC, translate
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 INVISIBLE_FORMAT_CHARS: set[str] = set(HTML_SPEC['invisible_format_chars'])
@@ -139,9 +139,7 @@ class Parser:
     Returns:
       The translated HTML string (str).
     """
-    text_content = get_text(html)
-    chunks = self.parse(text_content)
-    return resolve(chunks, html, wrap=wrap)
+    return translate(self, html, wrap=wrap)
 
 
 def load_default_japanese_parser() -> Parser:

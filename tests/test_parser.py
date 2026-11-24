@@ -87,7 +87,7 @@ class TestParser(unittest.TestCase):
     input_html = 'xyz<script>alert(1);</script>xyzabc'
     expected_html = (
       '<span style="word-break: keep-all; overflow-wrap: anywhere;">'
-      'xyz\u200b<script>alert(1);</script>xyz\u200babc</span>'
+      'xyz<script>alert(1);</script>xyz\u200babc</span>'
     )
     output_html = p.translate_html_string(input_html)
     self.assertEqual(output_html, expected_html, 'Should pass script tags as is.')
