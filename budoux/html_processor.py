@@ -166,6 +166,13 @@ class _ElementNode(_TokenNode):
 class _TokenTreeBuilder(HTMLParser):
   """Single-pass lossless HTML tokenizer building a lightweight element tree."""
 
+  @classmethod
+  def parse(cls, source: str) -> _ElementNode:
+    builder = cls(source)
+    builder.feed(source)
+    builder.close()
+    return builder.root
+
   def __init__(self, source: str) -> None:
     super().__init__(convert_charrefs=False)
     self._source = source
@@ -569,17 +576,15 @@ def translate(
   Returns:
     The processed HTML string.
   """
-  builder = _TokenTreeBuilder(html_str)
-  builder.feed(html_str)
-  builder.close()
+  root = _TokenTreeBuilder.parse(html_str)
 
   paragraphs: list[_Paragraph] = []
-  _collect_from_element(builder.root, None, False, paragraphs)
+  _collect_from_element(root, None, False, paragraphs)
 
   for paragraph in paragraphs:
     _apply_to_paragraph(parser, paragraph)
 
-  resolved = builder.root.serialize(separator)
+  resolved = root.serialize(separator)
   if not wrap:
     return resolved
   return f'<span style="{PARENT_CSS_STYLE}">{resolved}</span>'
