@@ -17,6 +17,7 @@ import enum
 import html
 import json
 import os
+import re
 from html.parser import HTMLParser
 from typing import Protocol
 
@@ -60,6 +61,7 @@ _BREAK_OPPORTUNITY_NODES: frozenset[str] = frozenset(
 )
 _IMPLICIT_CLOSE_RULES = build_implicit_close_rules(_BLOCK_NODES, _BLOCK_SKIP_NODES)
 _ZWSP = '\u200b'
+_INCOMPLETE_REF_RE = re.compile(r'&(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]*|#[xX][0-9a-fA-F]*)')
 
 
 class _DomAction(enum.Enum):
@@ -182,6 +184,15 @@ class _TokenTreeBuilder(HTMLParser):
         self._line_starts.append(idx + 1)
     self.root = _ElementNode('', '')
     self._stack: list[_ElementNode] = [self.root]
+
+  def close(self) -> None:
+    # Work around CPython 3.11/3.12 HTMLParser(convert_charrefs=False) dropping '&'
+    # for trailing incomplete references like '&c' at EOF (fixed in Python 3.13).
+    if self.cdata_elem is None and _INCOMPLETE_REF_RE.fullmatch(self.rawdata):
+      raw = self.rawdata
+      self.rawdata = ''
+      self._handle_reference(raw)
+    super().close()
 
   def _pos(self) -> int:
     lineno, offset = self.getpos()
