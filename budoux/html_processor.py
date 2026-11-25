@@ -283,6 +283,20 @@ class _TokenTreeBuilder(HTMLParser):
       return
     self._append_text_node().append_plain(data)
 
+  def _match_raw_reference(self, prefix: str, name: str) -> str:
+    pos = self._pos()
+    raw_no_semi = f'{prefix}{name}'
+    raw_with_semi = f'{raw_no_semi};'
+    for start in (pos, pos - len(prefix)):
+      if start >= 0:
+        if self._source.startswith(raw_with_semi, start):
+          return raw_with_semi
+        if self._source.startswith(raw_no_semi, start):
+          return raw_no_semi
+    if pos >= len(raw_with_semi) and self._source.endswith(raw_with_semi, 0, pos):
+      return raw_with_semi
+    return raw_no_semi
+
   def _handle_reference(self, raw: str) -> None:
     if self.cdata_elem is not None:
       self._current().children.append(_RawNode(raw))
@@ -300,18 +314,10 @@ class _TokenTreeBuilder(HTMLParser):
       self._append_text_node().append_plain(raw)
 
   def handle_entityref(self, name: str) -> None:
-    pos = self._pos()
-    end = pos + 1 + len(name)
-    if end < len(self._source) and self._source[end] == ';':
-      end += 1
-    self._handle_reference(self._source[pos:end])
+    self._handle_reference(self._match_raw_reference('&', name))
 
   def handle_charref(self, name: str) -> None:
-    pos = self._pos()
-    end = pos + 2 + len(name)
-    if end < len(self._source) and self._source[end] == ';':
-      end += 1
-    self._handle_reference(self._source[pos:end])
+    self._handle_reference(self._match_raw_reference('&#', name))
 
   def handle_comment(self, data: str) -> None:
     pos = self._pos()
