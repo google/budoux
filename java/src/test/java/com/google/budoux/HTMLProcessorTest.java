@@ -474,4 +474,12 @@ public class HTMLProcessorTest {
     assertEquals("", parser.translateHTMLString("", false));
     assertEquals(this.wrap(""), parser.translateHTMLString("", true));
   }
+
+  @Test
+  public void testResolveWithPlainTextSeparatorContainingLessThan() {
+    Parser parser = breakBefore("d");
+    String html = "abcdef";
+    String result = HTMLProcessor.translate(parser, html, " < ", false);
+    assertEquals("abc &lt; def", result);
+  }
 }
