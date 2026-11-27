@@ -45,6 +45,7 @@ const copyHtmlSpec = () => {
   const tsContent = `export interface HtmlSpec {
   element_actions: {
     block: string[];
+    block_skip: string[];
     skip: string[];
     nobreak: string[];
     break: string[];
