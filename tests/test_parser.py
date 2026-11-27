@@ -89,6 +89,29 @@ class TestParser(unittest.TestCase):
         ['\U0001f1ef\U0001f1f5', '\U0001f1f9\U0001f1fc', '\U0001f1ef'],
         'regional indicator pairs',
       ),
+      # Not General_Category M, but UAX #29 Extend or SpacingMark.
+      (
+        '\uff76\uff9e\uff8a\uff9f',
+        ['\uff76\uff9e', '\uff8a\uff9f'],
+        'halfwidth (semi-)voiced marks',
+      ),
+      ('\u0e01\u0e33a', ['\u0e01\u0e33', 'a'], 'Thai SARA AM'),
+      ('\u0e81\u0eb3a', ['\u0e81\u0eb3', 'a'], 'Lao SARA AM'),
+      ('a\u200cb', ['a\u200c', 'b'], 'ZWNJ'),
+      (
+        '\U0001f3f4\U000e0067\U000e0062\U000e0065\U000e006e\U000e0067\U000e007fa',
+        ['\U0001f3f4\U000e0067\U000e0062\U000e0065\U000e006e\U000e0067\U000e007f', 'a'],
+        'emoji tag sequence',
+      ),
+      ('a\r\nb', ['a', '\r\n', 'b'], 'CR LF'),
+      ('a\nb', ['a', '\n', 'b'], 'LF without CR'),
+      # An invisible format character in between ends the cluster.
+      ('\u304b\u200b\u3099', ['\u304b\u200b', '\u3099'], 'mark after ZWSP'),
+      (
+        '\U0001f1ef\u200b\U0001f1f5\U0001f1f7',
+        ['\U0001f1ef\u200b', '\U0001f1f5\U0001f1f7'],
+        'regional indicators across ZWSP',
+      ),
     ]
     for sentence, expected, name in cases:
       with self.subTest(name):

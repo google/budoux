@@ -20,35 +20,59 @@ const INVISIBLE_FORMAT_CHARS = new Set(htmlSpec.invisible_format_chars);
 const COMBINING_MARK = /^\p{M}$/u;
 const ZWJ = '\u200d';
 
-const isRegionalIndicator = (ch: string): boolean => {
-  const cp = ch.codePointAt(0) ?? 0;
-  return cp >= 0x1f1e6 && cp <= 0x1f1ff;
-};
+// Characters outside General_Category M that UAX #29 still keeps in the cluster
+// before them: ZWNJ (Extend), Thai and Lao SARA AM (SpacingMark) and the
+// halfwidth katakana voiced sound marks (Extend).
+const EXTEND_NOT_MARK = new Set([0x200c, 0x0e33, 0x0eb3, 0xff9e, 0xff9f]);
+
+const isRegionalIndicator = (cp: number): boolean =>
+  cp >= 0x1f1e6 && cp <= 0x1f1ff;
 
 /**
  * Checks whether chars[i] continues the grapheme cluster before it.
  *
  * A boundary before such a character would split a combining mark (such as a
- * decomposed dakuten U+3099), a variation selector, an emoji modifier, a ZWJ
- * sequence or a regional indicator pair from the character it belongs to.
+ * decomposed dakuten U+3099), a variation selector, an emoji modifier or tag,
+ * a ZWJ sequence, a regional indicator pair or CR LF.
  *
  * @param chars The visible characters (code points) of a sentence.
+ * @param offsets The UTF-16 offset of each character in the sentence.
  * @param i An index into chars, greater than 0.
  * @return True if no boundary may be placed before chars[i].
  */
-const continuesCluster = (chars: string[], i: number): boolean => {
+const continuesCluster = (
+  chars: string[],
+  offsets: number[],
+  i: number
+): boolean => {
+  // An invisible format character in between already ends the cluster.
+  if (offsets[i - 1] + chars[i - 1].length !== offsets[i]) return false;
   const ch = chars[i];
   if (ch === ZWJ || chars[i - 1] === ZWJ) return true;
-  if (isRegionalIndicator(ch)) {
-    // Only the second regional indicator of a pair continues the cluster.
+  const cp = ch.codePointAt(0) ?? 0;
+  if (isRegionalIndicator(cp)) {
+    // Only the second regional indicator of an adjacent pair continues it.
     let j = i - 1;
-    while (j >= 0 && isRegionalIndicator(chars[j])) j--;
+    while (
+      j >= 0 &&
+      isRegionalIndicator(chars[j].codePointAt(0) ?? 0) &&
+      offsets[j] + chars[j].length === offsets[j + 1]
+    ) {
+      j--;
+    }
     return (i - j) % 2 === 0;
   }
-  const cp = ch.codePointAt(0) ?? 0;
-  // No combining mark lies below U+0300 or among U+4E00-9FFF ideographs.
-  if (cp < 0x300 || (cp >= 0x4e00 && cp <= 0x9fff)) return false;
-  if (cp >= 0x1f3fb && cp <= 0x1f3ff) return true;
+  // Below U+0300 only LF continues a cluster, after CR.
+  if (cp < 0x300) return ch === '\n' && chars[i - 1] === '\r';
+  // No combining mark lies among U+4E00-9FFF ideographs.
+  if (cp >= 0x4e00 && cp <= 0x9fff) return false;
+  if (
+    (cp >= 0x1f3fb && cp <= 0x1f3ff) ||
+    (cp >= 0xe0020 && cp <= 0xe007f) ||
+    EXTEND_NOT_MARK.has(cp)
+  ) {
+    return true;
+  }
   return COMBINING_MARK.test(ch);
 };
 
@@ -162,7 +186,8 @@ export class Parser {
         score += 2 * (uw6?.get(chars[i + 2]) ?? 0);
         score += 2 * (tw4?.get(chars[i] + chars[i + 1] + chars[i + 2]) ?? 0);
       }
-      if (score > 0 && !continuesCluster(chars, i)) result.push(offsets[i]);
+      if (score > 0 && !continuesCluster(chars, offsets, i))
+        result.push(offsets[i]);
     }
     return result;
   }
