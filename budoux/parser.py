@@ -15,11 +15,64 @@
 
 import json
 import os
+import unicodedata
 
 from .html_processor import HTML_SPEC, get_text, resolve
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 INVISIBLE_FORMAT_CHARS: set[str] = set(HTML_SPEC['invisible_format_chars'])
+
+
+# Characters outside General_Category M that UAX #29 still keeps in the cluster
+# before them: ZWNJ (Extend), Thai and Lao SARA AM (SpacingMark) and the
+# halfwidth katakana voiced sound marks (Extend).
+_EXTEND_NOT_MARK = frozenset('\u200c\u0e33\u0eb3\uff9e\uff9f')
+
+
+def _continues_cluster(chars: list[str], offsets: list[int], i: int) -> bool:
+  """Checks whether chars[i] continues the grapheme cluster before it.
+
+  A boundary before such a character would split a combining mark (such as a
+  decomposed dakuten U+3099), a variation selector, an emoji modifier or tag,
+  a ZWJ sequence, a regional indicator pair or CR LF.
+
+  Args:
+    chars (list[str]): The visible characters of a sentence.
+    offsets (list[int]): The offset of each character in the sentence.
+    i (int): An index into chars, greater than 0.
+
+  Returns:
+    True if no boundary may be placed before chars[i].
+  """
+  if offsets[i - 1] + 1 != offsets[i]:
+    # An invisible format character in between already ends the cluster.
+    return False
+  ch = chars[i]
+  if ch == '\u200d' or chars[i - 1] == '\u200d':
+    return True
+  if '\U0001f1e6' <= ch <= '\U0001f1ff':
+    # Only the second regional indicator of an adjacent pair continues it.
+    j = i - 1
+    while (
+      j >= 0
+      and '\U0001f1e6' <= chars[j] <= '\U0001f1ff'
+      and offsets[j] + 1 == offsets[j + 1]
+    ):
+      j -= 1
+    return (i - j) % 2 == 0
+  # Below U+0300 only LF continues a cluster, after CR.
+  if ch < '\u0300':
+    return ch == '\n' and chars[i - 1] == '\r'
+  # No combining mark lies among U+4E00-9FFF ideographs.
+  if '\u4e00' <= ch <= '\u9fff':
+    return False
+  if (
+    '\U0001f3fb' <= ch <= '\U0001f3ff'
+    or '\U000e0020' <= ch <= '\U000e007f'
+    or ch in _EXTEND_NOT_MARK
+  ):
+    return True
+  return unicodedata.category(ch)[0] == 'M'
 
 
 class Parser:
@@ -50,6 +103,8 @@ class Parser:
 
     Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated as
     transparent in the feature window so repeated segmentation stays idempotent.
+    No boundary is placed inside a grapheme cluster, such as before a combining
+    mark or a variation selector.
 
     Args:
       sentence (str): An input sentence.
@@ -104,7 +159,7 @@ class Parser:
         score += 2 * uw6.get(chars[i + 2], 0)
         score += 2 * tw4.get(chars[i] + chars[i + 1] + chars[i + 2], 0)
 
-      if score > 0:
+      if score > 0 and not _continues_cluster(chars, offsets, i):
         boundaries.append(offsets[i])
     return boundaries
 

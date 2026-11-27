@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests the BudouX parser."""
 
+import unicodedata
 import unittest
 
 from budoux import parser
@@ -64,6 +65,57 @@ class TestParser(unittest.TestCase):
     self.assertEqual(twice, once)
     self.assertListEqual(p.parse_boundaries('abc\u200bdef'), [4])
     self.assertListEqual(p.parse('\u200b'), ['\u200b'])
+
+  def test_no_boundary_inside_grapheme_cluster(self) -> None:
+    # A negative total score places a boundary before every character.
+    p = parser.Parser({'UW1': {'x': -1}})
+    self.assertListEqual(p.parse('abc'), ['a', 'b', 'c'])
+    cases = [
+      # か + U+3099 COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK
+      ('か\u3099ら', ['か\u3099', 'ら'], 'combining dakuten'),
+      # ก + U+0E35 THAI CHARACTER SARA II
+      ('ก\u0e35a', ['ก\u0e35', 'a'], 'Thai vowel sign'),
+      ('a❤\ufe0fb', ['a', '❤\ufe0f', 'b'], 'variation selector'),
+      ('葛\U000e0100飾', ['葛\U000e0100', '飾'], 'IVS'),
+      ('1\ufe0f\u20e3a', ['1\ufe0f\u20e3', 'a'], 'keycap'),
+      ('\U0001f44d\U0001f3fda', ['\U0001f44d\U0001f3fd', 'a'], 'emoji modifier'),
+      (
+        '\U0001f468\u200d\U0001f469\u200d\U0001f467a',
+        ['\U0001f468\u200d\U0001f469\u200d\U0001f467', 'a'],
+        'ZWJ sequence',
+      ),
+      (
+        '\U0001f1ef\U0001f1f5\U0001f1f9\U0001f1fc\U0001f1ef',
+        ['\U0001f1ef\U0001f1f5', '\U0001f1f9\U0001f1fc', '\U0001f1ef'],
+        'regional indicator pairs',
+      ),
+      # Not General_Category M, but UAX #29 Extend or SpacingMark.
+      (
+        '\uff76\uff9e\uff8a\uff9f',
+        ['\uff76\uff9e', '\uff8a\uff9f'],
+        'halfwidth (semi-)voiced marks',
+      ),
+      ('\u0e01\u0e33a', ['\u0e01\u0e33', 'a'], 'Thai SARA AM'),
+      ('\u0e81\u0eb3a', ['\u0e81\u0eb3', 'a'], 'Lao SARA AM'),
+      ('a\u200cb', ['a\u200c', 'b'], 'ZWNJ'),
+      (
+        '\U0001f3f4\U000e0067\U000e0062\U000e0065\U000e006e\U000e0067\U000e007fa',
+        ['\U0001f3f4\U000e0067\U000e0062\U000e0065\U000e006e\U000e0067\U000e007f', 'a'],
+        'emoji tag sequence',
+      ),
+      ('a\r\nb', ['a', '\r\n', 'b'], 'CR LF'),
+      ('a\nb', ['a', '\n', 'b'], 'LF without CR'),
+      # An invisible format character in between ends the cluster.
+      ('\u304b\u200b\u3099', ['\u304b\u200b', '\u3099'], 'mark after ZWSP'),
+      (
+        '\U0001f1ef\u200b\U0001f1f5\U0001f1f7',
+        ['\U0001f1ef\u200b', '\U0001f1f5\U0001f1f7'],
+        'regional indicators across ZWSP',
+      ),
+    ]
+    for sentence, expected, name in cases:
+      with self.subTest(name):
+        self.assertListEqual(p.parse(sentence), expected)
 
   def test_translate_html_string(self) -> None:
     p = parser.Parser(
@@ -158,6 +210,17 @@ class TestDefaultParser(unittest.TestCase):
         'ことです。',
       ],
     )
+
+  def test_japanese_parser_decomposed_text(self) -> None:
+    p_ja = parser.load_default_japanese_parser()
+    sentence = unicodedata.normalize('NFD', '今日はとても良い天気です。')
+    phrases = p_ja.parse(sentence)
+    self.assertEqual(''.join(phrases), sentence)
+    for phrase in phrases:
+      self.assertFalse(
+        unicodedata.category(phrase[0]).startswith('M'),
+        f'A phrase starts with a combining mark: {phrases!r}',
+      )
 
   def test_load_default_simplified_chinese_parser(self) -> None:
     p_hans = parser.load_default_simplified_chinese_parser()

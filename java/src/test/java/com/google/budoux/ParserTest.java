@@ -206,4 +206,89 @@ public class ParserTest {
     assertArrayEquals(new int[] {4}, parser.parseBoundaries("abc\u200bdef"));
     assertEquals(Arrays.asList("\u200b"), parser.parse("\u200b"));
   }
+
+  private static String codePoints(int... codePoints) {
+    return new String(codePoints, 0, codePoints.length);
+  }
+
+  @Test
+  public void testNoBoundaryInsideGraphemeCluster() {
+    // A negative total score places a boundary before every character.
+    Map<String, Map<String, Integer>> model = new HashMap<>();
+    Map<String, Integer> uw1 = new HashMap<>();
+    uw1.put("x", -1);
+    model.put("UW1", uw1);
+    Parser parser = new Parser(model);
+    assertEquals(Arrays.asList("a", "b", "c"), parser.parse("abc"));
+
+    // Combining dakuten (decomposed form).
+    assertEquals(
+        Arrays.asList(codePoints(0x304B, 0x3099), codePoints(0x3089)),
+        parser.parse(codePoints(0x304B, 0x3099, 0x3089)));
+    // Thai vowel sign.
+    assertEquals(
+        Arrays.asList(codePoints(0x0E01, 0x0E35), "a"),
+        parser.parse(codePoints(0x0E01, 0x0E35, 'a')));
+    // Variation selector.
+    assertEquals(
+        Arrays.asList("a", codePoints(0x2764, 0xFE0F), "b"),
+        parser.parse(codePoints('a', 0x2764, 0xFE0F, 'b')));
+    // Ideographic variation selector.
+    assertEquals(
+        Arrays.asList(codePoints(0x845B, 0xE0100), codePoints(0x98FE)),
+        parser.parse(codePoints(0x845B, 0xE0100, 0x98FE)));
+    // Keycap.
+    assertEquals(
+        Arrays.asList(codePoints('1', 0xFE0F, 0x20E3), "a"),
+        parser.parse(codePoints('1', 0xFE0F, 0x20E3, 'a')));
+    // Emoji modifier.
+    assertEquals(
+        Arrays.asList(codePoints(0x1F44D, 0x1F3FD), "a"),
+        parser.parse(codePoints(0x1F44D, 0x1F3FD, 'a')));
+    // ZWJ sequence.
+    assertEquals(
+        Arrays.asList(codePoints(0x1F468, 0x200D, 0x1F469, 0x200D, 0x1F467), "a"),
+        parser.parse(codePoints(0x1F468, 0x200D, 0x1F469, 0x200D, 0x1F467, 'a')));
+    // Regional indicator pairs.
+    assertEquals(
+        Arrays.asList(
+            codePoints(0x1F1EF, 0x1F1F5), codePoints(0x1F1F9, 0x1F1FC), codePoints(0x1F1EF)),
+        parser.parse(codePoints(0x1F1EF, 0x1F1F5, 0x1F1F9, 0x1F1FC, 0x1F1EF)));
+
+    // Not General_Category M, but UAX #29 Extend or SpacingMark.
+    // Halfwidth voiced and semi-voiced sound marks.
+    assertEquals(
+        Arrays.asList(codePoints(0xFF76, 0xFF9E), codePoints(0xFF8A, 0xFF9F)),
+        parser.parse(codePoints(0xFF76, 0xFF9E, 0xFF8A, 0xFF9F)));
+    // Thai SARA AM.
+    assertEquals(
+        Arrays.asList(codePoints(0x0E01, 0x0E33), "a"),
+        parser.parse(codePoints(0x0E01, 0x0E33, 'a')));
+    // Lao SARA AM.
+    assertEquals(
+        Arrays.asList(codePoints(0x0E81, 0x0EB3), "a"),
+        parser.parse(codePoints(0x0E81, 0x0EB3, 'a')));
+    // ZWNJ.
+    assertEquals(Arrays.asList("a\u200C", "b"), parser.parse("a\u200Cb"));
+    // Emoji tag sequence.
+    assertEquals(
+        Arrays.asList(
+            codePoints(0x1F3F4, 0xE0067, 0xE0062, 0xE0065, 0xE006E, 0xE0067, 0xE007F), "a"),
+        parser.parse(
+            codePoints(0x1F3F4, 0xE0067, 0xE0062, 0xE0065, 0xE006E, 0xE0067, 0xE007F, 'a')));
+    // CR LF.
+    assertEquals(Arrays.asList("a", "\r\n", "b"), parser.parse("a\r\nb"));
+    // LF without CR.
+    assertEquals(Arrays.asList("a", "\n", "b"), parser.parse("a\nb"));
+
+    // An invisible format character in between ends the cluster.
+    // Mark after ZWSP.
+    assertEquals(
+        Arrays.asList(codePoints(0x304B, 0x200B), codePoints(0x3099)),
+        parser.parse(codePoints(0x304B, 0x200B, 0x3099)));
+    // Regional indicators across ZWSP.
+    assertEquals(
+        Arrays.asList(codePoints(0x1F1EF, 0x200B), codePoints(0x1F1F5, 0x1F1F7)),
+        parser.parse(codePoints(0x1F1EF, 0x200B, 0x1F1F5, 0x1F1F7)));
+  }
 }

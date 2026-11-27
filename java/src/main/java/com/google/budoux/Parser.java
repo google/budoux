@@ -98,6 +98,76 @@ public class Parser {
     this.tw4 = copyGroup(model, "TW4");
   }
 
+  private static final String ZWJ = "\u200D";
+
+  private static boolean isRegionalIndicator(int codePoint) {
+    return codePoint >= 0x1F1E6 && codePoint <= 0x1F1FF;
+  }
+
+  /**
+   * Checks for a character outside General_Category M that UAX #29 still keeps in the cluster
+   * before it: ZWNJ (Extend), Thai and Lao SARA AM (SpacingMark) and the halfwidth katakana voiced
+   * sound marks (Extend).
+   */
+  private static boolean isExtendNotMark(int codePoint) {
+    return codePoint == 0x200C
+        || codePoint == 0x0E33
+        || codePoint == 0x0EB3
+        || codePoint == 0xFF9E
+        || codePoint == 0xFF9F;
+  }
+
+  /**
+   * Checks whether {@code chars[i]} continues the grapheme cluster before it.
+   *
+   * <p>A boundary before such a character would split a combining mark (such as a decomposed
+   * dakuten U+3099), a variation selector, an emoji modifier or tag, a ZWJ sequence, a regional
+   * indicator pair or CR LF.
+   *
+   * @param chars the visible characters (code points) of a sentence.
+   * @param offsets the UTF-16 offset of each character in the sentence.
+   * @param i an index into chars, greater than 0.
+   * @return true if no boundary may be placed before {@code chars[i]}.
+   */
+  private static boolean continuesCluster(String[] chars, int[] offsets, int i) {
+    // An invisible format character in between already ends the cluster.
+    if (offsets[i - 1] + chars[i - 1].length() != offsets[i]) {
+      return false;
+    }
+    String ch = chars[i];
+    if (ch.equals(ZWJ) || chars[i - 1].equals(ZWJ)) {
+      return true;
+    }
+    int codePoint = ch.codePointAt(0);
+    if (isRegionalIndicator(codePoint)) {
+      // Only the second regional indicator of an adjacent pair continues it.
+      int j = i - 1;
+      while (j >= 0
+          && isRegionalIndicator(chars[j].codePointAt(0))
+          && offsets[j] + chars[j].length() == offsets[j + 1]) {
+        j--;
+      }
+      return (i - j) % 2 == 0;
+    }
+    // Below U+0300 only LF continues a cluster, after CR.
+    if (codePoint < 0x300) {
+      return codePoint == '\n' && chars[i - 1].equals("\r");
+    }
+    // No combining mark lies among U+4E00-9FFF ideographs.
+    if (codePoint >= 0x4E00 && codePoint <= 0x9FFF) {
+      return false;
+    }
+    if ((codePoint >= 0x1F3FB && codePoint <= 0x1F3FF)
+        || (codePoint >= 0xE0020 && codePoint <= 0xE007F)
+        || isExtendNotMark(codePoint)) {
+      return true;
+    }
+    int type = Character.getType(codePoint);
+    return type == Character.NON_SPACING_MARK
+        || type == Character.COMBINING_SPACING_MARK
+        || type == Character.ENCLOSING_MARK;
+  }
+
   private static Map<String, Integer> copyGroup(
       Map<String, Map<String, Integer>> model, String key) {
     Map<String, Integer> group = model.get(key);
@@ -166,7 +236,8 @@ public class Parser {
    * Parses the input sentence and returns UTF-16 code unit offsets of phrase boundaries.
    *
    * <p>Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated as transparent in
-   * the feature window so repeated segmentation stays idempotent.
+   * the feature window so repeated segmentation stays idempotent. No boundary is placed inside a
+   * grapheme cluster, such as before a combining mark or a variation selector.
    *
    * @param sentence the sentence to analyze.
    * @return an array of UTF-16 code unit boundary offsets.
@@ -248,7 +319,7 @@ public class Parser {
           score += 2L * this.tw4.getOrDefault(chars[i] + chars[i + 1] + chars[i + 2], 0);
         }
       }
-      if (score > 0) {
+      if (score > 0 && !continuesCluster(chars, offsets, i)) {
         tempBoundaries[boundaryCount++] = offsets[i];
       }
     }
