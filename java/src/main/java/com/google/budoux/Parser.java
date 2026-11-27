@@ -98,17 +98,49 @@ public class Parser {
     this.tw4 = copyGroup(model, "TW4");
   }
 
-  private static final int ZWJ = 0x200D;
+  private static final String ZWJ = "\u200D";
 
-  private static boolean isCombiningMark(int codePoint) {
+  private static boolean isRegionalIndicator(String ch) {
+    int codePoint = ch.codePointAt(0);
+    return codePoint >= 0x1F1E6 && codePoint <= 0x1F1FF;
+  }
+
+  /**
+   * Checks whether {@code chars[i]} continues the grapheme cluster before it.
+   *
+   * <p>A boundary before such a character would split a combining mark (such as a decomposed
+   * dakuten U+3099), a variation selector, an emoji modifier, a ZWJ sequence or a regional
+   * indicator pair from the character it belongs to.
+   *
+   * @param chars the visible characters (code points) of a sentence.
+   * @param i an index into chars, greater than 0.
+   * @return true if no boundary may be placed before {@code chars[i]}.
+   */
+  private static boolean continuesCluster(String[] chars, int i) {
+    String ch = chars[i];
+    if (ch.equals(ZWJ) || chars[i - 1].equals(ZWJ)) {
+      return true;
+    }
+    if (isRegionalIndicator(ch)) {
+      // Only the second regional indicator of a pair continues the cluster.
+      int j = i - 1;
+      while (j >= 0 && isRegionalIndicator(chars[j])) {
+        j--;
+      }
+      return (i - j) % 2 == 0;
+    }
+    int codePoint = ch.codePointAt(0);
+    // No combining mark lies below U+0300 or among U+4E00-9FFF ideographs.
+    if (codePoint < 0x300 || (codePoint >= 0x4E00 && codePoint <= 0x9FFF)) {
+      return false;
+    }
+    if (codePoint >= 0x1F3FB && codePoint <= 0x1F3FF) {
+      return true;
+    }
     int type = Character.getType(codePoint);
     return type == Character.NON_SPACING_MARK
         || type == Character.COMBINING_SPACING_MARK
         || type == Character.ENCLOSING_MARK;
-  }
-
-  private static boolean isRegionalIndicator(int codePoint) {
-    return codePoint >= 0x1F1E6 && codePoint <= 0x1F1FF;
   }
 
   private static Map<String, Integer> copyGroup(
@@ -192,11 +224,8 @@ public class Parser {
     int maxCodePoints = sentence.codePointCount(0, sentence.length());
     String[] chars = new String[maxCodePoints];
     int[] offsets = new int[maxCodePoints];
-    boolean[] continuesCluster = new boolean[maxCodePoints];
 
     int visibleCount = 0;
-    int prevCodePoint = -1;
-    int regionalIndicators = 0;
     for (int charOffset = 0; charOffset < sentence.length(); ) {
       int codePoint = sentence.codePointAt(charOffset);
       int charCount = Character.charCount(codePoint);
@@ -206,15 +235,6 @@ public class Parser {
       }
       chars[visibleCount] = sentence.substring(charOffset, charOffset + charCount);
       offsets[visibleCount] = charOffset;
-      regionalIndicators = isRegionalIndicator(codePoint) ? regionalIndicators + 1 : 0;
-      continuesCluster[visibleCount] =
-          prevCodePoint >= 0
-              && (isCombiningMark(codePoint)
-                  || codePoint == ZWJ
-                  || prevCodePoint == ZWJ
-                  || (codePoint >= 0x1F3FB && codePoint <= 0x1F3FF)
-                  || (regionalIndicators > 0 && regionalIndicators % 2 == 0));
-      prevCodePoint = codePoint;
       visibleCount++;
       charOffset += charCount;
     }
@@ -226,9 +246,6 @@ public class Parser {
     int[] tempBoundaries = new int[visibleCount - 1];
     int boundaryCount = 0;
     for (int i = 1; i < visibleCount; i++) {
-      if (continuesCluster[i]) {
-        continue;
-      }
       long score = -this.totalScore;
       if (i > 2) {
         if (!this.uw1.isEmpty()) {
@@ -277,7 +294,7 @@ public class Parser {
           score += 2L * this.tw4.getOrDefault(chars[i] + chars[i + 1] + chars[i + 2], 0);
         }
       }
-      if (score > 0) {
+      if (score > 0 && !continuesCluster(chars, i)) {
         tempBoundaries[boundaryCount++] = offsets[i];
       }
     }

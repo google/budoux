@@ -20,34 +20,36 @@ const INVISIBLE_FORMAT_CHARS = new Set(htmlSpec.invisible_format_chars);
 const COMBINING_MARK = /^\p{M}$/u;
 const ZWJ = '\u200d';
 
+const isRegionalIndicator = (ch: string): boolean => {
+  const cp = ch.codePointAt(0) ?? 0;
+  return cp >= 0x1f1e6 && cp <= 0x1f1ff;
+};
+
 /**
- * Marks the characters that continue the grapheme cluster before them.
+ * Checks whether chars[i] continues the grapheme cluster before it.
  *
- * A boundary before one of these characters would split a combining mark
- * (such as a decomposed dakuten U+3099), a variation selector, an emoji
- * modifier, a ZWJ sequence or a regional indicator pair from the character it
- * belongs to.
+ * A boundary before such a character would split a combining mark (such as a
+ * decomposed dakuten U+3099), a variation selector, an emoji modifier, a ZWJ
+ * sequence or a regional indicator pair from the character it belongs to.
  *
  * @param chars The visible characters (code points) of a sentence.
- * @return True where no boundary may be placed.
+ * @param i An index into chars, greater than 0.
+ * @return True if no boundary may be placed before chars[i].
  */
-const continuesCluster = (chars: string[]): boolean[] => {
-  const result: boolean[] = [];
-  let regionalIndicators = 0;
-  chars.forEach((ch, i) => {
-    const cp = ch.codePointAt(0) ?? 0;
-    regionalIndicators =
-      cp >= 0x1f1e6 && cp <= 0x1f1ff ? regionalIndicators + 1 : 0;
-    result.push(
-      i > 0 &&
-        (COMBINING_MARK.test(ch) ||
-          ch === ZWJ ||
-          chars[i - 1] === ZWJ ||
-          (cp >= 0x1f3fb && cp <= 0x1f3ff) ||
-          (regionalIndicators > 0 && regionalIndicators % 2 === 0))
-    );
-  });
-  return result;
+const continuesCluster = (chars: string[], i: number): boolean => {
+  const ch = chars[i];
+  if (ch === ZWJ || chars[i - 1] === ZWJ) return true;
+  if (isRegionalIndicator(ch)) {
+    // Only the second regional indicator of a pair continues the cluster.
+    let j = i - 1;
+    while (j >= 0 && isRegionalIndicator(chars[j])) j--;
+    return (i - j) % 2 === 0;
+  }
+  const cp = ch.codePointAt(0) ?? 0;
+  // No combining mark lies below U+0300 or among U+4E00-9FFF ideographs.
+  if (cp < 0x300 || (cp >= 0x4e00 && cp <= 0x9fff)) return false;
+  if (cp >= 0x1f3fb && cp <= 0x1f3ff) return true;
+  return COMBINING_MARK.test(ch);
 };
 
 /**
@@ -135,9 +137,7 @@ export class Parser {
       utf16Offset += ch.length;
     }
 
-    const noBoundary = continuesCluster(chars);
     for (let i = 1; i < chars.length; i++) {
-      if (noBoundary[i]) continue;
       let score = -this.totalScore;
       // NOTE: Score values in models may be negative.
       if (i > 2) {
@@ -162,7 +162,7 @@ export class Parser {
         score += 2 * (uw6?.get(chars[i + 2]) ?? 0);
         score += 2 * (tw4?.get(chars[i] + chars[i + 1] + chars[i + 2]) ?? 0);
       }
-      if (score > 0) result.push(offsets[i]);
+      if (score > 0 && !continuesCluster(chars, i)) result.push(offsets[i]);
     }
     return result;
   }

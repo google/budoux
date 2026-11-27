@@ -23,37 +23,35 @@ MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 INVISIBLE_FORMAT_CHARS: set[str] = set(HTML_SPEC['invisible_format_chars'])
 
 
-def _continues_cluster(chars: list[str]) -> list[bool]:
-  """Marks the characters that continue the grapheme cluster before them.
+def _continues_cluster(chars: list[str], i: int) -> bool:
+  """Checks whether chars[i] continues the grapheme cluster before it.
 
-  A boundary before one of these characters would split a combining mark (such
-  as a decomposed dakuten U+3099), a variation selector, an emoji modifier, a
-  ZWJ sequence or a regional indicator pair from the character it belongs to.
+  A boundary before such a character would split a combining mark (such as a
+  decomposed dakuten U+3099), a variation selector, an emoji modifier, a ZWJ
+  sequence or a regional indicator pair from the character it belongs to.
 
   Args:
     chars (list[str]): The visible characters of a sentence.
+    i (int): An index into chars, greater than 0.
 
   Returns:
-    A list of booleans, True where no boundary may be placed.
+    True if no boundary may be placed before chars[i].
   """
-  result: list[bool] = []
-  regional_indicators = 0
-  for i, ch in enumerate(chars):
-    if '\U0001f1e6' <= ch <= '\U0001f1ff':
-      regional_indicators += 1
-    else:
-      regional_indicators = 0
-    result.append(
-      i > 0
-      and (
-        unicodedata.category(ch).startswith('M')
-        or ch == '\u200d'
-        or chars[i - 1] == '\u200d'
-        or '\U0001f3fb' <= ch <= '\U0001f3ff'
-        or (regional_indicators > 0 and regional_indicators % 2 == 0)
-      )
-    )
-  return result
+  ch = chars[i]
+  if ch == '\u200d' or chars[i - 1] == '\u200d':
+    return True
+  if '\U0001f1e6' <= ch <= '\U0001f1ff':
+    # Only the second regional indicator of a pair continues the cluster.
+    j = i - 1
+    while j >= 0 and '\U0001f1e6' <= chars[j] <= '\U0001f1ff':
+      j -= 1
+    return (i - j) % 2 == 0
+  # No combining mark lies below U+0300 or among U+4E00-9FFF ideographs.
+  if ch < '\u0300' or '\u4e00' <= ch <= '\u9fff':
+    return False
+  if '\U0001f3fb' <= ch <= '\U0001f3ff':
+    return True
+  return unicodedata.category(ch)[0] == 'M'
 
 
 class Parser:
@@ -120,10 +118,7 @@ class Parser:
 
     boundaries: list[int] = []
     n = len(chars)
-    continues_cluster = _continues_cluster(chars)
     for i in range(1, n):
-      if continues_cluster[i]:
-        continue
       score = -self._total_score
       if i > 2:
         score += 2 * uw1.get(chars[i - 3], 0)
@@ -143,7 +138,7 @@ class Parser:
         score += 2 * uw6.get(chars[i + 2], 0)
         score += 2 * tw4.get(chars[i] + chars[i + 1] + chars[i + 2], 0)
 
-      if score > 0:
+      if score > 0 and not _continues_cluster(chars, i):
         boundaries.append(offsets[i])
     return boundaries
 
