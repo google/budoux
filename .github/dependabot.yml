@@ -25,10 +25,11 @@ updates:
     schedule:
       interval: weekly
     groups:
-      patch:
+      minor-and-patch:
         patterns:
           - "*"
         update-types:
+          - "minor"
           - "patch"
     cooldown:
       default-days: 7
@@ -42,10 +43,11 @@ updates:
       codeql:
         patterns:
           - "github/codeql-action*"
-      patch:
+      minor-and-patch:
         patterns:
           - "*"
         update-types:
+          - "minor"
           - "patch"
     cooldown:
       default-days: 7
@@ -58,10 +60,11 @@ updates:
     schedule:
       interval: weekly
     groups:
-      patch:
+      minor-and-patch:
         patterns:
           - "*"
         update-types:
+          - "minor"
           - "patch"
     cooldown:
       default-days: 7
@@ -72,10 +75,11 @@ updates:
     schedule:
       interval: weekly
     groups:
-      patch:
+      minor-and-patch:
         patterns:
           - "*"
         update-types:
+          - "minor"
           - "patch"
     cooldown:
       default-days: 7
