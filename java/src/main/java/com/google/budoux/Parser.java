@@ -98,6 +98,19 @@ public class Parser {
     this.tw4 = copyGroup(model, "TW4");
   }
 
+  private static final int ZWJ = 0x200D;
+
+  private static boolean isCombiningMark(int codePoint) {
+    int type = Character.getType(codePoint);
+    return type == Character.NON_SPACING_MARK
+        || type == Character.COMBINING_SPACING_MARK
+        || type == Character.ENCLOSING_MARK;
+  }
+
+  private static boolean isRegionalIndicator(int codePoint) {
+    return codePoint >= 0x1F1E6 && codePoint <= 0x1F1FF;
+  }
+
   private static Map<String, Integer> copyGroup(
       Map<String, Map<String, Integer>> model, String key) {
     Map<String, Integer> group = model.get(key);
@@ -166,7 +179,8 @@ public class Parser {
    * Parses the input sentence and returns UTF-16 code unit offsets of phrase boundaries.
    *
    * <p>Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated as transparent in
-   * the feature window so repeated segmentation stays idempotent.
+   * the feature window so repeated segmentation stays idempotent. No boundary is placed inside a
+   * grapheme cluster, such as before a combining mark or a variation selector.
    *
    * @param sentence the sentence to analyze.
    * @return an array of UTF-16 code unit boundary offsets.
@@ -178,8 +192,11 @@ public class Parser {
     int maxCodePoints = sentence.codePointCount(0, sentence.length());
     String[] chars = new String[maxCodePoints];
     int[] offsets = new int[maxCodePoints];
+    boolean[] continuesCluster = new boolean[maxCodePoints];
 
     int visibleCount = 0;
+    int prevCodePoint = -1;
+    int regionalIndicators = 0;
     for (int charOffset = 0; charOffset < sentence.length(); ) {
       int codePoint = sentence.codePointAt(charOffset);
       int charCount = Character.charCount(codePoint);
@@ -189,6 +206,15 @@ public class Parser {
       }
       chars[visibleCount] = sentence.substring(charOffset, charOffset + charCount);
       offsets[visibleCount] = charOffset;
+      regionalIndicators = isRegionalIndicator(codePoint) ? regionalIndicators + 1 : 0;
+      continuesCluster[visibleCount] =
+          prevCodePoint >= 0
+              && (isCombiningMark(codePoint)
+                  || codePoint == ZWJ
+                  || prevCodePoint == ZWJ
+                  || (codePoint >= 0x1F3FB && codePoint <= 0x1F3FF)
+                  || (regionalIndicators > 0 && regionalIndicators % 2 == 0));
+      prevCodePoint = codePoint;
       visibleCount++;
       charOffset += charCount;
     }
@@ -200,6 +226,9 @@ public class Parser {
     int[] tempBoundaries = new int[visibleCount - 1];
     int boundaryCount = 0;
     for (int i = 1; i < visibleCount; i++) {
+      if (continuesCluster[i]) {
+        continue;
+      }
       long score = -this.totalScore;
       if (i > 2) {
         if (!this.uw1.isEmpty()) {

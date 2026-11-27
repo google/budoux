@@ -15,11 +15,45 @@
 
 import json
 import os
+import unicodedata
 
 from .html_processor import HTML_SPEC, get_text, resolve
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'models')
 INVISIBLE_FORMAT_CHARS: set[str] = set(HTML_SPEC['invisible_format_chars'])
+
+
+def _continues_cluster(chars: list[str]) -> list[bool]:
+  """Marks the characters that continue the grapheme cluster before them.
+
+  A boundary before one of these characters would split a combining mark (such
+  as a decomposed dakuten U+3099), a variation selector, an emoji modifier, a
+  ZWJ sequence or a regional indicator pair from the character it belongs to.
+
+  Args:
+    chars (list[str]): The visible characters of a sentence.
+
+  Returns:
+    A list of booleans, True where no boundary may be placed.
+  """
+  result: list[bool] = []
+  regional_indicators = 0
+  for i, ch in enumerate(chars):
+    if '\U0001f1e6' <= ch <= '\U0001f1ff':
+      regional_indicators += 1
+    else:
+      regional_indicators = 0
+    result.append(
+      i > 0
+      and (
+        unicodedata.category(ch).startswith('M')
+        or ch == '\u200d'
+        or chars[i - 1] == '\u200d'
+        or '\U0001f3fb' <= ch <= '\U0001f3ff'
+        or (regional_indicators > 0 and regional_indicators % 2 == 0)
+      )
+    )
+  return result
 
 
 class Parser:
@@ -50,6 +84,8 @@ class Parser:
 
     Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated as
     transparent in the feature window so repeated segmentation stays idempotent.
+    No boundary is placed inside a grapheme cluster, such as before a combining
+    mark or a variation selector.
 
     Args:
       sentence (str): An input sentence.
@@ -84,7 +120,10 @@ class Parser:
 
     boundaries: list[int] = []
     n = len(chars)
+    continues_cluster = _continues_cluster(chars)
     for i in range(1, n):
+      if continues_cluster[i]:
+        continue
       score = -self._total_score
       if i > 2:
         score += 2 * uw1.get(chars[i - 3], 0)

@@ -107,6 +107,37 @@ describe('Parser.parse', () => {
     expect(parser.parseBoundaries('abc\u200bdef')).toEqual([4]);
     expect(parser.parse('\u200b')).toEqual(['\u200b']);
   });
+
+  describe('should not separate inside a grapheme cluster.', () => {
+    // A negative total score places a boundary before every character.
+    const parser = new Parser({UW1: {x: -1}});
+    const cases: [string, string, string[]][] = [
+      ['combining dakuten', 'か\u3099ら', ['か\u3099', 'ら']],
+      ['Thai vowel sign', 'ก\u0e35a', ['ก\u0e35', 'a']],
+      ['variation selector', 'a❤\ufe0fb', ['a', '❤\ufe0f', 'b']],
+      ['IVS', '葛\u{e0100}飾', ['葛\u{e0100}', '飾']],
+      ['keycap', '1\ufe0f\u20e3a', ['1\ufe0f\u20e3', 'a']],
+      ['emoji modifier', '\u{1f44d}\u{1f3fd}a', ['\u{1f44d}\u{1f3fd}', 'a']],
+      [
+        'ZWJ sequence',
+        '\u{1f468}\u200d\u{1f469}\u200d\u{1f467}a',
+        ['\u{1f468}\u200d\u{1f469}\u200d\u{1f467}', 'a'],
+      ],
+      [
+        'regional indicator pairs',
+        '\u{1f1ef}\u{1f1f5}\u{1f1f9}\u{1f1fc}\u{1f1ef}',
+        ['\u{1f1ef}\u{1f1f5}', '\u{1f1f9}\u{1f1fc}', '\u{1f1ef}'],
+      ],
+    ];
+    it('should separate plain characters.', () => {
+      expect(parser.parse('abc')).toEqual(['a', 'b', 'c']);
+    });
+    for (const [name, sentence, expected] of cases) {
+      it(name, () => {
+        expect(parser.parse(sentence)).toEqual(expected);
+      });
+    }
+  });
 });
 
 describe('thModel', () => {

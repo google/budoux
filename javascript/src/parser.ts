@@ -17,6 +17,38 @@
 import {htmlSpec} from './data/html_spec.js';
 
 const INVISIBLE_FORMAT_CHARS = new Set(htmlSpec.invisible_format_chars);
+const COMBINING_MARK = /^\p{M}$/u;
+const ZWJ = '\u200d';
+
+/**
+ * Marks the characters that continue the grapheme cluster before them.
+ *
+ * A boundary before one of these characters would split a combining mark
+ * (such as a decomposed dakuten U+3099), a variation selector, an emoji
+ * modifier, a ZWJ sequence or a regional indicator pair from the character it
+ * belongs to.
+ *
+ * @param chars The visible characters (code points) of a sentence.
+ * @return True where no boundary may be placed.
+ */
+const continuesCluster = (chars: string[]): boolean[] => {
+  const result: boolean[] = [];
+  let regionalIndicators = 0;
+  chars.forEach((ch, i) => {
+    const cp = ch.codePointAt(0) ?? 0;
+    regionalIndicators =
+      cp >= 0x1f1e6 && cp <= 0x1f1ff ? regionalIndicators + 1 : 0;
+    result.push(
+      i > 0 &&
+        (COMBINING_MARK.test(ch) ||
+          ch === ZWJ ||
+          chars[i - 1] === ZWJ ||
+          (cp >= 0x1f3fb && cp <= 0x1f3ff) ||
+          (regionalIndicators > 0 && regionalIndicators % 2 === 0))
+    );
+  });
+  return result;
+};
 
 /**
  * Base BudouX parser.
@@ -66,7 +98,8 @@ export class Parser {
    *
    * Invisible format characters (such as U+200B ZERO WIDTH SPACE) are treated
    * as transparent in the feature window so repeated segmentation stays
-   * idempotent.
+   * idempotent. No boundary is placed inside a grapheme cluster, such as
+   * before a combining mark or a variation selector.
    *
    * @param sentence An input sentence.
    * @return The list of UTF-16 code unit offsets of the boundaries.
@@ -102,7 +135,9 @@ export class Parser {
       utf16Offset += ch.length;
     }
 
+    const noBoundary = continuesCluster(chars);
     for (let i = 1; i < chars.length; i++) {
+      if (noBoundary[i]) continue;
       let score = -this.totalScore;
       // NOTE: Score values in models may be negative.
       if (i > 2) {
