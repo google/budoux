@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {htmlSpec} from './data/html_spec.js';
 import {parseFromString} from './dom.js';
 import {Parser} from './parser.js';
 
@@ -41,119 +42,53 @@ const DomAction = {
 type DomAction = (typeof DomAction)[keyof typeof DomAction];
 
 /**
- * Determines the action from an element name, as defined in
- * {@link https://html.spec.whatwg.org/multipage/rendering.html HTML Rendering}.
+ * Determines the action from an element name, derived from the shared
+ * `html_spec.json` specification.
  * See also {@link actionForElement}.
  */
-const domActions: {[name: string]: DomAction} = {
-  // Hidden elements
-  // https://html.spec.whatwg.org/multipage/rendering.html#hidden-elements
-  AREA: DomAction.Skip,
-  BASE: DomAction.Skip,
-  BASEFONT: DomAction.Skip,
-  DATALIST: DomAction.Skip,
-  HEAD: DomAction.Skip,
-  LINK: DomAction.Skip,
-  META: DomAction.Skip,
-  NOEMBED: DomAction.Skip,
-  NOFRAMES: DomAction.Skip,
-  PARAM: DomAction.Skip,
-  RP: DomAction.Skip,
-  SCRIPT: DomAction.Skip,
-  STYLE: DomAction.Skip,
-  TEMPLATE: DomAction.Skip,
-  TITLE: DomAction.Skip,
-  NOSCRIPT: DomAction.Skip,
+const domActions: {[name: string]: DomAction} = {};
+for (const tag of htmlSpec.element_actions.skip) {
+  domActions[tag] = DomAction.Skip;
+}
+for (const tag of htmlSpec.element_actions.nobreak) {
+  domActions[tag] = DomAction.NoBreak;
+}
+for (const tag of htmlSpec.element_actions.break) {
+  domActions[tag] = DomAction.Break;
+}
+for (const tag of htmlSpec.element_actions.break_opportunity) {
+  domActions[tag] = DomAction.BreakOpportunity;
+}
 
-  // Flow content
-  // https://html.spec.whatwg.org/multipage/rendering.html#flow-content-3
-  HR: DomAction.Break,
-  // Disable if `white-space: pre`.
-  LISTING: DomAction.Skip,
-  PLAINTEXT: DomAction.Skip,
-  PRE: DomAction.Skip,
-  XMP: DomAction.Skip,
+const defaultBlockElements = new Set(htmlSpec.element_actions.block);
+const blockSkipElements = new Set(htmlSpec.element_actions.block_skip);
+const spaceCodePoints = new Set(
+  htmlSpec.space_chars.map(ch => ch.codePointAt(0)!)
+);
 
-  // Phrasing content
-  // https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3
-  BR: DomAction.Break,
-  RT: DomAction.Skip,
-  WBR: DomAction.BreakOpportunity,
+function isSpace(codePoint: number): boolean {
+  return spaceCodePoints.has(codePoint);
+}
 
-  // Form controls
-  // https://html.spec.whatwg.org/multipage/rendering.html#form-controls
-  INPUT: DomAction.Skip,
-  SELECT: DomAction.Skip,
-  BUTTON: DomAction.Skip,
-  TEXTAREA: DomAction.Skip,
+function codePointBefore(text: string, index: number): number {
+  const prev = text.charCodeAt(index - 1);
+  if (prev >= 0xdc00 && prev <= 0xdfff && index >= 2) {
+    const high = text.charCodeAt(index - 2);
+    if (high >= 0xd800 && high <= 0xdbff) {
+      return ((high - 0xd800) << 10) + (prev - 0xdc00) + 0x10000;
+    }
+  }
+  return prev;
+}
 
-  // Other elements where the phrase-based line breaking should be disabled.
-  ABBR: DomAction.Skip,
-  CODE: DomAction.Skip,
-  IFRAME: DomAction.Skip,
-  TIME: DomAction.Skip,
-  VAR: DomAction.Skip,
-
-  // Deprecated, but supported in all browsers.
-  // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/nobr
-  NOBR: DomAction.NoBreak,
-};
-
-const defaultBlockElements = new Set([
-  // 15.3.2 The page
-  'HTML',
-  'BODY',
-  // 15.3.3 Flow content
-  'ADDRESS',
-  'BLOCKQUOTE',
-  'CENTER',
-  'DIALOG',
-  'DIV',
-  'FIGURE',
-  'FIGCAPTION',
-  'FOOTER',
-  'FORM',
-  'HEADER',
-  'LEGEND',
-  'LISTING',
-  'MAIN',
-  'P',
-  // 15.3.6 Sections and headings
-  'ARTICLE',
-  'ASIDE',
-  'H1',
-  'H2',
-  'H3',
-  'H4',
-  'H5',
-  'H6',
-  'HGROUP',
-  'NAV',
-  'SECTION',
-  // 15.3.7 Lists
-  'DIR',
-  'DD',
-  'DL',
-  'DT',
-  'MENU',
-  'OL',
-  'UL',
-  'LI',
-  // 15.3.8 Tables
-  'TABLE',
-  'CAPTION',
-  'COL',
-  'TR',
-  'TD',
-  'TH',
-  // 15.3.12 The fieldset and legend elements
-  'FIELDSET',
-  // 15.5.4 The details and summary elements
-  'DETAILS',
-  'SUMMARY',
-  // 15.5.12 The marquee element
-  'MARQUEE',
-]);
+function isAllSpaces(text: string): boolean {
+  for (let i = 0; i < text.length; ) {
+    const cp = text.codePointAt(i)!;
+    if (!isSpace(cp)) return false;
+    i += cp > 0xffff ? 2 : 1;
+  }
+  return true;
+}
 
 /**
  * Determine the action for a CSS `display` property value.
@@ -162,8 +97,9 @@ const defaultBlockElements = new Set([
  */
 function actionForDisplay(display: string): DomAction {
   // Handle common cases first.
-  if (display === 'inline') return DomAction.Inline;
+  if (display === 'inline' || display === 'contents') return DomAction.Inline;
   if (display === 'block') return DomAction.Block;
+  if (display === 'none') return DomAction.Skip;
 
   // Handle Ruby base as in-flow.
   if (display.startsWith('ruby')) {
@@ -186,12 +122,13 @@ function actionForElement(element: Element | DocumentFragment): DomAction {
     return DomAction.Block;
   }
 
-  const nodeName = element.nodeName;
+  const nodeName = element.nodeName.toUpperCase();
   const action = domActions[nodeName];
   if (action !== undefined) return action;
 
   if (typeof globalThis.getComputedStyle === 'function') {
     const style = globalThis.getComputedStyle(element);
+    if (style.display === 'none') return DomAction.Skip;
     switch (style.whiteSpace) {
       case 'nowrap':
       case 'pre':
@@ -341,13 +278,11 @@ class Paragraph {
     const opportunities: number[] = [];
     let len = 0;
     for (const node of this.nodes) {
-      if (node.canSplit) {
-        const text = node.text;
-        if (text) {
-          for (let i = 0; i < text.length; ++i) {
-            if (text.charCodeAt(i) === ZWSP_CODEPOINT) {
-              opportunities.push(len + i + 1);
-            }
+      const text = node.text;
+      if (text) {
+        for (let i = 0; i < text.length; ++i) {
+          if (text.charCodeAt(i) === ZWSP_CODEPOINT) {
+            opportunities.push(len + i + 1);
           }
         }
       }
@@ -372,6 +307,26 @@ class Paragraph {
   }
 }
 export class ParagraphForTesting extends Paragraph {}
+
+/**
+ * Mutable pointer to the active {@link Paragraph} within a block formatting context.
+ */
+class ParagraphContext {
+  element: HTMLElement | DocumentFragment;
+  current: Paragraph;
+
+  constructor(element: HTMLElement | DocumentFragment) {
+    this.element = element;
+    this.current = new Paragraph(element);
+  }
+
+  *flush(): IterableIterator<Paragraph> {
+    if (!this.current.isEmpty()) {
+      yield this.current;
+      this.current = new Paragraph(this.element);
+    }
+  }
+}
 
 /**
  * Options for {@link HTMLProcessor}.
@@ -427,7 +382,7 @@ export class HTMLProcessor {
       if (
         child.nodeType === NodeType.TEXT_NODE &&
         child.nodeValue &&
-        /\S/.test(child.nodeValue)
+        !isAllSpaces(child.nodeValue)
       ) {
         return true;
       }
@@ -452,12 +407,18 @@ export class HTMLProcessor {
   /**
    * Find paragraphs from a given HTML element or document fragment.
    * @param element The root element or document fragment to find paragraphs.
-   * @param parent The parent {@link Paragraph} if any.
    * @return A list of {@link Paragraph}s.
    */
   *getBlocks(
+    element: HTMLElement | DocumentFragment
+  ): IterableIterator<Paragraph> {
+    yield* this.collectBlocksFromElement(element, null, false);
+  }
+
+  private *collectBlocksFromElement(
     element: HTMLElement | DocumentFragment,
-    parent?: Paragraph
+    parentContext: ParagraphContext | null,
+    inNoBreak: boolean
   ): IterableIterator<Paragraph> {
     assert(
       element.nodeType === NodeType.ELEMENT_NODE ||
@@ -469,22 +430,39 @@ export class HTMLProcessor {
       !isDocumentFragment(element) &&
       this.className &&
       element.classList.contains(this.className)
-    )
+    ) {
+      if (
+        parentContext &&
+        (actionForElement(element) === DomAction.Block ||
+          blockSkipElements.has(element.nodeName.toUpperCase()))
+      ) {
+        yield* parentContext.flush();
+      }
       return;
+    }
 
     const action = actionForElement(element);
-    if (action === DomAction.Skip) return;
+    if (action === DomAction.Skip) {
+      if (
+        parentContext &&
+        !isDocumentFragment(element) &&
+        blockSkipElements.has(element.nodeName.toUpperCase())
+      ) {
+        yield* parentContext.flush();
+      }
+      return;
+    }
     if (action === DomAction.Break) {
-      if (parent && !parent.isEmpty()) {
-        parent.setHasBreakOpportunityAfter();
-        yield parent;
-        parent.nodes = [];
+      if (parentContext) {
+        yield* parentContext.flush();
       }
       assert(!element.firstChild);
       return;
     }
     if (action === DomAction.BreakOpportunity) {
-      if (parent) parent.setHasBreakOpportunityAfter();
+      if (parentContext) {
+        parentContext.current.setHasBreakOpportunityAfter();
+      }
       return;
     }
 
@@ -495,32 +473,42 @@ export class HTMLProcessor {
         action === DomAction.Inline ||
         action === DomAction.NoBreak
     );
-    const isNewBlock = !parent || action === DomAction.Block;
-    const block = isNewBlock ? new Paragraph(element) : parent;
+    const isNewBlock = !parentContext || action === DomAction.Block;
+    if (isNewBlock && parentContext) {
+      yield* parentContext.flush();
+    }
+    const ctx = isNewBlock ? new ParagraphContext(element) : parentContext;
+    const childNoBreak = inNoBreak || action === DomAction.NoBreak;
 
-    // Collect all text nodes in this inline formatting context, while searching
-    // descendant elements recursively.
-    for (const child of element.childNodes) {
+    // Snapshot `childNodes` so DOM mutations by the caller during `yield`
+    // (e.g., replacing a `Text` node with chunks and Node separators) never
+    // shift iteration over remaining sibling nodes.
+    for (const child of Array.from(element.childNodes)) {
       switch (child.nodeType) {
         case NodeType.ELEMENT_NODE:
-          for (const childBlock of this.getBlocks(child as HTMLElement, block))
-            yield childBlock;
+          yield* this.collectBlocksFromElement(
+            child as HTMLElement,
+            ctx,
+            childNoBreak
+          );
           break;
-        case NodeType.TEXT_NODE:
-          if (action === DomAction.NoBreak) {
-            const text = child.nodeValue;
-            if (text) {
-              block.nodes.push(new NodeOrText(text));
-            }
-            break;
+        case NodeType.TEXT_NODE: {
+          const text = child.nodeValue;
+          if (!text) break;
+          if (childNoBreak) {
+            ctx.current.nodes.push(new NodeOrText(text));
+          } else {
+            ctx.current.nodes.push(new NodeOrText(child as Text));
           }
-          block.nodes.push(new NodeOrText(child as Text));
           break;
+        }
       }
     }
 
     // Apply if this is an inline formatting context.
-    if (isNewBlock && !block.isEmpty()) yield block;
+    if (isNewBlock) {
+      yield* ctx.flush();
+    }
   }
 
   /**
@@ -533,7 +521,7 @@ export class HTMLProcessor {
     if (!paragraph.nodes.some(node => node.canSplit)) return;
     const text = paragraph.text;
     // No changes if whitespace-only.
-    if (/^\s*$/.test(text)) return;
+    if (isAllSpaces(text)) return;
 
     // Compute the phrase boundaries.
     const boundaries = this.parser_.parseBoundaries(text);
@@ -546,11 +534,15 @@ export class HTMLProcessor {
     assert(boundaries[boundaries.length - 1] < text.length);
 
     // Don't insert separators before or after whitespace, as in Python and Java,
-    // or right before a ZWSP in the source.
+    // or adjacent to a ZWSP in the source.
     const adjustedBoundaries = paragraph
       .excludeForcedOpportunities(boundaries)
       .filter(
-        i => !/\s/.test(text[i - 1]) && !/\s/.test(text[i]) && text[i] !== ZWSP
+        i =>
+          !isSpace(codePointBefore(text, i)) &&
+          !isSpace(text.codePointAt(i)!) &&
+          text.charCodeAt(i - 1) !== ZWSP_CODEPOINT &&
+          text.charCodeAt(i) !== ZWSP_CODEPOINT
       );
 
     // Add a sentinel to help iterating.

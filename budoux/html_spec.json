@@ -46,6 +46,12 @@
       "TR",
       "UL"
     ],
+    "block_skip": [
+      "LISTING",
+      "PLAINTEXT",
+      "PRE",
+      "XMP"
+    ],
     "skip": [
       "AREA",
       "BASE",
